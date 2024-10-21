@@ -1,0 +1,59 @@
+
+
+.logo-container {
+    position: relative;
+    width: 50px; 
+    height: 50px;
+}
+
+.black-triangle {
+    position: absolute;
+    width: 0;
+    height: 0;
+    border-left: 25px solid transparent;
+    border-right: 25px solid transparent;
+    border-bottom: 25px solid black;
+    top: 0;
+    left: 0;
+    transform-origin: 50% 100%;
+    animation: rotateBlack 1.5s infinite;
+    /* clip-path: polygon(28% 86%,31% 33%,1% 33%,56% 0%,100% 31%,71% 32%,74% 86%); */
+}
+
+.orange-triangle {
+    position: absolute;
+    width: 0;
+    height: 0;
+    border-left: 25px solid transparent;
+    border-right: 25px solid transparent;
+    border-top: 25px solid #ea7600;
+    bottom: 0;
+    left: 0;
+    transform-origin: 50% 0%;
+    animation: rotateOrange 1.5s infinite;
+    /* clip-path: polygon(28% 86%,31% 33%,1% 33%,56% 0%,100% 31%,71% 32%,74% 86%); */
+}
+
+@keyframes rotateBlack {
+    0% {
+        transform: rotate(0deg);
+    }
+    50% {
+        transform: rotate(180deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes rotateOrange {
+    0% {
+        transform: rotate(0deg);
+    }
+    50% {
+        transform: rotate(-180deg);
+    }
+    100% {
+        transform: rotate(-360deg);
+    }
+}
