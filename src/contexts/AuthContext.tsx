@@ -1,6 +1,6 @@
 import { createContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { User } from "../types/schemas/UserSchemas";
+import { User } from "../types/zodschemas/UserSchemas";
 import axios, { AxiosError } from "axios";
 import { BackendUrl } from "../utils/useEnv";
 import { isTokenExpired } from "../utils/axios";

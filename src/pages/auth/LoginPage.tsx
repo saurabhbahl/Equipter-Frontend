@@ -1,6 +1,6 @@
 import { useState } from "react";
 import InputField from "../../components/InputFeild";
-import { IUserLogin, userSchema } from "../../types/schemas/UserSchemas";
+import { IUserLogin, userSchema } from "../../types/zodschemas/UserSchemas";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCheckCircle,

@@ -1,6 +1,6 @@
 import InputField from "../../components/InputFeild";
 import { useState } from "react";
-import { forgetPasswordSchema } from "../../types/schemas/UserSchemas";
+import { forgetPasswordSchema } from "../../types/zodschemas/UserSchemas";
 import axios, { AxiosError } from "axios";
 import { BackendUrl } from "../../utils/useEnv";
 import LoaderSpinner from "../../components/LoaderSpinner";

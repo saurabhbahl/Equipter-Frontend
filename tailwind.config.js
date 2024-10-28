@@ -24,12 +24,14 @@ export default {
         "custom-black-25": "rgba(0, 0, 0, 0.25)",
         "custom-red": "#EB5757",
         "custom-sky": "#E2E8F0",
+        "custom-cream": "#FFEAD7",
       },
       fontFamily: {
         "work-sans": ["Work Sans", "sans-serif"],
-        'arial': ["Arial", "sans-serif"],
-        'robot': ["Roboto", "sans-serif"],
-        'inter': ["Inter", "sans-serif"],
+        arial: ["Arial", "sans-serif"],
+        robot: ["Roboto", "sans-serif"],
+        roboto: ["Roboto", "sans-serif"],
+        inter: ["Inter", "sans-serif"],
         "noto-sans": ["Noto Sans", "sans-serif"],
       },
       fontSize: {

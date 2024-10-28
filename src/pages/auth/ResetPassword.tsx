@@ -1,7 +1,7 @@
 import { Link, useParams } from "react-router-dom";
 import InputField from "../../components/InputFeild";
 import { useEffect, useState } from "react";
-import { resetPasswordSchema } from "../../types/schemas/UserSchemas";
+import { resetPasswordSchema } from "../../types/zodschemas/UserSchemas";
 import axios from "axios";
 import { BackendUrl } from "../../utils/useEnv";
 import LoaderSpinner from "../../components/LoaderSpinner";

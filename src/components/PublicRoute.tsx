@@ -9,7 +9,11 @@ export const PublicRoute = () => {
 
   useEffect(() => {
     if (!loading && token) {
-      navigate(-1);
+      if (window.history.length > 2) {
+        navigate(-1);
+      } else {
+        navigate("/", { replace: true });
+      }
     }
   }, [token, navigate, loading]);
   if (loading) {

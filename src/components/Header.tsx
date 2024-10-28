@@ -2,48 +2,69 @@ import { Link } from "react-router-dom";
 import logo from "../assets/images/logo.png";
 import { useAuth } from "../hooks/useAuth";
 import { useEffect, useState } from "react";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { BackendUrl } from "../utils/useEnv";
-
+import { isTokenExpired } from "../utils/axios";
+interface IExp {
+  isExp: boolean;
+}
+interface ErrorResponse {
+  success: boolean;
+  message: string;
+}
 const Header = () => {
   const { token, logOut } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    const checkAdminRole = async () => {
-      if (token) {
-        try {
-          const response = await axios.post(
-            `${BackendUrl}/admin/check-admin`,
-            {},
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
+    const Exp = isTokenExpired(token) as IExp;
+    if (Exp.isExp) {
+      logOut();
+    } else {
+      const checkAdminRole = async () => {
+        if (token) {
+          try {
+            const response = await axios.post(
+              `${BackendUrl}/admin/check-admin`,
+              {},
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              }
+            );
+            setIsAdmin(response.data.success);
+          } catch (err) {
+            const error = err as AxiosError<ErrorResponse>;
+            const data = error.response?.data;
+            if (data && data.message === "Access denied." && !data.success) {
+              setIsAdmin(false);
+              return;
+            } else if (
+              data &&
+              data.message === "Invalid token." &&
+              !data.success
+            ) {
+              logOut();
+            } else if (
+              data &&
+              data.message === "Token expired." &&
+              !data.success
+            ) {
+              logOut();
             }
-          );
-          setIsAdmin(response.data.success);
-        } catch (error: any) {
-          const { data } = error.response;
-          if (data && data.message === "Access denied." && !data.success) {
             setIsAdmin(false);
-            return;
-          } else if (data && data.message === "Invalid token." && !data.success) {
-            logOut();
-          } else if (data && data.message === "Token expired." && !data.success) {
-            logOut();
+          } finally {
+            setIsLoading(false);
           }
-          setIsAdmin(false);
-        } finally {
+        } else {
           setIsLoading(false);
         }
-      } else {
-        setIsLoading(false);
-      }
-    };
+      };
 
-    checkAdminRole();
+      checkAdminRole();
+    }
   }, [token]);
 
   if (isLoading) {
@@ -59,23 +80,38 @@ const Header = () => {
         <nav className="flex items-center space-x-5 font-work-sans text-md">
           {!token ? (
             <>
-              <Link to={"/"} className="text-custom-orange hover:text-custom-orange/70 transition">
+              <Link
+                to={"/"}
+                className="text-custom-orange hover:text-custom-orange/70 transition"
+              >
                 Home
               </Link>
-              <Link to={"/login"} className="text-custom-orange hover:text-custom-orange/70 transition">
+              <Link
+                to={"/login"}
+                className="text-custom-orange hover:text-custom-orange/70 transition"
+              >
                 Login
               </Link>
             </>
           ) : (
             <>
-              <Link to={"/"} className="text-custom-orange hover:text-custom-orange/70 transition">
+              <Link
+                to={"/"}
+                className="text-custom-orange hover:text-custom-orange/70 transition"
+              >
                 Home
               </Link>
-              <Link to={"/sample"} className="text-custom-orange hover:text-custom-orange/70 transition">
+              <Link
+                to={"/sample"}
+                className="text-custom-orange hover:text-custom-orange/70 transition"
+              >
                 Sample
               </Link>
               {isAdmin && (
-                <Link to={"/admin"} className="text-custom-orange hover:text-custom-orange/70 transition">
+                <Link
+                  to={"/admin"}
+                  className="text-custom-orange hover:text-custom-orange/70 transition"
+                >
                   Admin
                 </Link>
               )}
