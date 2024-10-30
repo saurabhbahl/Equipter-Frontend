@@ -1,10 +1,10 @@
 import { Link, useParams } from "react-router-dom";
-import InputField from "../../components/InputFeild";
+import InputField from "../../components/utils/InputFeild";
 import { useEffect, useState } from "react";
 import { resetPasswordSchema } from "../../types/zodschemas/UserSchemas";
 import axios from "axios";
 import { BackendUrl } from "../../utils/useEnv";
-import LoaderSpinner from "../../components/LoaderSpinner";
+import LoaderSpinner from "../../components/utils/LoaderSpinner";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCheckCircle,
@@ -16,7 +16,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { isTokenExpired } from "../../utils/axios";
 import { useAuth } from "../../hooks/useAuth";
-import Loader from "../../components/Loader";
+import Loader from "../../components/utils/Loader";
 
 interface IResetPassword {
   password: string | null;

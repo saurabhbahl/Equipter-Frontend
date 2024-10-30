@@ -88,7 +88,7 @@ const Dashboard = () => {
     ],
   };
 
-  // Sample data for the charts
+  //  data for the charts
   const salesData = [
     { month: "Jan", sales: 4000, revenue: 2400 },
     { month: "Feb", sales: 3000, revenue: 1398 },
@@ -250,7 +250,7 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="p-8 bg-gray-100 h-full flex flex-col gap-6">
+    <div className="p-6 bg-gray-100 h-full flex flex-col gap-5">
       <Topbar />
       <Stats />
       {/* Charts Section */}

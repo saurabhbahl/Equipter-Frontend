@@ -15,15 +15,15 @@ const Topbar = () => {
     console.log("Data refreshed");
   };
   return (
-    <div className="!sticky !top-0  z-100 flex items-center justify-between bg-white p-4 rounded-lg shadow-lg">
+    <div className="!sticky !top-0  z-100 flex items-center justify-between bg-white p-4 rounded-sm shadow-md">
       <h1 className="text-xl font-bold">Dashboard</h1>
       <div className="flex items-center gap-4">
         <select
           value={timeFrame}
           onChange={handleTimeFrameChange}
-          className="border rounded p-2"
+          className="border rounded p-2 cursor-pointer"
         >
-          <option value="week">Last Week</option>
+          <option  value="week">Last Week</option>
           <option value="month">Last Month</option>
           <option value="6months">Last 6 Months</option>
           <option value="year">Last Year</option>

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import InputField from "../../components/InputFeild";
+import InputField from "../../components/utils/InputFeild";
 import { IUserLogin, userSchema } from "../../types/zodschemas/UserSchemas";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -10,8 +10,8 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { useAuth } from "../../hooks/useAuth";
 import { useNavigate } from "react-router-dom";
-import LoaderSpinner from "../../components/LoaderSpinner";
-import Loader from "../../components/Loader";
+import LoaderSpinner from "../../components/utils/LoaderSpinner";
+import Loader from "../../components/utils/Loader";
 
 interface LoginResponse {
   success: boolean;

@@ -1,10 +1,10 @@
 import { Link } from "react-router-dom";
-import logo from "../assets/images/logo.png";
-import { useAuth } from "../hooks/useAuth";
+import logo from "../../assets/images/logo.png";
+import { useAuth } from "../../hooks/useAuth";
 import { useEffect, useState } from "react";
 import axios, { AxiosError } from "axios";
-import { BackendUrl } from "../utils/useEnv";
-import { isTokenExpired } from "../utils/axios";
+import { BackendUrl } from "../../utils/useEnv";
+import { isTokenExpired } from "../../utils/axios";
 interface IExp {
   isExp: boolean;
 }

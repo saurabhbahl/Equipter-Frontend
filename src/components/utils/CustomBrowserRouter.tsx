@@ -9,21 +9,21 @@ import { PrivateRoute } from "./PrivateRoute";
 import { PublicRoute } from "./PublicRoute";
 import Loader from "./Loader";
 
-const Home = lazy(() => import("../pages/Home"));
-const LoginPage = lazy(() => import("../pages/auth/LoginPage"));
-const ForgetPassword = lazy(() => import("../pages/auth/ForgetPassword"));
-const ResetPassword = lazy(() => import("../pages/auth/ResetPassword"));
-const SamplePage = lazy(() => import("../pages/SamplePage"));
-const NotFound = lazy(() => import("../pages/NotFound"));
-const AdminPage = lazy(() => import("../pages/admin/AdminPage"));
-const Dashboard = lazy(() => import("./admincomponents/Dashboard/Dashboard"));
-const Customers = lazy(() => import("./admincomponents/Customers"));
-const Products = lazy(() => import("./admincomponents/Products/Products"));
+const Home = lazy(() => import("../../pages/Home"));
+const LoginPage = lazy(() => import("../../pages/auth/LoginPage"));
+const ForgetPassword = lazy(() => import("../../pages/auth/ForgetPassword"));
+const ResetPassword = lazy(() => import("../../pages/auth/ResetPassword"));
+const SamplePage = lazy(() => import("../../pages/SamplePage"));
+const NotFound = lazy(() => import("../../pages/NotFound"));
+const AdminPage = lazy(() => import("../../pages/admin/AdminPage"));
+const Dashboard = lazy(() => import("../admincomponents/Dashboard/Dashboard"));
+const Customers = lazy(() => import("../admincomponents/Customers/Customers"));
+const Products = lazy(() => import("../admincomponents/Products/Products"));
 const AddNewProduct = lazy(() =>
-  import("./admincomponents/Products/AddNewProduct")
+  import("../admincomponents/Products/AddNewProduct")
 );
-const Accessories = lazy(() => import("./admincomponents/Accessories"));
-const Orders = lazy(() => import("./admincomponents/Orders"));
+const Accessories = lazy(() => import("../admincomponents/Accessories/Accessories"));
+const Orders = lazy(() => import("../admincomponents/Orders/Orders"));
 
 const router = createBrowserRouter([
   {

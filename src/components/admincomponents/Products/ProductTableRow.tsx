@@ -1,5 +1,5 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faTrashAlt, faEdit } from "@fortawesome/free-solid-svg-icons";
+import { faTrashAlt, faEdit, faEye } from "@fortawesome/free-solid-svg-icons";
 import TableRow from "../../Table/TableRow";
 
 const ProductTableRow = ({ product }: { product: any }) => {
@@ -8,10 +8,9 @@ const ProductTableRow = ({ product }: { product: any }) => {
       <img
         src={product.image}
         alt={product.name}
-        className="w-16 h-16 object-cover"
-      />
+        className="w-12 h-12 mx-auto object-cover"/>
     ) : (
-      <div className="w-16 h-16 bg-gray-200 flex items-center justify-center">
+      <div className="w-12 h-12 mx-auto bg-gray-200 flex items-center justify-center">
         No Image
       </div>
     ),
@@ -29,11 +28,18 @@ const ProductTableRow = ({ product }: { product: any }) => {
 
   const actions = [
     {
+      icon: <FontAwesomeIcon icon={faEye} />,
+      title: "View Product",
+      className: "hover:text-blue-500",
+    },
+    {
       icon: <FontAwesomeIcon icon={faEdit} />,
+      title: "Edit Product",
       className: "hover:text-blue-500",
     },
     {
       icon: <FontAwesomeIcon icon={faTrashAlt} />,
+      title: "Delete Product",
       className: "hover:text-red-500",
     },
   ];

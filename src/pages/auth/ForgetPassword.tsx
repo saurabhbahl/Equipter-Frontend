@@ -1,16 +1,16 @@
-import InputField from "../../components/InputFeild";
+import InputField from "../../components/utils/InputFeild";
 import { useState } from "react";
 import { forgetPasswordSchema } from "../../types/zodschemas/UserSchemas";
 import axios, { AxiosError } from "axios";
 import { BackendUrl } from "../../utils/useEnv";
-import LoaderSpinner from "../../components/LoaderSpinner";
+import LoaderSpinner from "../../components/utils/LoaderSpinner";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCheckCircle,
   faEnvelopeCircleCheck,
   faTimesCircle,
 } from "@fortawesome/free-solid-svg-icons";
-import Loader from "../../components/Loader";
+import Loader from "../../components/utils/Loader";
 import { useAuth } from "../../hooks/useAuth";
 
 interface IForgetPassword {

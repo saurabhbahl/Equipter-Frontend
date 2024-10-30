@@ -1,6 +1,6 @@
-import ErrorBoundary from "./components/ErrorBoundary";
-import Header from "./components/Header";
-import Router from "./components/Router";
+import ErrorBoundary from "./components/utils/ErrorBoundary";
+import Header from "./components/utils/Header";
+import Router from "./components/utils/Router";
 
 export default function App() {
   return (

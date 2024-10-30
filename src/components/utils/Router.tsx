@@ -1,31 +1,31 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { Suspense, lazy } from "react";
 
-import { PrivateRoute } from "../components/PrivateRoute";
-import { PublicRoute } from "../components/PublicRoute";
-import Loader from "../components/Loader";
-import Dashboard from "./admincomponents/Dashboard/Dashboard";
+import { PrivateRoute } from "./PrivateRoute";
+import { PublicRoute } from "./PublicRoute";
+import Loader from "./Loader";
+import Dashboard from "../admincomponents/Dashboard/Dashboard";
 
-const Home = lazy(() => import("../pages/Home"));
-const LoginPage = lazy(() => import("../pages/auth/LoginPage"));
-const ForgetPassword = lazy(() => import("../pages/auth/ForgetPassword"));
-const ResetPassword = lazy(() => import("../pages/auth/ResetPassword"));
-const SamplePage = lazy(() => import("../pages/SamplePage"));
-const NotFound = lazy(() => import("../pages/NotFound"));
-const AdminPage = lazy(() => import("../pages/admin/AdminPage"));
+const Home = lazy(() => import("../../pages/Home"));
+const LoginPage = lazy(() => import("../../pages/auth/LoginPage"));
+const ForgetPassword = lazy(() => import("../../pages/auth/ForgetPassword"));
+const ResetPassword = lazy(() => import("../../pages/auth/ResetPassword"));
+const SamplePage = lazy(() => import("../../pages/SamplePage"));
+const NotFound = lazy(() => import("../../pages/NotFound"));
+const AdminPage = lazy(() => import("../../pages/admin/AdminPage"));
 // const Dashboard = React.lazy(() => import('./components/admincomponents/Dashboard/Dashboard'));
 
-const Customers = lazy(() => import("../components/admincomponents/Customers"));
+const Customers = lazy(() => import("../admincomponents/Customers/Customers"));
 const Products = lazy(() =>
-  import("../components/admincomponents/Products/Products")
+  import("../admincomponents/Products/Products")
 );
 const AddNewProduct = lazy(() =>
-  import("../components/admincomponents/Products/AddNewProduct")
+  import("../admincomponents/Products/AddNewProduct")
 );
 const Accessories = lazy(() =>
-  import("../components/admincomponents/Accessories")
+  import("../admincomponents/Accessories/Accessories")
 );
-const Orders = lazy(() => import("../components/admincomponents/Orders"));
+const Orders = lazy(() => import("../admincomponents/Orders/Orders"));
 
 export default function Router() {
   return (
