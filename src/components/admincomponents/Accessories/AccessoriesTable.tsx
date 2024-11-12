@@ -1,61 +1,61 @@
+import { useEffect, useState } from "react";
 import AccessoriesTableRow from "./AccessoriesTableRow";
+import { SfAccessToken } from "../../../utils/useEnv";
+import LoaderSpinner from "../../utils/LoaderSpinner";
 
 const AccessoriesTable = () => {
-  const accessories = [
-    {
-      name: "Wireless Headphones",
-      category: "Audio",
-      price: "$99.99",
-      stockStatus: "In Stock",
+  const [accessories, setAccesories] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null); 
+  const fetchProducts = async () => {
+    try {
+      const response = await fetch(
+        "/api/services/data/v52.0/query/?q=SELECT+Id,+Name,+CreatedById,+Description__c,+LastModifiedById,+OwnerId,+Price__c,+Quantity__c+FROM+Accessory__c",
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${SfAccessToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
-      image:
-        "https://images.pexels.com/photos/3387138/pexels-photo-3387138.jpeg",
-    },
-    {
-      name: "Smart Watch",
-      category: "Wearable",
-      price: "$199.99",
-      stockStatus: "Low Stock",
+      if (!response.ok) {
+        throw new Error(`Error fetching products: ${response.statusText}`);
+      }
 
-      image: "https://images.pexels.com/photos/338727/pexels-photo-338727.jpeg",
-    },
-    {
-      name: "Bluetooth Speaker",
-      category: "Audio",
-      price: "$49.99",
-      stockStatus: "Out of Stock",
-    },
-    {
-      name: "Phone Case",
-      category: "Mobile",
-      price: "$15.99",
-      stockStatus: "In Stock",
-      image: "https://images.pexels.com/photos/351186/pexels-photo-351186.jpeg",
-    },
-    {
-      name: "Fitness Tracker",
-      category: "Wearable",
-      price: "$79.99",
-      stockStatus: "In Stock",
-      image: "https://images.pexels.com/photos/92904/pexels-photo-92904.jpeg",
-    },
-  ];
+      const data = await response.json();
+console.log(data)
+      setAccesories(data.records);
+    } catch (error:any) {
+      setError(error.message );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+  if (loading) return <div className="w-full h-96 my-10 text-center mx-auto flex justify-center items-center "><LoaderSpinner classes="w-[2rem] h-[2rem]"/></div>;
+  if (error) return <div>Error: {error}</div>;
 
   return (
     <div className="overflow-auto shadow-lg rounded-lg">
       <table className="w-full mx-auto   bg-white">
         <thead>
           <tr className="border-b border-gray-200 text-center">
+            <th className="px-6 py-4 font-semibold text-gray-500">Sr.No.</th>
             <th className="px-6 py-4 font-semibold text-gray-500">Image</th>
             <th className="px-6 py-4 font-semibold text-gray-500">Name</th>
-            <th className="px-6 py-4 font-semibold text-gray-500">Category</th>
-            <th className="px-6 py-4 font-semibold text-gray-500">Price</th>
+              <th className="px-6 py-4 font-semibold text-gray-500">Price</th>
             <th className="px-6 py-4 font-semibold text-gray-500">Stock</th>
+            {/* <th className="px-6 py-4 font-semibold text-gray-500">Actions</th> */}
           </tr>
         </thead>
         <tbody>
           {accessories.map((accessory, index) => (
-            <AccessoriesTableRow key={index} accessory={accessory} />
+            <AccessoriesTableRow key={index} accessory={accessory} id={index+1} />
           ))}
         </tbody>
       </table>

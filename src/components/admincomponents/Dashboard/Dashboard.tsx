@@ -13,6 +13,7 @@ import {
 import { CanvasRenderer } from "echarts/renderers";
 import Topbar from "./Topbar";
 import Stats from "./Stats";
+import Map from "./Map";
 
 echarts.use([
   TitleComponent,
@@ -31,63 +32,6 @@ echarts.use([
 echarts.registerMap("USA", usaJson as any);
 
 const Dashboard = () => {
-  const stateOrderData = [
-    { name: "California", value: 1000 },
-    { name: "Texas", value: 750 },
-    { name: "New York", value: 500 },
-    { name: "Florida", value: 450 },
-    { name: "Illinois", value: 300 },
-    { name: "Ohio", value: 250 },
-    { name: "Michigan", value: 200 },
-    { name: "Pennsylvania", value: 150 },
-    { name: "Georgia", value: 100 },
-    { name: "North Carolina", value: 90 },
-  ];
-
-  const highestOrderState = stateOrderData.reduce((prev, current) => {
-    return current.value > prev.value ? current : prev;
-  });
-
-  const usaMapOptions = {
-    title: {
-      text: "Orders by State",
-      left: "left",
-    },
-    tooltip: {
-      trigger: "item",
-      formatter: (params: any) => {
-        const { name, value } = params.data;
-        const density = value > 0 ? `Orders: ${value}` : "No Orders";
-        return `${name}: ${density}<br/>${highestOrderState.name} has the highest orders: ${highestOrderState.value}`;
-      },
-    },
-    visualMap: {
-      min: 0,
-      max: Math.max(...stateOrderData.map((item) => item.value)),
-      left: "left",
-      top: "bottom",
-      text: ["High", "Low"],
-      inRange: {
-        color: ["#e0f7fa", "#00796b"],
-      },
-      calculable: true,
-    },
-    series: [
-      {
-        name: "Orders",
-        type: "map",
-        map: "USA",
-        roam: true,
-        emphasis: {
-          label: {
-            show: true,
-          },
-        },
-        data: stateOrderData,
-      },
-    ],
-  };
-
   //  data for the charts
   const salesData = [
     { month: "Jan", sales: 4000, revenue: 2400 },
@@ -289,17 +233,13 @@ const Dashboard = () => {
           />
         </div>
 
-        {/* USA Map for Orders */}
+        {/* USA Map Sorted */}
         <div className="bg-white p-6 shadow-lg w-[65%]">
-          <ReactEChartsCore
-            echarts={echarts}
-            option={usaMapOptions}
-            style={{ height: "400px", width: "100%" }}
-          />
+          <Map />
         </div>
       </div>
 
-      {/* Additional Sales by Product Over Years Bar Chart */}
+      {/*  Sales by Product  */}
       <div className="bg-white p-6 w-full shadow-lg">
         <ReactEChartsCore
           echarts={echarts}

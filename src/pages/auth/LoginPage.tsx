@@ -14,19 +14,17 @@ import LoaderSpinner from "../../components/utils/LoaderSpinner";
 import Loader from "../../components/utils/Loader";
 
 interface LoginResponse {
-  success: boolean;
+  success: boolean;             
   message: string;
 }
 
 const LoginPage = () => {
+  const nav = useNavigate();
+  const { loginAction, token: storedToken } = useAuth();
   const [formData, setFormData] = useState<IUserLogin>({
     email: "",
     password: "",
   });
-
-  const nav = useNavigate();
-  const { loginAction, token: storedToken } = useAuth();
-
   const [errors, setErrors] = useState<IUserLogin>({
     email: null,
     password: null,
@@ -85,6 +83,7 @@ const LoginPage = () => {
   const togglePasswordVisibility = () => {
     setShowPassword((prevState) => !prevState);
   };
+
   if (storedToken) {
     return <Loader />;
   }

@@ -5,13 +5,16 @@ import { BrowserRouter } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext.tsx";
 // import { Toaster } from "react-hot-toast";
 import { AdminContextProvider } from "./contexts/AdminContext.tsx";
+import NotificationProvider from "./contexts/NotificationContext.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <BrowserRouter>
     <AuthProvider>
-      <AdminContextProvider>
-        <App />
-      </AdminContextProvider>
+      <NotificationProvider>
+        <AdminContextProvider>
+          <App />
+        </AdminContextProvider>
+      </NotificationProvider>
     </AuthProvider>
   </BrowserRouter>
 );

@@ -13,8 +13,7 @@ const Products = () => {
         <button
           className="btn-yellow text-sm !p-2"
           onClick={() => {
-            nav("/admin/products/new");
-          }}
+            nav("/admin/products/new");}}
         >
           Add New Product
         </button>

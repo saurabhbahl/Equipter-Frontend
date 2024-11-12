@@ -1,7 +1,7 @@
-const LoaderSpinner = () => {
+const LoaderSpinner = ({classes}:{classes?:string}) => {
   return (
     <svg
-      className="animate-spin h-5 w-5 text-white mr-2"
+      className={`animate-spin h-5 w-5 text-custom-orange mr-2 ${classes}`}
       xmlns="http://www.w3.org/2000/svg"
       fill="none"
       viewBox="0 0 24 24"

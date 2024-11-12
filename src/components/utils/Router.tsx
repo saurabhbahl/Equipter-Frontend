@@ -5,6 +5,7 @@ import { PrivateRoute } from "./PrivateRoute";
 import { PublicRoute } from "./PublicRoute";
 import Loader from "./Loader";
 import Dashboard from "../admincomponents/Dashboard/Dashboard";
+import AddNewAccessory from "../admincomponents/Accessories/AddNewAccessory";
 
 const Home = lazy(() => import("../../pages/Home"));
 const LoginPage = lazy(() => import("../../pages/auth/LoginPage"));
@@ -45,15 +46,20 @@ export default function Router() {
             <Route path="/admin" element={<AdminPage />}>
               <Route
                 index
-                element={<Navigate to="/admin/dashboard" replace />}
-              />
+                element={<Navigate to="/admin/dashboard" replace />}/>
               <Route path="dashboard" element={<Dashboard />} />
               <Route path="customers" element={<Customers />} />
+              
               {/* products */}
               <Route path="products" element={<Products />} />
               <Route path="products/new" element={<AddNewProduct />} />
 
+              {/* accessories */}
               <Route path="accessories" element={<Accessories />} />
+              <Route path="accessories/new" element={<AddNewAccessory />} />
+
+
+
               <Route path="orders" element={<Orders />} />
             </Route>
           </Route>
