@@ -10,7 +10,7 @@ import {
   faChevronCircleRight,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useAdminContext } from "../../hooks/useAdminContext";
+import { useAdminContext } from "../../../hooks/useAdminContext";
 
 const Sidebar = () => {
   const { toggleSidebar, isSidebarCollapsed } = useAdminContext();

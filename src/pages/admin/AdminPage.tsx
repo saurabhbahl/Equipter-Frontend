@@ -5,7 +5,7 @@
 // import { productSchema } from "../../types/zodschemas/ProductSchema";
 // import { apiClient } from "../../utils/axios";
 
-import Sidebar from "../../components/admincomponents/Sidebar";
+import Sidebar from "../../components/admincomponents/rootComponents/Sidebar";
 
 // interface ProductRecord {
 //   Id: string;

@@ -1,7 +1,6 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import ReactDOM from "react-dom";
 import {
-  faArrowLeft,
   faTimes,
   faStar,
   faTrash,
@@ -11,9 +10,9 @@ import { useNavigate } from "react-router-dom";
 import { useState, ChangeEvent, useRef, FormEvent, useEffect } from "react";
 import InputField from "../../utils/InputFeild";
 import { AccessoriesSchema, IAccessories } from "./AccessoriesSchema";
-
 import { useNotification } from "../../../contexts/NotificationContext";
 import { SfAccessToken } from "../../../utils/useEnv";
+import HeadingBar from "../rootComponents/HeadingBar";
 
 const AddNewAccessory = () => {
   const nav = useNavigate();
@@ -34,7 +33,6 @@ const AddNewAccessory = () => {
   //   type: "error" | "info";
   //   message: string;
   // } | null>(null);
-
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [images, setImages] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
@@ -43,6 +41,7 @@ const AddNewAccessory = () => {
     url: string;
     index: number;
   } | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
 
   const handleInputChange = (
     e: ChangeEvent<HTMLInputElement> | ChangeEvent<HTMLTextAreaElement>
@@ -143,9 +142,9 @@ const AddNewAccessory = () => {
       });
       setErrors(newErrors);
       addNotification("error", "test");
-return;
+      return;
     }
-  
+
     const token = SfAccessToken;
     try {
       const response = await fetch(
@@ -172,14 +171,14 @@ return;
         throw new Error(
           `HTTP error! status: ${response.status}, message: ${errorText}`
         );
-        return
+        return;
       }
 
       const data = await response.json();
       console.log("Product created successfully:", data);
       addNotification("success", "Accessory added successfully");
       nav("/admin/accessories");
-    } catch (error:any) {
+    } catch (error) {
       console.error("Error creating product:", error);
       addNotification("error", error.message);
     }
@@ -187,7 +186,7 @@ return;
   // const handleClosePortal = () => {
   //   setServerResponse(null);
   // };
-  const [showPreview, setShowPreview] = useState(false);
+ 
 
   useEffect(() => {
     if (previewImage) {
@@ -199,34 +198,7 @@ return;
 
   return (
     <div className="bg-[#F6F8FF] min-h-screen">
-      {/* {serverResponse && (
-        <Notification
-        type={serverResponse.type}
-        isOpen={!!serverResponse}
-        onClose={handleClosePortal}
-        message={serverResponse.message}
-        />
-      )} */}
-      <section className="bg-custom-cream w-full p-4">
-        <div className="flex gap-3">
-          <div className="py-1">
-            <button
-              onClick={() => nav("/admin/accessories")}
-              className="flex border border-black text-black items-center hover:bg-gray-200"
-            >
-              <FontAwesomeIcon
-                icon={faArrowLeft}
-                className="m-3 font-bold text-xl"
-              />
-            </button>
-          </div>
-          <div>
-            <p className="text-sm font-sans">Back To List</p>
-            <p className="font-bold text-xl mt-0.5">Add New Accessory</p>
-          </div>
-        </div>
-      </section>
-
+      <HeadingBar buttonLink="/admin/accessories" heading="Add New Accessory" />
       <div className="flex w-[90%] gap-6 mx-auto my-10">
         {/* Details section */}
         <div className="flex-1 bg-white p-5 shadow-md rounded-sm h-fit">
@@ -238,29 +210,29 @@ return;
               type="text"
               placeholder="Name"
               name="name"
-              value={formValues.name}
+              value={formValues.Name}
               onChange={handleInputChange}
               classes="!w-full"
               label="Name"
-              error={errors.name as string}
+              error={errors.Name as string}
             />
             <div className="mb-3">
               <label htmlFor="desc" className="font-medium text-custom-gray ">
                 Description
               </label>
               <textarea
-                value={formValues.description}
+                value={formValues.Description__c}
                 name="description"
                 onChange={handleInputChange}
                 className={`mt-1 font-arial block w-full text-xs p-2 border border-inset h-[111px] border-custom-gray-200 outline-none py-2 px-3 ${
-                  errors.description
+                  errors.Description__c
                     ? "border-red-500"
                     : "border-custom-gray-200"
                 } `}
                 placeholder="Description"
               />
               <span className="text-red-500 h-6 text-[10px] font-bold">
-                {errors.description}
+                {errors.Description__c}
               </span>
             </div>
             <InputField
@@ -268,9 +240,9 @@ return;
               type="number"
               placeholder="Price"
               name="price"
-              value={formValues.price}
+              value={formValues.Price__c as string}
               onChange={handleInputChange}
-              error={errors.price as string}
+              error={errors.Price__c as string}
               classes="!w-full "
               label="Price"
             />
@@ -279,10 +251,10 @@ return;
               type="number"
               placeholder="Quantity"
               name="quantity"
-              value={formValues.quantity}
+              value={formValues.Quantity__c as string}
               onChange={handleInputChange}
               classes="!w-full"
-              error={errors.quantity as string}
+              error={errors.Quantity__c as string}
               label="Quantity"
             />
             <div className="flex justify-end space-x-4 ">
@@ -304,9 +276,7 @@ return;
           className={`bg-white p-5 shadow-md flex-1 rounded-sm space-y-3 ${
             images.length >= 3
               ? "h-[588px] overflow-y-scroll scrollbar-custom"
-              : "h-fi"
-          }`}
-        >
+              : "h-fi"}`}>
           <p className="font-roboto text-lg font-bold">Upload Images</p>
           <hr className="my-3 border-1 border-gray-400" />
           {featuredImage && (
@@ -323,6 +293,7 @@ return;
           )}
 
           <p className="font-medium">Accessory Images:</p>
+          {/* upload input */}
           <label
             className={`relative block w-full border border-dashed border-gray-400 p-2 rounded-md cursor-pointer ${
               isUploading ? "animate-pulse duration-500" : ""
@@ -336,11 +307,10 @@ return;
               className="hidden"
             />
             <p className="text-center text-gray-500">
-              {isUploading
-                ? "Uploading images..."
-                : "Click to upload images or drag them here"}
+              {isUploading ? "Uploading images..." : "Click to upload images"}
             </p>
           </label>
+          {/* all images */}
           <div className="flex justify-start flex-wrap gap-5 mt-5">
             {images.map((image, index) => (
               <div
@@ -368,14 +338,13 @@ return;
                   onClick={(e) => {
                     e.stopPropagation();
                     openImagePreview(URL.createObjectURL(image), index);
-                  }}
-                >
+                  }}>
                   <FontAwesomeIcon icon={faExpand} />
                 </button>
               </div>
             ))}
           </div>
-
+          {/* full screen */}
           {previewImage &&
             ReactDOM.createPortal(
               <div

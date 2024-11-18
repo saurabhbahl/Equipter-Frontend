@@ -1,7 +1,7 @@
 import { useContext } from "react";
-import { AdminContext } from "../contexts/AdminContext";
+import { AdminContext, IAdminContext } from "../contexts/AdminContext";
 
-export const useAdminContext = () => {
+export const useAdminContext = ():IAdminContext => {
   const context = useContext(AdminContext);
   if (!context) {
     throw new Error("useAuth must be used within an AuthProvider");

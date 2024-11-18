@@ -2,25 +2,28 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrashAlt, faEdit, faEye } from "@fortawesome/free-solid-svg-icons";
 import TableRow from "../../Table/TableRow";
+import { useNavigate } from "react-router-dom";
 
 const ProductTableRow = ({ product,no }: { product: any,no:number }) => {
+  const nav=useNavigate()
   const columns = [
     no+1,
-    product.Product_Images__c ? (
-      <img
-        src="http://example.com/images/super_widget.jpg" 
-        alt={product.Name}
-        className="w-12 h-12 mx-auto object-cover"
-      />
-    ) : (
-      <div className="w-12 h-12 mx-auto bg-gray-200 flex items-center justify-center">
-        No Image
-      </div>
-    ),
+    // product.Product_Images__c ? (
+    //   <img
+    //     src="http://example.com/images/super_widget.jpg" 
+    //     alt={product.Name}
+    //     className="w-12 h-12 mx-auto object-cover"
+    //   />
+    // ) : (
+    //   <div className="w-12 h-12 mx-auto bg-gray-200 flex items-center justify-center">
+    //     No Image
+    //   </div>
+    // ),
     product.Name,
     // "Electronics", 
     `$${product.Product_Price__c}`,
-    `$${product.Down_Payment_Cost__c}`,
+    product.GVWR__c,
+    // `$${product.Down_Payment_Cost__c}`,
 
     // <span
     //   className={`px-3 py-1 text-sm font-semibold rounded-full ${
@@ -35,6 +38,7 @@ const ProductTableRow = ({ product,no }: { product: any,no:number }) => {
     {
       icon: <FontAwesomeIcon icon={faEye} />,
       title: "View Product",
+      onClick:()=>nav(`/admin/products/view/${product.Id}`),
       className: "hover:text-blue-500",
     },
     {

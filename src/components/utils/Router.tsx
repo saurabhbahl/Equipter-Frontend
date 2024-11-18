@@ -14,12 +14,13 @@ const ResetPassword = lazy(() => import("../../pages/auth/ResetPassword"));
 const SamplePage = lazy(() => import("../../pages/SamplePage"));
 const NotFound = lazy(() => import("../../pages/NotFound"));
 const AdminPage = lazy(() => import("../../pages/admin/AdminPage"));
+const ViewProduct = lazy(() =>
+  import("../admincomponents/Products/ViewProduct")
+);
 // const Dashboard = React.lazy(() => import('./components/admincomponents/Dashboard/Dashboard'));
 
 const Customers = lazy(() => import("../admincomponents/Customers/Customers"));
-const Products = lazy(() =>
-  import("../admincomponents/Products/Products")
-);
+const Products = lazy(() => import("../admincomponents/Products/Products"));
 const AddNewProduct = lazy(() =>
   import("../admincomponents/Products/AddNewProduct")
 );
@@ -46,19 +47,19 @@ export default function Router() {
             <Route path="/admin" element={<AdminPage />}>
               <Route
                 index
-                element={<Navigate to="/admin/dashboard" replace />}/>
+                element={<Navigate to="/admin/dashboard" replace />}
+              />
               <Route path="dashboard" element={<Dashboard />} />
               <Route path="customers" element={<Customers />} />
-              
+
               {/* products */}
               <Route path="products" element={<Products />} />
               <Route path="products/new" element={<AddNewProduct />} />
+              <Route path="products/view/:id" element={<ViewProduct />} />
 
               {/* accessories */}
               <Route path="accessories" element={<Accessories />} />
               <Route path="accessories/new" element={<AddNewAccessory />} />
-
-
 
               <Route path="orders" element={<Orders />} />
             </Route>

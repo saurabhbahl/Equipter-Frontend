@@ -6,7 +6,7 @@ import { BackendUrl } from "../utils/useEnv";
 import { isTokenExpired } from "../utils/axios";
 import { ITokenRes } from "../pages/auth/ResetPassword";
 
-interface AuthContextType {
+export interface AuthContextType {
   token: string | null;
   user: User | null;
   loginAction: (data: any) => any;

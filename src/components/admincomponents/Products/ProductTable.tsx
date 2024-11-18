@@ -48,10 +48,10 @@ const ProductTable = () => {
         <thead>
           <tr className="border-b border-gray-200">
             <th className="px-6 py-4 text-center font-semibold text-custom-gray">Sr.No.</th>
-            <th className="px-6 py-4 text-center font-semibold text-custom-gray">Image</th>
+            {/* <th className="px-6 py-4 text-center font-semibold text-custom-gray">Image</th> */}
             <th className="px-6 py-4 text-center font-semibold text-custom-gray">Product Name</th>
             <th className="px-6 py-4 text-center font-semibold text-custom-gray">Price</th>
-            <th className="px-6 py-4 text-center font-semibold text-custom-gray">DownPayment</th>
+            <th className="px-6 py-4 text-center font-semibold text-custom-gray">GVWR</th>
             {/* <th className="px-6 py-4 text-center font-semibold text-custom-gray">Stock Status</th> */}
             <th className="px-6 py-4 text-center font-semibold text-custom-gray">Actions</th>
           </tr>

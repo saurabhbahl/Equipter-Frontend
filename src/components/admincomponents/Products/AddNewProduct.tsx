@@ -1,282 +1,475 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import ReactDOM from "react-dom";
 import {
-  faArrowLeft,
-  faRemove,
+  faExpand,
+  faStar,
+  faTimes,
+  faTrash,
 } from "@fortawesome/free-solid-svg-icons";
 import { useNavigate } from "react-router-dom";
-import { useState, ChangeEvent, useRef } from "react";
+import { useState, ChangeEvent, useRef, useEffect } from "react";
 import InputField from "../../utils/InputFeild";
-import { SfAccessToken } from "../../../utils/useEnv";
 
-type Accessory = { label: string; price: string };
-type FormValues = {
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import HeadingBar from "../rootComponents/HeadingBar";
+import AccessoriesService from "../Accessories/AccessoriesService";
+import { useAdminContext } from "../../../hooks/useAdminContext";
+import { SfAccessToken } from "../../../utils/useEnv";
+import { ProductSchema } from "./ProductSchema";
+import { useNotification } from "../../../contexts/NotificationContext";
+import LoaderSpinner from "../../utils/LoaderSpinner";
+import Loader from "../../utils/Loader";
+
+const s3 = new S3Client({
+  region: import.meta.env.VITE_AWS_REGION,
+  credentials: {
+    accessKeyId: import.meta.env.VITE_AWS_ACCESS_KEY_ID,
+    secretAccessKey: import.meta.env.VITE_AWS_SECRET_ACCESS_KEY,
+  },
+});
+
+interface InputValues {
   productName: string;
-  subtitle: string;
   price: string;
   gvwr: string;
   liftCapacity: string;
   liftHeight: string;
   container: string;
-  accessories: Accessory[];
-};
+  Down_Payment_Cost__c: string;
+}
 
 const AddNewProduct = () => {
+  const {
+    accessories,
+    error,
+    loading,
+    setLoading,
+    setError,
+    setAccessories,
+  } = useAdminContext();
   const nav = useNavigate();
-
-  const accessories: Accessory[] = [
-    { label: "8' Roof Chute", price: "$165" },
-    { label: "8' Gutter Protector", price: "$154" },
-    { label: "Rear Extension Kit", price: "$489" },
-    { label: "2 x 6 Track Mat", price: "$329" },
-    { label: "18' x 18' Outrigger Pad", price: "$79" },
-    { label: "Tire Sealant Kit", price: "$195" },
-    { label: "Roofing Accessories Package", price: "$995" },
-    { label: "Premium Accessories Package", price: "$2675" },
-  ];
-
-  const [formValues, setFormValues] = useState<FormValues>({
+  const [isResSaving, setIsResSaving] = useState(false);
+  const [errors, setErrors] = useState<InputValues>({
+    productName: "",
+    price: "",
+    gvwr: "",
+    Down_Payment_Cost__c: "",
+    liftCapacity: "",
+    liftHeight: "",
+    container: "",
+  });
+  const [featuredImage, setFeaturedImage] = useState<File | null>(null);
+  const [formValues, setFormValues] = useState<InputValues>({
     productName: "",
     subtitle: "",
     price: "",
     gvwr: "",
     liftCapacity: "",
+    Down_Payment_Cost__c: "",
     liftHeight: "",
     container: "",
-    accessories: [],
   });
-
+  const [previewImage, setPreviewImage] = useState<{
+    url: string;
+    index: number;
+  } | null>(null);
   const [images, setImages] = useState<File[]>([]);
-
-
+  const [showPreview, setShowPreview] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [currentStatus, setCurrentStatus] = useState("");
+  const [imageUploadError, setImageUploadError] = useState(false);
+  const [newAccessories, setNewAccessories] = useState<string[]>([]);
+  const { addNotification } = useNotification();
+
+  const uploadImageToS3 = async (image: File): Promise<string> => {
+    const uploadParams = {
+      Bucket: import.meta.env.VITE_AWS_BUCKET_NAME,
+      Key: `images/products/${Date.now()}-${image.name}`,
+      Body: image,
+      ContentType: image.type,
+    };
+    const command = new PutObjectCommand(uploadParams);
+    const data = await s3.send(command);
+    console.log(data);
+    return `https://${import.meta.env.VITE_AWS_BUCKET_NAME}.s3.${
+      import.meta.env.VITE_AWS_REGION
+    }.amazonaws.com/${uploadParams.Key}`;
+  };
+
+  const saveImageToSalesforce = async (
+    productId: string,
+    imageUrl: string,
+    isFeatured: boolean
+  ) => {
+    try {
+      const imagePayload = {
+        Name: formValues.productName,
+        Product_Id__c: productId,
+        Is_Featured__c: isFeatured,
+        Image_URL__c: imageUrl,
+      };
+      console.log(imagePayload);
+
+      const response = await fetch(
+        "/api/services/data/v52.0/sobjects/Product_Images__c",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${SfAccessToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(imagePayload),
+        }
+      );
+      console.log(response);
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to save image to Salesforce: ${errorText}`);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormValues({ ...formValues, [name]: value });
-  };
-  const timeoutRef = useRef<number | null>(null);
- 
-  const handleAccessoryChange = (
-    e: ChangeEvent<HTMLInputElement>,
-    accessory: Accessory
-  ) => {
-    const isChecked = e.target.checked;
-    setFormValues((prevValues) => {
-      const updatedAccessories = isChecked
-        ? [...prevValues.accessories, accessory]
-        : prevValues.accessories.filter((acc) => acc.label !== accessory.label);
-      return { ...prevValues, accessories: updatedAccessories };
-    });
+    setErrors({ ...errors, [name]: "" });
   };
 
- 
+  const handleAccessoryChange = (accessoryId: string) => {
+    setNewAccessories((prev) =>
+      prev.includes(accessoryId)
+        ? prev.filter((id) => id !== accessoryId)
+        : [...prev, accessoryId]
+    );
+  };
+
   const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
+    setImageUploadError(false);
+    const files = Array.from(e.target.files || []).filter((file) =>
+      file.type.startsWith("image/")
+    );
 
     if (files.length > 0) {
       setIsUploading(true);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
 
-      // Clear previous timeout if it exists
-      if (timeoutRef.current) {
-        console.log("call");
-        clearTimeout(timeoutRef.current);
-      }
-
-      //  image upload 
       timeoutRef.current = setTimeout(() => {
-        setImages((prevImages) => [...prevImages, ...files]);
+        setImages((prevImages) => {
+          const updatedImages = [...prevImages, ...files];
+          if (!featuredImage && updatedImages.length > 0) {
+            setFeaturedImage(updatedImages[0]);
+          }
+          return updatedImages;
+        });
         setIsUploading(false);
       }, 400);
     }
   };
 
-  const removeImage = (index: number) => {
-    setImages((prevImages) => prevImages.filter((_, i) => i !== index));
-  };
-
-  const handleImageClick = (index: number) => {
-    if (index === 0) return;
-    const newImages = [...images];
-    const selectedImage = newImages.splice(index, 1)[0];
-    setImages([selectedImage, ...newImages]);
-  };
-
-  const handleSave = async () => {
-    const productData = {
-      Name: formValues.productName,
-      Product_Price__c: parseFloat(formValues.price),
-      Down_Payment_Cost__c: 30.0,
-      GVWR__c: parseFloat(formValues.gvwr),
-      Lift_Capacity__c: parseFloat(formValues.liftCapacity),
-      Lift_Height__c: parseFloat(formValues.liftHeight),
-      Container__c: formValues.container,
-      Product_Images__c:
-        images.length > 0
-          ? images.map((image) => URL.createObjectURL(image)).join(", ")
-          : "",
-    };
-
-    const token = SfAccessToken;
-    try {
-      const response = await fetch(
-        "/api/services/data/v52.0/sobjects/Product__c/",
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-          body: JSON.stringify(productData),
-        }
-      );
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(
-          `HTTP error! status: ${response.status}, message: ${errorText}`
-        );
-      }
-
-      const data = await response.json();
-      console.log("Product created successfully:", data);
-      nav("/admin/products");
-    } catch (error:any) {
-      console.error("Error creating product:", error);
-      alert("Failed to create product: " + error.message);
+  const setAsFeaturedImage = (index: number) => {
+    if (images[index]) {
+      setFeaturedImage(images[index]);
+      closeImagePreview();
     }
   };
 
+  const removeImage = (index: number) => {
+    setImages((prevImages) => {
+      const updatedImages = prevImages.filter((_, i) => i !== index);
+      if (index === 0 && updatedImages.length > 0) {
+        setFeaturedImage(updatedImages[0]);
+      } else if (updatedImages.length === 0) {
+        setFeaturedImage(null);
+      } else {
+        setFeaturedImage(updatedImages[index - 1]);
+      }
+      return updatedImages;
+    });
+    setPreviewImage(null);
+  };
+
+  const openImagePreview = (image: string, index: number) => {
+    setPreviewImage({ url: image, index });
+    setShowPreview(true);
+  };
+
+  const closeImagePreview = () => {
+    setShowPreview(false);
+    setTimeout(() => setPreviewImage(null), 350);
+  };
+
+  const handleSave = async (e) => {
+    e.preventDefault();
+
+    const result = ProductSchema.safeParse(formValues);
+    console.log(result);
+    if (images.length == 0) {
+      setImageUploadError(true);
+    }
+    if (!result.success) {
+      const newErrors: { [key in keyof InputValues]: string } = {
+        productName: "",
+        price: "",
+        gvwr: "",
+        liftCapacity: "",
+        liftHeight: "",
+        Down_Payment_Cost__c: "",
+        container: "",
+      };
+      result.error.issues.forEach((issue) => {
+        const fieldName = issue.path[0] as keyof InputValues;
+        newErrors[fieldName] = issue.message;
+      });
+      setErrors(newErrors);
+
+      // return;
+    } else {
+      if (images.length == 0) {
+        setImageUploadError(true);
+        return
+      }
+      setIsResSaving(true);
+      setCurrentStatus("Creating product  ")
+
+      const token = SfAccessToken;
+      const productData = {
+        Name: formValues.productName,
+        Product_Price__c: parseFloat(formValues.price),
+        Down_Payment_Cost__c: formValues.Down_Payment_Cost__c,
+        GVWR__c: parseFloat(formValues.gvwr),
+        Lift_Capacity__c: parseFloat(formValues.liftCapacity),
+        Lift_Height__c: parseFloat(formValues.liftHeight),
+        Container__c: formValues.container,
+      };
+      try {
+        // add product
+        const productResponse = await fetch(
+          "/api/services/data/v52.0/sobjects/Product__c/",
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(productData),
+          }
+        );
+        setCurrentStatus("adding product")
+        if (!productResponse.ok) {
+          const errorText = await productResponse.text();
+          throw new Error(`Product creation failed: ${errorText}`);
+        }
+
+        const productDataResponse = await productResponse.json();
+        console.log(productDataResponse);
+        const newProductId = productDataResponse.id;
+
+        // add accessories
+        const accessoryRequests = newAccessories.map((accessoryId) => ({
+          method: "POST",
+          url: "/services/data/v52.0/sobjects/Accessory_Product__c",
+          richInput: {
+            Name: formValues.productName,
+            Accessory_Id__c: accessoryId,
+            Product_Id__c: newProductId,
+          },
+        }));
+        console.log(accessoryRequests);
+
+        const batchRequestData = { batchRequests: accessoryRequests };
+        setCurrentStatus("attaching accessories")
+        const accessoryResponse = await fetch(
+          "/api/services/data/v52.0/composite/batch",
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(batchRequestData),
+          }
+        );
+
+        if (!accessoryResponse.ok) {
+          const errorText = await accessoryResponse.text();
+          throw new Error(`Accessory creation failed: ${errorText}`);
+        }
+        console.log(featuredImage);
+        setCurrentStatus("uploading images")
+        const orderedImages = featuredImage
+          ? [featuredImage, ...images.filter((img) => img !== featuredImage)]
+          : images;
+
+        const imageUrls = [];
+
+        for (const [index, image] of orderedImages.entries()) {
+          console.log(index, image);
+          const imageUrl = await uploadImageToS3(image);
+          console.log(imageUrl);
+          imageUrls.push(imageUrl);
+
+          await saveImageToSalesforce(newProductId, imageUrl, index === 0);
+        }
+        setIsResSaving(false);
+        addNotification("success", "Product Added Successfully");
+
+        nav("/admin/products");
+      } catch (error) {
+        console.error("Error creating product or accessory:", error);
+        setIsResSaving(false);
+        addNotification("error", "Error while creating product");
+      }
+    }
+  };
+
+  const fetchAccessoriesData = async () => {
+    setLoading((prevState) => ({ ...prevState, accessories: true }));
+    try {
+      const accessoriesData = await AccessoriesService.fetchAccessories();
+      setAccessories(accessoriesData);
+    } catch (error) {
+      setError((prev) => ({
+        ...prev,
+        accessories: error.message || "An error occurred",
+      }));
+    } finally {
+      setLoading((prevState) => ({ ...prevState, accessories: false }));
+    }
+  };
+
+  useEffect(() => {
+    if (accessories.length == 0) {
+      fetchAccessoriesData();
+    }
+  }, []);
+
   return (
     <div className="bg-[#F6F8FF] min-h-screen">
-      {/* TopBar */}
-      <section className="bg-custom-cream w-full p-4">
-        <div className="flex gap-3">
-          <div className="py-1">
-            <button
-              onClick={() => nav("/admin/products")}
-              className="flex border border-black text-black items-center hover:bg-gray-200"
-            >
-              <FontAwesomeIcon
-                icon={faArrowLeft}
-                className="m-3 font-bold text-xl"
-              />
-            </button>
-          </div>
-          <div>
-            <p className="text-sm font-sans">Back To List</p>
-            <p className="font-bold text-xl mt-0.5">Add New Product</p>
-          </div>
-        </div>
-      </section>
-
+      <HeadingBar buttonLink="/admin/products" heading="Add New Product" />
       {/* Product Details */}
-      <div className="flex w-[90%] gap-6 mx-auto my-10">
-        {/* General Information */}
-        <div className="flex-1 bg-white p-5 shadow-md rounded-md">
-          <p className="font-roboto text-lg font-bold">General Information</p>
-          <hr className="my-3 border-1 border-gray-400" />
+      <div
+        className={`flex w-[90%] gap-6 mx-auto my-10 ${isResSaving ? "" : ""}`}
+      >
+        {isResSaving && <Loader message={currentStatus} />}
 
-          {/* Product Name */}
-          <p className="font-medium my-3">Product Name</p>
-          <div className="grid my-1 grid-cols-2 gap-2">
+        {/*Details section */}
+        <form
+          onSubmit={handleSave}
+          className="flex-1 bg-white p-5 shadow-md rounded-sm"
+        >
+          <p className="font-roboto text-lg font-bold">General Information</p>
+          <hr className="my-3 border-1 border-gray-900" />
+
+          {/* Product Name and Price,Downpayment cost */}
+          <div className="grid my-1 grid-cols-1 ">
             <InputField
               id="productName"
-              type="text"
+              type="name"
+              label="Product Name"
               placeholder="Enter Product Name"
               name="productName"
               value={formValues.productName}
               onChange={handleInputChange}
+              error={errors.productName}
               classes="!w-full"
             />
             <InputField
-              id="subtitle"
-              type="text"
-              placeholder="Subtitles"
-              name="subtitle"
-              value={formValues.subtitle}
+              id="Down_Payment_Cost__c"
+              type="number"
+              label="Down Payment Cost"
+              placeholder="Down Payment Cost"
+              name="Down_Payment_Cost__c"
+              value={formValues.Down_Payment_Cost__c}
+              error={errors.Down_Payment_Cost__c}
+              onChange={handleInputChange}
+              classes="!w-full "
+            />{" "}
+            {/* Price */}
+            <InputField
+              id="price"
+              label="Price"
+              type="number"
+              placeholder="Enter Price"
+              name="price"
+              value={formValues.price}
+              error={errors.price}
               onChange={handleInputChange}
               classes="!w-full"
             />
           </div>
 
-          {/* Price */}
-          <p className="font-medium my-3">Price</p>
-          <InputField
-            id="price"
-            type="text"
-            placeholder="Enter Price"
-            name="price"
-            value={formValues.price}
-            onChange={handleInputChange}
-            classes="!w-full"
-          />
+          {/* GVWR and Lift Capacity*/}
+          <div className="grid grid-cols-2 gap-2">
+            <InputField
+              id="gvwr"
+              label="GVWR"
+              type="number"
+              placeholder="7,500 Lbs"
+              name="gvwr"
+              value={formValues.gvwr}
+              onChange={handleInputChange}
+              error={errors.gvwr}
+              classes="!w-full"
+            />
 
-          {/* Specifications */}
-          <div className="grid grid-cols-4 gap-4 my-5">
-            <div>
-              <p className="font-medium">GVWR</p>
-              <InputField
-                id="gvwr"
-                type="text"
-                placeholder="7,500 Lbs"
-                name="gvwr"
-                value={formValues.gvwr}
-                onChange={handleInputChange}
-                classes="!w-full"
-              />
-            </div>
-            <div>
-              <p className="font-medium">Lift Capacity</p>
-              <InputField
-                id="liftCapacity"
-                type="text"
-                placeholder="4,000 Lbs"
-                name="liftCapacity"
-                value={formValues.liftCapacity}
-                onChange={handleInputChange}
-                classes="!w-full"
-              />
-            </div>
-            <div>
-              <p className="font-medium">Lift Height</p>
-              <InputField
-                id="liftHeight"
-                type="text"
-                placeholder="12' 0\"
-                name="liftHeight"
-                value={formValues.liftHeight}
-                onChange={handleInputChange}
-                classes="!w-full"
-              />
-            </div>
-            <div>
-              <p className="font-medium">Container</p>
-              <InputField
-                id="container"
-                type="text"
-                placeholder="4.1 Cu Yds"
-                name="container"
-                value={formValues.container}
-                onChange={handleInputChange}
-                classes="!w-full"
-              />
-            </div>
+            <InputField
+              label="Lift Capacity"
+              id="liftCapacity"
+              type="number"
+              placeholder="4,000 Lbs"
+              name="liftCapacity"
+              error={errors.liftCapacity}
+              value={formValues.liftCapacity}
+              onChange={handleInputChange}
+              classes="!w-full"
+            />
+          </div>
+          {/* Lift height and Container */}
+          <div className="grid grid-cols-2 gap-2">
+            <InputField
+              id="liftHeight"
+              label="Lift Height"
+              type="number"
+              placeholder="12' 0\"
+              name="liftHeight"
+              error={errors.liftHeight}
+              value={formValues.liftHeight}
+              onChange={handleInputChange}
+              classes="!w-full"
+            />
+
+            <InputField
+              label="Container"
+              id="container"
+              type="number"
+              placeholder="4.1 Cu Yds"
+              name="container"
+              error={errors.container}
+              value={formValues.container}
+              onChange={handleInputChange}
+              classes="!w-full"
+            />
           </div>
 
           {/* Accessories Section */}
-          <p className="font-medium my-3">Accessories</p>
+          <hr className="my-3 border-1 border-gray-900" />
+          <p className="font-medium text-xl my-3">Accessories</p>
           <div className="grid grid-cols-2 gap-2 my-3">
-            {accessories.map((accessory, index) => (
+            {accessories?.map((accessory, index) => (
               <label key={index} className="flex items-center space-x-2">
                 <input
                   type="checkbox"
                   className="h-4 w-4"
-                  onChange={(e) => handleAccessoryChange(e, accessory)}
+                  onChange={() => handleAccessoryChange(accessory.Id)}
                 />
-                <span>
-                  {accessory.label} -{" "}
-                  <span className="text-gray-600">{accessory.price}</span>
+                <span className="capitalize">
+                  {accessory?.Name} -{" "}
+                  <span className="text-gray-600 font-bold">
+                    ${accessory?.Price__c}
+                  </span>
                 </span>
               </label>
             ))}
@@ -291,96 +484,138 @@ const AddNewProduct = () => {
               Cancel
             </button>
             <button
-              className="btn-yellow hover:bg-yellow-600"
-              onClick={handleSave}
+              className={`btn-yellow  ${
+                isResSaving ? "bg-custom-orange/40" : ""
+              }`}
+              type="submit"
+              // onClick={handleSave}
             >
-              Save
+              {isResSaving ? <LoaderSpinner /> : "Save"}
             </button>
           </div>
-        </div>
+        </form>
 
-        {/* Image Upload Section */}
+        {/* Image section */}
         <div
-          className={`bg-white p-5 shadow-md flex-1 space-y-4 ${
-            images.length >= 5
-              ? "h-[617px] overflow-y-scroll scrollbar-custom"
-              : ""
+          className={`bg-white p-5 shadow-md flex-1 rounded-sm space-y-3 ${
+            images.length >= 3
+              ? "h-[704px] overflow-y-scroll scrollbar-custom"
+              : "h-"
           }`}
         >
-          {/* <div className="flex-1 bg-white p-5 shadow-md rounded-md"> */}
-          <p className="font-roboto text-lg font-bold">Image Upload</p>
+          <p className="font-roboto text-lg font-bold">Upload Images</p>
           <hr className="my-3 border-1 border-gray-400" />
-          {images[0] ? (
-            <div className="relative w-full h-[258px]">
-              <img
-                src={URL.createObjectURL(images[0])}
-                className="w-full h-full object-cover rounded-md"
-                alt={`Uploaded ${images[0]}`}
-              />
-              <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 opacity-0 hover:opacity-100 transition-opacity">
-                <button
-                  className="bg-red-500 text-white px-4 py-1 rounded"
-                  onClick={() => removeImage(0)}
-                >
-                  Remove
-                </button>
+          {featuredImage && (
+            <>
+              <p className="font-roboto text-md font-medium">Featured Image:</p>
+              <div className="relative w-full h-[258px]">
+                <img
+                  src={URL.createObjectURL(featuredImage)}
+                  className="w-full h-full object-cover rounded-md"
+                  alt="Featured"
+                />
               </div>
-            </div>
-          ) : (
-            <p>No image uploaded yet.</p>
+            </>
           )}
 
-          {/* Image Upload Input */}
-          <div className="mt-5">
-            <label
-              className={`relative block w-full border border-dashed border-gray-400 p-2 rounded-md cursor-pointer ${
-                isUploading ? "animate-pulse duration-500" : ""
-              }`}
-            >
-              <input
-                type="file"
-                accept="image/*"
-                multiple
-                onChange={handleImageUpload}
-                className="hidden"
-              />
-              <p className="text-center text-gray-500">
-                {isUploading
-                  ? "Uploading images..."
-                  : "Click to upload images or drag them here"}
-              </p>
-            </label>
-
-            {/* Uploaded Images */}
-            <div className="mt-5 ">
-              <p className="font-medium">Uploaded Images:</p>
-              <div className="flex w-full mx-auto  flex-wrap gap-[18px] mt-2">
-                {images.map((image, index) => (
-                  <div
-                    key={index}
-                    className="relative group cursor-pointer"
-                    onClick={() => handleImageClick(index)}
-                  >
+          <p className="font-medium">Product Images:</p>
+          {/* upload input */}
+          <label
+            className={`relative block w-full border border-dashed border-gray-400 p-2 rounded-md cursor-pointer ${
+              isUploading ? "animate-pulse duration-500" : ""
+            } ${imageUploadError ? "border-red-500 border-1" : ""}`}
+          >
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={handleImageUpload}
+              className="hidden"
+            />
+            <p className={`text-center text-gray-500 `}>
+              {isUploading ? "Uploading images..." : "Click to upload images"}
+            </p>
+          </label>
+          {imageUploadError && (
+            <p className="text-[11px] font-semibold text-red-500">
+              Minimum one product Image is required
+            </p>
+          )}
+          {/* all images */}
+          <div className="flex justify-start flex-wrap gap-5 mt-5">
+            {images.map((image, index) => (
+              <div
+                key={index}
+                className="relative w-[150px] h-[150px] border border-gray-300 rounded-md overflow-hidden cursor-pointer"
+              >
+                <img
+                  src={URL.createObjectURL(image)}
+                  alt="Product"
+                  className="w-full h-full object-cover"
+                />
+                <button
+                  className="absolute top-2 right-2 bg-red-60 text-red-600 text-md hover:scale-125 duration-100 ease-linear rounded-full px1"
+                  title="Delete"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    removeImage(index);
+                  }}
+                >
+                  <FontAwesomeIcon icon={faTrash} />
+                </button>
+                <button
+                  className="absolute top-2 right-8  bg-red-60 text-green-600 text-md hover:scale-125 duration-100 ease-linear rounded-full px1"
+                  title="Preview"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openImagePreview(URL.createObjectURL(image), index);
+                  }}
+                >
+                  <FontAwesomeIcon icon={faExpand} />
+                </button>
+              </div>
+            ))}
+          </div>
+          {/* full screen */}
+          {previewImage &&
+            ReactDOM.createPortal(
+              <div
+                className={`fixed inset-0 h-full p-5 bg-black bg-opacity-40 flex items-center justify-center transition-all duration-500 ${
+                  showPreview ? "opacity-100" : "opacity-0 pointer-events-none"
+                }`}
+              >
+                <div className="h-[90%]">
+                  <div className="max-w-[90%] min-h-[90%] object-cove mx-auto max-h-[90%]  h-[90%]">
                     <img
-                      src={URL.createObjectURL(image)}
-                      alt={`upload-preview-${index}`}
-                      className="w-[120px] h-[120px] object-cover rounded-md"
+                      src={previewImage.url}
+                      alt="Preview"
+                      className="w-full h-full object-contain"
                     />
+                  </div>
+                  <div className="flex justify-center gap-5 mt-4">
                     <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        removeImage(index);
-                      }}
-                      className="absolute top-0 right-0 bg-red-500 text-white rounded-full px-1 py-[1px] opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="bg-red-600 text-white px-4 py-2 rounded-md"
+                      onClick={closeImagePreview}
                     >
-                      {/* &times; */}
-                      <FontAwesomeIcon icon={faRemove} />
+                      <FontAwesomeIcon icon={faTimes} /> Close
+                    </button>
+                    <button
+                      className="bg-yellow-600 text-white px-4 py-2 rounded-md"
+                      onClick={() => setAsFeaturedImage(previewImage.index)}
+                    >
+                      <FontAwesomeIcon icon={faStar} /> Make Feature Image
+                    </button>
+                    <button
+                      className="bg-gray-600 text-white px-4 py-2 rounded-md"
+                      onClick={() => removeImage(previewImage.index)}
+                    >
+                      <FontAwesomeIcon icon={faTrash} /> Delete
                     </button>
                   </div>
-                ))}
-              </div>
-            </div>
-          </div>
+                </div>
+              </div>,
+              document.body
+            )}
         </div>
       </div>
     </div>
