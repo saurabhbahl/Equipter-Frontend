@@ -6,6 +6,7 @@ import { PublicRoute } from "./PublicRoute";
 import Loader from "./Loader";
 import Dashboard from "../admincomponents/Dashboard/Dashboard";
 import AddNewAccessory from "../admincomponents/Accessories/AddNewAccessory";
+import EditProduct from "../admincomponents/Products/EditProduct";
 
 const Home = lazy(() => import("../../pages/Home"));
 const LoginPage = lazy(() => import("../../pages/auth/LoginPage"));
@@ -56,6 +57,7 @@ export default function Router() {
               <Route path="products" element={<Products />} />
               <Route path="products/new" element={<AddNewProduct />} />
               <Route path="products/view/:id" element={<ViewProduct />} />
+              <Route path="products/edit/:id" element={<EditProduct />} />
 
               {/* accessories */}
               <Route path="accessories" element={<Accessories />} />

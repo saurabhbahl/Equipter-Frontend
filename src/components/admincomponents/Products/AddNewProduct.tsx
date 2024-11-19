@@ -351,8 +351,7 @@ const AddNewProduct = () => {
       <HeadingBar buttonLink="/admin/products" heading="Add New Product" />
       {/* Product Details */}
       <div
-        className={`flex w-[90%] gap-6 mx-auto my-10 ${isResSaving ? "" : ""}`}
-      >
+        className={`flex w-[90%] gap-6 mx-auto my-10 ${isResSaving ? "" : ""}`}>
         {isResSaving && <Loader message={currentStatus} />}
 
         {/*Details section */}

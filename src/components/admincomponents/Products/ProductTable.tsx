@@ -8,6 +8,9 @@ const ProductTable = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null); 
 
+  
+
+
   const fetchProducts = async () => {
     try {
       const response = await fetch(
@@ -52,7 +55,7 @@ const ProductTable = () => {
             <th className="px-6 py-4 text-center font-semibold text-custom-gray">Product Name</th>
             <th className="px-6 py-4 text-center font-semibold text-custom-gray">Price</th>
             <th className="px-6 py-4 text-center font-semibold text-custom-gray">GVWR</th>
-            {/* <th className="px-6 py-4 text-center font-semibold text-custom-gray">Stock Status</th> */}
+            <th className="px-6 py-4 text-center font-semibold text-custom-gray">Downpayment</th>
             <th className="px-6 py-4 text-center font-semibold text-custom-gray">Actions</th>
           </tr>
         </thead>

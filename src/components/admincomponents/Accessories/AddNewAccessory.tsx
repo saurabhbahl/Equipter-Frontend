@@ -24,10 +24,10 @@ const AddNewAccessory = () => {
   });
   const { addNotification } = useNotification();
   const [errors, setErrors] = useState<IAccessories>({
-    description: "",
-    name: "",
-    price: "",
-    quantity: "",
+    Description__c: "",
+    Name: "",
+    Price__c: "",
+    Quantity__c: "",
   });
   // const [serverResponse, setServerResponse] = useState<{
   //   type: "error" | "info";
@@ -186,7 +186,6 @@ const AddNewAccessory = () => {
   // const handleClosePortal = () => {
   //   setServerResponse(null);
   // };
- 
 
   useEffect(() => {
     if (previewImage) {
@@ -276,7 +275,9 @@ const AddNewAccessory = () => {
           className={`bg-white p-5 shadow-md flex-1 rounded-sm space-y-3 ${
             images.length >= 3
               ? "h-[588px] overflow-y-scroll scrollbar-custom"
-              : "h-fi"}`}>
+              : "h-fi"
+          }`}
+        >
           <p className="font-roboto text-lg font-bold">Upload Images</p>
           <hr className="my-3 border-1 border-gray-400" />
           {featuredImage && (
@@ -338,7 +339,8 @@ const AddNewAccessory = () => {
                   onClick={(e) => {
                     e.stopPropagation();
                     openImagePreview(URL.createObjectURL(image), index);
-                  }}>
+                  }}
+                >
                   <FontAwesomeIcon icon={faExpand} />
                 </button>
               </div>
