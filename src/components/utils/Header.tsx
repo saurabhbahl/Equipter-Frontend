@@ -1,3 +1,4 @@
+// this is the naviagation bar
 import { Link } from "react-router-dom";
 import logo from "../../assets/images/logo.png";
 import { useAuth } from "../../hooks/useAuth";

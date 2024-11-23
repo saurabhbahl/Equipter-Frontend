@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import HeadingBar from "../rootComponents/HeadingBar";
 import { SfAccessToken } from "../../../utils/useEnv";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import LoaderSpinner from "../../utils/LoaderSpinner";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faArrowUp, faChevronLeft, faChevronRight, faCube, faMoneyBillWave, faTag, faWeightHanging } from "@fortawesome/free-solid-svg-icons";
 
 const ViewProduct = () => {
   const [product, setProduct] = useState(null);
@@ -10,7 +12,7 @@ const ViewProduct = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const { id } = useParams();
   const [isAnimating, setIsAnimating] = useState(false);
-  const fetchProductDetails = async (productId:string) => {
+  const fetchProductDetails = async (productId: string) => {
     const productUrl = `/api/services/data/v52.0/query/?q=SELECT+Id%2C+Name%2C+Product_Price__c%2C+Down_Payment_Cost__c%2C+GVWR__c%2C+Lift_Capacity__c%2C+Lift_Height__c%2C+Container__c%2C+%28SELECT+Id%2C+Image_URL__c%2C+Is_Featured__c%2C+Product_Id__c%2C+Name%2C+Image_Description__c+FROM+Product_Images__r%29+FROM+Product__c+WHERE+Id+%3D+%27${productId}%27`;
 
     try {
@@ -32,8 +34,9 @@ const ViewProduct = () => {
       throw error;
     }
   };
+  const nav = useNavigate();
 
-  const fetchAccessoryProducts = async (productId:string) => {
+  const fetchAccessoryProducts = async (productId: string) => {
     const accessoryProductUrl = `/api/services/data/v52.0/query/?q=SELECT+Id%2C+Accessory_Id__c%2C+Product_Id__c%2C+Name+FROM+Accessory_Product__c+WHERE+Product_Id__c+%3D+%27${productId}%27`;
 
     try {
@@ -82,7 +85,7 @@ const ViewProduct = () => {
     }
   };
 
-  const getProductWithDetails = async (productId:string) => {
+  const getProductWithDetails = async (productId: string) => {
     const productDetails = await fetchProductDetails(productId);
     const accessoryProducts = await fetchAccessoryProducts(productId);
     const allAccessories = await fetchAccessories();
@@ -140,20 +143,24 @@ const ViewProduct = () => {
   };
 
   if (loading) {
-    return <div className="w-full h-full flex justify-center my-20"><LoaderSpinner /></div> ;
+    return (
+      <div className="w-full h-full flex justify-center my-20">
+        <LoaderSpinner />
+      </div>
+    );
   }
 
   return (
     <>
       <HeadingBar buttonLink="/admin/products" heading="Product Details" />
-      <div className="p-6 ">
+      <div className="p-6 lg:p-10 bg-custom-sky min-h-screen capitalize">
         <div className="space-y-8">
           {/* Product Images Section */}
-          <div className="bg-white p-2 rounded-xl shadow-lg">
-            <h3 className="text-2xl font-semibold text-gray-800 mb-3">
+          <div className="bg-white p-4 rounded-xl shadow-lg">
+            <h3 className="text-3xl font-semibold text-custom-black-200 mb-4">
               Product Images
             </h3>
-            <div className="relative w-full h-full overflow-hidden">
+            <div className="relative w-full overflow-hidden rounded-lg border border-gray-200 shadow-md">
               {product.images && product.images.length > 0 ? (
                 <>
                   <div
@@ -165,71 +172,48 @@ const ViewProduct = () => {
                     <img
                       src={product.images[currentImageIndex].Image_URL__c}
                       alt={`Product image ${currentImageIndex + 1}`}
-                      className="rounded-lg w-full h-[800px] object-cover shadow-md"
+                      className="rounded-lg w-full h-[650px] object-cover shadow-md"
+                      // className="rounded-md w-full h-[500px] object-cover"
                     />
                     {product.images[currentImageIndex].Is_Featured__c && (
-                      <span className="absolute top-4 left-4 bg-orange-500 text-white text-sm font-bold px-3 py-1 rounded-full">
+                      <span className="absolute top-4 left-4 bg-custom-orange text-white text-sm font-bold px-3 py-1 rounded-full shadow-md">
                         Featured
                       </span>
                     )}
                   </div>
-                  {/* Navigation Buttons */}
-                  <button
-                    onClick={handlePrevImage}
-                    className="absolute top-1/2 left-4 transform -translate-y-1/2 bg-white bg-opacity-75 hover:bg-opacity-100 text-gray-700 rounded-full p-2 shadow-md focus:outline-none"
-                  >
-                    {/* Left Arrow Icon */}
-                    <svg
-                      className="w-6 h-6"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M15 19l-7-7 7-7"
-                      />
-                    </svg>
-                  </button>
-                  <button
-                    onClick={handleNextImage}
-                    className="absolute top-1/2 right-4 transform -translate-y-1/2 bg-white bg-opacity-75 hover:bg-opacity-100 text-gray-700 rounded-full p-2 shadow-md focus:outline-none"
-                  >
-                    {/* Right Arrow Icon */}
-                    <svg
-                      className="w-6 h-6"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 5l7 7-7 7"
-                      />
-                    </svg>
-                  </button>
+                  {product.images.length > 1 && (
+                    <>
+                      <button
+                        onClick={handlePrevImage}
+                        className="absolute top-1/2 left-4 transform -translate-y-1/2 bg-custom-orange bg-opacity-75 hover:bg-opacity-100 text-white rounded-full p-3 shadow-md focus:outline-none"
+                      >
+                        <FontAwesomeIcon icon={faChevronLeft  } />
+                      </button>
+                      <button
+                        onClick={handleNextImage}
+                        className="absolute top-1/2 right-4 transform -translate-y-1/2 bg-custom-orange bg-opacity-75 hover:bg-opacity-100 text-white rounded-full p-3 shadow-md focus:outline-none"
+                      >
+                        <FontAwesomeIcon icon={faChevronRight} />
+                      </button>
+                    </>
+                  )}
                 </>
               ) : (
-                <p className="text-gray-500">
+                <p className="text-gray-500 text-center p-6">
                   No images available for this product.
                 </p>
               )}
             </div>
-            {/* Thumbnail Indicators */}
             {product.images && product.images.length > 1 && (
               <div className="flex justify-center mt-4 space-x-2">
                 {product.images.map((_, index) => (
                   <button
                     key={index}
                     onClick={() => setCurrentImageIndex(index)}
-                    className={`w-3 h-3 rounded-full obj ${
+                    className={`w-3 h-3 rounded-full ${
                       currentImageIndex === index
-                        ? "bg-gray-800"
-                        : "bg-gray-400 hover:bg-gray-600"
+                        ? "bg-custom-orange"
+                        : "bg-gray-400 hover:bg-custom-orange-100"
                     } focus:outline-none`}
                   ></button>
                 ))}
@@ -237,156 +221,143 @@ const ViewProduct = () => {
             )}
           </div>
 
-          {/* Product Information and Accessories */}
-          <div className="flex flex-col lg:flex-row gap-8">
-            {/* Product Information Section */}
-            <div className="w-full lg:w-2/3 bg-white p-6 rounded-xl shadow-lg">
-              <h3 className="text-2xl font-semibold text-gray-800 mb-6">
-                General Information
-              </h3>
-              <div className="space-y-6 text-gray-700">
+          {/* Product Information Section */}
+          <div className="w-full bg-white p-6 rounded-xl shadow-lg">
+            <h3 className="text-3xl font-semibold text-custom-black-200 mb-6">
+              Product Details
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="flex items-center space-x-4">
+                <FontAwesomeIcon
+                  icon={faTag}
+                  className="text-custom-orange text-2xl"
+                />
                 <div>
-                  <h4 className="font-medium text-gray-600">Product Name</h4>
-                  <p className="text-xl font-semibold capitalize">{product.Name}</p>
+                  <h4 className="font-bold text-lg text-gray-800">Name</h4>
+                  <p className="text-custom-black-200">{product.Name}</p>
                 </div>
+              </div>
+              <div className="flex items-center space-x-4">
+                <FontAwesomeIcon
+                  icon={faMoneyBillWave}
+                  className="text-custom-orange text-2xl"
+                />
                 <div>
-                  <h4 className="font-medium text-gray-600">Description</h4>
-                  <p className="text-lg leading-relaxed">
-                    {product.Description__c}
+                  <h4 className="font-bold text-lg text-gray-800">Price</h4>
+                  <p className="text-custom-orange font-semibold">
+                    ${product.Product_Price__c.toFixed(2)}
                   </p>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-                  <div className="flex items-center">
-                    <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mr-4">
-                      {/* Icon */}
-                      <svg
-                        className="w-6 h-6"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 8c1.657 0 3-1.567 3-3.5S13.657 1 12 1 9 2.567 9 4.5s1.343 3.5 3 3.5zM5.4 9.8c.078-1.205 1.076-2.137 2.3-2.3a6 6 0 0111.6 0c1.224.163 2.222 1.095 2.3 2.3a6 6 0 010 4.4c-.078 1.205-1.076 2.137-2.3 2.3a6 6 0 01-11.6 0c-1.224-.163-2.222-1.095-2.3-2.3a6 6 0 010-4.4z"
-                        />
-                      </svg>
-                    </div>
-                    <div>
-                      <h4 className="font-medium text-gray-600">Price</h4>
-                      <p className="text-lg font-semibold">
-                        ${product.Product_Price__c.toFixed(2)}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center">
-                    <div className="w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center mr-4">
-                      {/* Icon */}
-                      <svg
-                        className="w-6 h-6"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M3 10h1l1.2 4h13.6l1.2-4H21"
-                        />
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M5 6h14l1 4H4l1-4z"
-                        />
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 18a2 2 0 100-4 2 2 0 000 4zM15 18a2 2 0 100-4 2 2 0 000 4z"
-                        />
-                      </svg>
-                    </div>
-                    <div>
-                      <h4 className="font-medium text-gray-600">Down Payment</h4>
-                      <p className="text-lg font-semibold">
-                        ${product.Down_Payment_Cost__c.toFixed(2)}
-                      </p>
-                    </div>
-                  </div>
-                  {/* Add more items with icons for GVWR, Lift Capacity, etc. */}
-                  
-                  <div className="flex items-center">
-                    <div className="w-12 h-12 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center mr-4">
-                      {/* Icon */}
-                      <svg
-                        className="w-6 h-6"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M3 3v18h18"
-                        />
-                      </svg>
-                    </div>
-                    <div>
-                      <h4 className="font-medium text-gray-600">GVWR</h4>
-                      <p className="text-lg font-semibold">
-                        {product.GVWR__c} lbs
-                      </p>
-                    </div>
-                  </div>
-                  {/* Repeat for other specifications */}
+              </div>
+              <div className="flex items-center space-x-4">
+                <FontAwesomeIcon
+                  icon={faMoneyBillWave}
+                  className="text-custom-orange text-2xl"
+                />
+                <div>
+                  <h4 className="font-bold text-lg text-gray-800">
+                    Down Payment Cost
+                  </h4>
+                  <p className="text-custom-black-200">
+                    ${product.Down_Payment_Cost__c.toFixed(2)}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-4">
+                <FontAwesomeIcon
+                  icon={faWeightHanging}
+                  className="text-custom-orange text-2xl"
+                />
+                <div>
+                  <h4 className="font-bold text-lg text-gray-800">GVWR</h4>
+                  <p className="text-custom-black-200">{product.GVWR__c} lbs</p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-4">
+                <FontAwesomeIcon
+                  icon={faArrowUp}
+                  className="text-custom-orange text-2xl"
+                />
+                <div>
+                  <h4 className="font-bold text-lg text-gray-800">
+                    Lift Capacity
+                  </h4>
+                  <p className="text-custom-black-200">
+                    {product.Lift_Capacity__c} lbs
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-4">
+                <FontAwesomeIcon
+                  icon={faArrowUp}
+                  className="text-custom-orange text-2xl"
+                />
+                <div>
+                  <h4 className="font-bold text-lg text-gray-800">
+                    Lift Height
+                  </h4>
+                  <p className="text-custom-black-200">
+                    {product.Lift_Height__c} feet
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-4">
+                <FontAwesomeIcon
+                  icon={faCube}
+                  className="text-custom-orange text-2xl"
+                />
+                <div>
+                  <h4 className="font-bold text-lg text-gray-800">Container</h4>
+                  <p className="text-custom-black-200">
+                    {product.Container__c}
+                  </p>
                 </div>
               </div>
             </div>
+          </div>
 
-            {/* Accessories Section */}
-            <div className="w-full lg:w-1/3 bg-white p-6 rounded-xl shadow-lg">
-              <h3 className="text-2xl font-semibold text-gray-800 mb-6">
+          {/* Accessories Section */}
+          {product.accessories && product.accessories.length > 0 && (
+            <div className="w-full bg-white p-6 rounded shadow-lg">
+              <h3 className="text-3xl font-semibold text-custom-black-200 mb-6">
                 Accessories
               </h3>
-              {product.accessories && product.accessories.length > 0 ? (
-                <ul className="space-y-4">
-                  {product.accessories.map((accessory, index) => (
-                    <li
-                      key={index}
-                      className="flex items-start hover:bg-gray-50 p-3 rounded-lg transition"
+              <ul className="space-y-6">
+                {product.accessories.map((accessory, index) => (
+                  <li
+                    key={index}
+                    className="flex items-start hover:bg-gray-50 p-3 rounded-lg transition"
+                  >
+                    {accessory.Image_URL__c && (
+                      <img
+                        src={accessory.Image_URL__c}
+                        alt={accessory.Name}
+                        className="w-16 h-16 object-cover rounded-md shadow-sm mr-4"
+                      />
+                    )}
+                    <div
+                      className="bg-custom-gray-300 w-full cursor-pointer p-4 rounded-lg"
+                      title="See Details"
+                      onClick={() =>
+                        nav(`/admin/accessories/view/${accessory.Id}`)
+                      }
                     >
-                      {accessory.Image_URL__c && (
-                        <img
-                          src={accessory.Image_URL__c}
-                          alt={accessory.Name}
-                          className="w-16 h-16 object-cover rounded-md shadow-sm mr-4"
-                        />
-                      )}
-                      <div>
-                        <h4 className="text-lg font-semibold capitalize text-gray-800">
-                          {accessory.Name}
-                        </h4>
-                        <p className="text-sm text-gray-600">
-                          {accessory.Description__c}
-                        </p>
-                        <p className="text-md font-medium text-gray-900 mt-1">
-                          ${accessory.Price__c.toFixed(2)}
-                        </p>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-gray-500">
-                  No accessories available for this product.
-                </p>
-              )}
+                      <h4 className="text-lg font-semibold capitalize text-gray-800">
+                        {accessory.Name}
+                      </h4>
+                      <p className="text-sm text-gray-600">
+                        {accessory.Description__c}
+                      </p>
+                      <p className="text-md font-medium text-custom-black-200 mt-4">
+                        ${accessory.Price__c.toFixed(2)}
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
             </div>
-          </div>
+          )}
+
         </div>
       </div>
     </>
@@ -394,3 +365,5 @@ const ViewProduct = () => {
 };
 
 export default ViewProduct;
+
+

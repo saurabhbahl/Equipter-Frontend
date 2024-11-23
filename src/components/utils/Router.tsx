@@ -7,6 +7,8 @@ import Loader from "./Loader";
 import Dashboard from "../admincomponents/Dashboard/Dashboard";
 import AddNewAccessory from "../admincomponents/Accessories/AddNewAccessory";
 import EditProduct from "../admincomponents/Products/EditProduct";
+import ViewAccessory from "../admincomponents/Accessories/ViewAccessory";
+import EditAccessory from "../admincomponents/Accessories/EditAccessory";
 
 const Home = lazy(() => import("../../pages/Home"));
 const LoginPage = lazy(() => import("../../pages/auth/LoginPage"));
@@ -62,6 +64,8 @@ export default function Router() {
               {/* accessories */}
               <Route path="accessories" element={<Accessories />} />
               <Route path="accessories/new" element={<AddNewAccessory />} />
+              <Route path="accessories/view/:id" element={<ViewAccessory />} />
+              <Route path="accessories/edit/:id" element={<EditAccessory />} />
 
               <Route path="orders" element={<Orders />} />
             </Route>

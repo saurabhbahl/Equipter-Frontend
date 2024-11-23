@@ -25,6 +25,7 @@ export default {
         "custom-red": "#EB5757",
         "custom-sky": "#E2E8F0",
         "custom-cream": "#FFEAD7",
+        
       },
       fontFamily: {
         "work-sans": ["Work Sans", "sans-serif"],

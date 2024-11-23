@@ -26,6 +26,31 @@ class AccessoriesService {
       throw error;
     }
   }
+  static async fetchSingleAccessory(accessoryID:string) {
+    try {
+      const response = await fetch(
+        `/api/services/data/v52.0/query/?q=SELECT+Id,+Name,+CreatedById,+Description__c,+LastModifiedById,+OwnerId,+Price__c,+Quantity__c+FROM+Accessory__c+WHERE+Id+%3D+%27${accessoryID}%27`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${SfAccessToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      console.log(response)
+
+      if (!response.ok) {
+        throw new Error(`Error fetching products: ${response.statusText}`);
+      }
+      const data = await response.json();
+    return data.records || [];
+    } catch (error) {
+      console.error("Error fetching accessories:", error);
+      throw error;
+    }
+  }
+  
 }
 
 export default AccessoriesService;

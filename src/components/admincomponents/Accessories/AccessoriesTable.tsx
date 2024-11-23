@@ -3,12 +3,13 @@ import AccessoriesTableRow from "./AccessoriesTableRow";
 import LoaderSpinner from "../../utils/LoaderSpinner";
 import { useAdminContext } from "../../../hooks/useAdminContext";
 import AccessoriesService from "./AccessoriesService";
-import { IAccessoriesRes } from "./AccessoriesSchema";
+import TableHeading from "../../Table/TableHeading";
 
 const AccessoriesTable = () => {
   // const [accessories, setAccessories] = useState([]);
   // const [loading, setLoading] = useState(true);
   // const [error, setError] = useState<string | null>(null);
+  const headers = ["Sr.No.", "Name", "Price", "Stock", "Actions"];
   const {
     accessories,
     error,
@@ -48,18 +49,10 @@ const AccessoriesTable = () => {
   if (error?.accessories) return <div> {error.accessories}</div>;
 
   return (
-    <div className="overflow-auto shadow-lg rounded-lg">
+    <div className="overflow-auto shadow-lg rounded">
       <table className="w-full mx-auto   bg-white">
-        <thead>
-          <tr className="border-b border-gray-200 text-center">
-            <th className="px-6 py-4 font-semibold text-gray-500">Sr.No.</th>
-            {/* <th className="px-6 py-4 font-semibold text-gray-500">Image</th> */}
-            <th className="px-6 py-4 font-semibold text-gray-500">Name</th>
-            <th className="px-6 py-4 font-semibold text-gray-500">Price</th>
-            <th className="px-6 py-4 font-semibold text-gray-500">Stock</th>
-            {/* <th className="px-6 py-4 font-semibold text-gray-500">Actions</th> */}
-          </tr>
-        </thead>
+      
+        <TableHeading headers={headers} />
         <tbody>
           {accessories?.map((accessory, index) => (
             <AccessoriesTableRow

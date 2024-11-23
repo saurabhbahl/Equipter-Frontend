@@ -13,14 +13,25 @@ import { AccessoriesSchema, IAccessories } from "./AccessoriesSchema";
 import { useNotification } from "../../../contexts/NotificationContext";
 import { SfAccessToken } from "../../../utils/useEnv";
 import HeadingBar from "../rootComponents/HeadingBar";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import Loader from "../../utils/Loader";
+import LoaderSpinner from "../../utils/LoaderSpinner";
+
+const s3 = new S3Client({
+  region: import.meta.env.VITE_AWS_REGION,
+  credentials: {
+    accessKeyId: import.meta.env.VITE_AWS_ACCESS_KEY_ID,
+    secretAccessKey: import.meta.env.VITE_AWS_SECRET_ACCESS_KEY,
+  },
+});
 
 const AddNewAccessory = () => {
   const nav = useNavigate();
   const [formValues, setFormValues] = useState<IAccessories>({
-    description: "",
-    name: "",
-    price: "",
-    quantity: "",
+    Description__c: "",
+    Name: "",
+    Price__c: "",
+    Quantity__c: "",
   });
   const { addNotification } = useNotification();
   const [errors, setErrors] = useState<IAccessories>({
@@ -29,10 +40,6 @@ const AddNewAccessory = () => {
     Price__c: "",
     Quantity__c: "",
   });
-  // const [serverResponse, setServerResponse] = useState<{
-  //   type: "error" | "info";
-  //   message: string;
-  // } | null>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [images, setImages] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
@@ -42,26 +49,72 @@ const AddNewAccessory = () => {
     index: number;
   } | null>(null);
   const [showPreview, setShowPreview] = useState(false);
+  const [isResSaving, setIsResSaving] = useState(false);
+  const [currentStatus, setCurrentStatus] = useState("");
+  const [imageUploadError, setImageUploadError] = useState(false);
+
+  const uploadImageToS3 = async (image: File): Promise<string> => {
+    const uploadParams = {
+      Bucket: import.meta.env.VITE_AWS_BUCKET_NAME,
+      Key: `images/accessories/${Date.now()}-${image.name}`,
+      Body: image,
+      ContentType: image.type,
+    };
+    const command = new PutObjectCommand(uploadParams);
+    const data = await s3.send(command);
+    return `https://${import.meta.env.VITE_AWS_BUCKET_NAME}.s3.${
+      import.meta.env.VITE_AWS_REGION
+    }.amazonaws.com/${uploadParams.Key}`;
+  };
+
+  const saveImageToSalesforce = async (
+    accessoryId: string,
+    imageUrl: string,
+    isFeatured: boolean
+  ) => {
+    try {
+      const imagePayload = {
+        Name: formValues.Name,
+        Accessory_Id__c: accessoryId,
+        Is_Featured__c: isFeatured,
+        Image_URL__c: imageUrl,
+      };
+      const response = await fetch(
+        "/api/services/data/v52.0/sobjects/Accessory_Image__c",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${SfAccessToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(imagePayload),
+        }
+      );
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to save image to Salesforce: ${errorText}`);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   const handleInputChange = (
     e: ChangeEvent<HTMLInputElement> | ChangeEvent<HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-    setFormValues({ ...formValues, [name]: value ?? null });
-    setErrors({ ...errors, [name]: null });
-    // setServerResponse(null);
+    setFormValues({ ...formValues, [name]: value ?? "" });
+    setErrors({ ...errors, [name]: "" });
   };
 
   const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
+    setImageUploadError(false);
     const files = Array.from(e.target.files || []).filter((file) =>
       file.type.startsWith("image/")
     );
 
     if (files.length !== (e.target.files || []).length) {
-      // setServerResponse({
-      //   type: "error",
-      //   message: "Only image files are allowed.",
-      // });
+      addNotification("error", "Only image files are allowed.");
       return;
     }
 
@@ -85,11 +138,9 @@ const AddNewAccessory = () => {
   const removeImage = (index: number) => {
     setImages((prevImages) => {
       const updatedImages = prevImages.filter((_, i) => i !== index);
-      console.log(updatedImages);
       if (index == 0 && updatedImages.length > 0) {
         setFeaturedImage(updatedImages[0]);
       } else if (updatedImages.length == 0) {
-        console.log("call");
         setFeaturedImage(null);
       } else {
         setFeaturedImage(updatedImages[index - 1]);
@@ -119,36 +170,46 @@ const AddNewAccessory = () => {
     e.preventDefault();
     const accessoriesData = {
       ...formValues,
-      price: Number(formValues.price),
-      quantity: Number(formValues.quantity),
-      // Product_Images__c:
-      //   images.length > 0
-      //     ? images.map((image) => URL.createObjectURL(image)).join(", ")
-      //     : "",
+      Price__c: Number(formValues.Price__c),
+      Quantity__c: Number(formValues.Quantity__c),
     };
+    console.log(accessoriesData)
 
     const result = AccessoriesSchema.safeParse(accessoriesData);
-
+    console.log(result)
+    if (images.length == 0) {
+      setImageUploadError(true);
+    }
     if (!result.success) {
       const newErrors: IAccessories = {
-        description: "",
-        name: "",
-        price: "",
-        quantity: "",
+        Description__c: "",
+        Name: "",
+        Price__c: "",
+        Quantity__c: "",
       };
       result.error.issues.forEach((issue) => {
         const fieldName = issue.path[0] as keyof IAccessories;
+        console.log(fieldName)
         newErrors[fieldName] = String(issue.message);
       });
       setErrors(newErrors);
-      addNotification("error", "test");
+      console.log(errors)
       return;
     }
+
+    if (images.length == 0) {
+      setImageUploadError(true);
+      addNotification("error", "At least one image is required.");
+      return;
+    }
+
+    setIsResSaving(true);
+    setCurrentStatus("Creating accessory");
 
     const token = SfAccessToken;
     try {
       const response = await fetch(
-        "/api//services/data/v52.0/sobjects/Accessory__c/",
+        "/api/services/data/v52.0/sobjects/Accessory__c/",
         {
           method: "POST",
           headers: {
@@ -157,10 +218,10 @@ const AddNewAccessory = () => {
           },
           credentials: "include",
           body: JSON.stringify({
-            Name: formValues.name,
-            Description__c: formValues.description,
-            Price__c: Number(formValues.price),
-            Quantity__c: Number(formValues.quantity),
+            Name: formValues.Name,
+            Description__c: formValues.Description__c,
+            Price__c: Number(formValues.Price__c),
+            Quantity__c: Number(formValues.Quantity__c),
           }),
         }
       );
@@ -171,21 +232,31 @@ const AddNewAccessory = () => {
         throw new Error(
           `HTTP error! status: ${response.status}, message: ${errorText}`
         );
-        return;
       }
 
       const data = await response.json();
-      console.log("Product created successfully:", data);
+      const newAccessoryId = data.id;
+
+      // Upload images
+      setCurrentStatus("Uploading images");
+      const orderedImages = featuredImage
+        ? [featuredImage, ...images.filter((img) => img !== featuredImage)]
+        : images;
+
+      for (const [index, image] of orderedImages.entries()) {
+        const imageUrl = await uploadImageToS3(image);
+        await saveImageToSalesforce(newAccessoryId, imageUrl, index === 0);
+      }
+
       addNotification("success", "Accessory added successfully");
       nav("/admin/accessories");
     } catch (error) {
-      console.error("Error creating product:", error);
+      console.error("Error creating accessory:", error);
       addNotification("error", error.message);
+    } finally {
+      setIsResSaving(false);
     }
   };
-  // const handleClosePortal = () => {
-  //   setServerResponse(null);
-  // };
 
   useEffect(() => {
     if (previewImage) {
@@ -199,29 +270,36 @@ const AddNewAccessory = () => {
     <div className="bg-[#F6F8FF] min-h-screen">
       <HeadingBar buttonLink="/admin/accessories" heading="Add New Accessory" />
       <div className="flex w-[90%] gap-6 mx-auto my-10">
+        {isResSaving && <Loader message={currentStatus} />}
         {/* Details section */}
-        <div className="flex-1 bg-white p-5 shadow-md rounded-sm h-fit">
+        <form
+          onSubmit={handleSave}
+          className="flex-1 bg-white p-5 shadow-md rounded-sm h-fit"
+        >
           <p className="font-roboto text-lg font-bold">General Information</p>
           <hr className="my-3 border-1 border-gray-400" />
-          <form onSubmit={handleSave} className="grid my-1 grid-cols-1 gap-2">
+          <div className="grid my-1 grid-cols-1 gap-5">
             <InputField
               id="name"
               type="text"
               placeholder="Name"
-              name="name"
+              name="Name"
               value={formValues.Name}
               onChange={handleInputChange}
               classes="!w-full"
               label="Name"
-              error={errors.Name as string}
+              error={errors.Name}
             />
             <div className="mb-3">
-              <label htmlFor="desc" className="font-medium text-custom-gray ">
+              <label
+                htmlFor="description"
+                className="font-medium text-custom-gray "
+              >
                 Description
               </label>
               <textarea
                 value={formValues.Description__c}
-                name="description"
+                name="Description__c"
                 onChange={handleInputChange}
                 className={`mt-1 font-arial block w-full text-xs p-2 border border-inset h-[111px] border-custom-gray-200 outline-none py-2 px-3 ${
                   errors.Description__c
@@ -238,8 +316,8 @@ const AddNewAccessory = () => {
               id="price"
               type="number"
               placeholder="Price"
-              name="price"
-              value={formValues.Price__c as string}
+              name="Price__c"
+              value={formValues.Price__c}
               onChange={handleInputChange}
               error={errors.Price__c as string}
               classes="!w-full "
@@ -249,8 +327,8 @@ const AddNewAccessory = () => {
               id="quantity"
               type="number"
               placeholder="Quantity"
-              name="quantity"
-              value={formValues.Quantity__c as string}
+              name="Quantity__c"
+              value={formValues.Quantity__c}
               onChange={handleInputChange}
               classes="!w-full"
               error={errors.Quantity__c as string}
@@ -264,18 +342,18 @@ const AddNewAccessory = () => {
                 Cancel
               </button>
               <button className="btn-yellow hover:bg-yellow-600" type="submit">
-                Save
+                {isResSaving ? <LoaderSpinner /> : "Save"}
               </button>
             </div>
-          </form>
-        </div>
+          </div>
+        </form>
 
         {/* Image section */}
         <div
           className={`bg-white p-5 shadow-md flex-1 rounded-sm space-y-3 ${
             images.length >= 3
-              ? "h-[588px] overflow-y-scroll scrollbar-custom"
-              : "h-fi"
+              ? "h-[624px] overflow-y-scroll scrollbar-custom"
+              : ""
           }`}
         >
           <p className="font-roboto text-lg font-bold">Upload Images</p>
@@ -298,7 +376,7 @@ const AddNewAccessory = () => {
           <label
             className={`relative block w-full border border-dashed border-gray-400 p-2 rounded-md cursor-pointer ${
               isUploading ? "animate-pulse duration-500" : ""
-            }`}
+            } ${imageUploadError ? "border-red-500 border-1" : ""}`}
           >
             <input
               type="file"
@@ -307,10 +385,15 @@ const AddNewAccessory = () => {
               onChange={handleImageUpload}
               className="hidden"
             />
-            <p className="text-center text-gray-500">
+            <p className={`text-center text-gray-500 `}>
               {isUploading ? "Uploading images..." : "Click to upload images"}
             </p>
           </label>
+          {imageUploadError && (
+            <p className="text-[11px] font-semibold text-red-500">
+              Minimum one accessory Image is required
+            </p>
+          )}
           {/* all images */}
           <div className="flex justify-start flex-wrap gap-5 mt-5">
             {images.map((image, index) => (
@@ -373,7 +456,7 @@ const AddNewAccessory = () => {
                       className="bg-yellow-600 text-white px-4 py-2 rounded-md"
                       onClick={() => setAsFeaturedImage(previewImage.index)}
                     >
-                      <FontAwesomeIcon icon={faStar} /> Make Feature Image
+                      <FontAwesomeIcon icon={faStar} /> Make Featured Image
                     </button>
                     <button
                       className="bg-gray-600 text-white px-4 py-2 rounded-md"

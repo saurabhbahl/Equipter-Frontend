@@ -29,11 +29,12 @@
 import React, { createContext, useState } from "react";
 import { IAccessoriesRes } from "../components/admincomponents/Accessories/AccessoriesSchema";
 
-
 export interface IAdminContext {
   toggleSidebar: () => void;
   isSidebarCollapsed: boolean;
   accessories: IAccessoriesRes[];
+  products:any;
+  setProducts:any;
   setAccessories: React.Dispatch<React.SetStateAction<IAccessoriesRes[]>>;
   // fetchAccessoriesData: () => Promise<void>;
   loading: { [key: string]: boolean };
@@ -50,12 +51,15 @@ export const AdminContextProvider = ({
   children: React.ReactNode;
 }) => {
   const [accessories, setAccessories] = useState<IAccessoriesRes[]>([]);
+  const [products, setProducts] = useState([]);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [loading, setLoading] = useState<{ [key: string]: boolean }>({
     accessories: false,
+    products: false,
   });
   const [error, setError] = useState<{ [key: string]: string }>({
     accessories: "",
+    products: "",
   });
 
   function toggleSidebar() {
@@ -66,6 +70,8 @@ export const AdminContextProvider = ({
     <AdminContext.Provider
       value={{
         toggleSidebar,
+        products,
+        setProducts,
         isSidebarCollapsed,
         accessories,
         setAccessories,
