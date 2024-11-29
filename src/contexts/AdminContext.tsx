@@ -1,45 +1,20 @@
-// import { createContext, useState } from "react";
-// import { IAccessoriesRes } from "../components/admincomponents/Accessories/AccessoriesSchema";
-// interface IAdminContext {
-//   toggleSidebar: () => void;
-//   isSidebarCollapsed: boolean;
-// }
-
-// export const AdminContext = createContext<IAdminContext | null>(null);
-
-// export const AdminContextProvider = ({children}: {children: React.ReactNode;}) => {
-//   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-//   const [accessories,setAccessories]=useState<IAccessoriesRes[]|[]>([])
-//   function toggleSidebar() {
-//     setIsSidebarCollapsed(!isSidebarCollapsed);
-//   }
-//   class Accessories{
-//     static function getAllAccessories() {
-
-//     }
-//   }
-
-//   return (
-//     <AdminContext.Provider value={{ toggleSidebar, isSidebarCollapsed }}>
-//       {children}
-//     </AdminContext.Provider>
-//   );
-// };
-
 import React, { createContext, useState } from "react";
 import { IAccessoriesRes } from "../components/admincomponents/Accessories/AccessoriesSchema";
-
+interface IError {
+  accessories: string;
+  products: string;
+}
 export interface IAdminContext {
   toggleSidebar: () => void;
   isSidebarCollapsed: boolean;
-  accessories: IAccessoriesRes[];
-  products:any;
-  setProducts:any;
+  accessories: IAccessoriesRes[] | any;
+  products: any;
+  setProducts: any;
   setAccessories: React.Dispatch<React.SetStateAction<IAccessoriesRes[]>>;
   // fetchAccessoriesData: () => Promise<void>;
   loading: { [key: string]: boolean };
   setLoading: React.Dispatch<React.SetStateAction<{ [key: string]: boolean }>>;
-  error: { [key: string]: string };
+  error: IError;
   setError: React.Dispatch<React.SetStateAction<{ [key: string]: string }>>;
 }
 
@@ -57,7 +32,7 @@ export const AdminContextProvider = ({
     accessories: false,
     products: false,
   });
-  const [error, setError] = useState<{ [key: string]: string }>({
+  const [error, setError] = useState<IError>({
     accessories: "",
     products: "",
   });

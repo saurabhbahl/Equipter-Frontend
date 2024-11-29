@@ -9,13 +9,15 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useState, ChangeEvent, useRef, FormEvent, useEffect } from "react";
 import InputField from "../../utils/InputFeild";
-import { AccessoriesSchema, IAccessories } from "./AccessoriesSchema";
+import { AccessoriesSchema, IAccessoriesInput } from "./AccessoriesSchema";
 import { useNotification } from "../../../contexts/NotificationContext";
 import { SfAccessToken } from "../../../utils/useEnv";
 import HeadingBar from "../rootComponents/HeadingBar";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import Loader from "../../utils/Loader";
 import LoaderSpinner from "../../utils/LoaderSpinner";
+
+import AccessoriesService from "./AccessoriesService";
 
 const s3 = new S3Client({
   region: import.meta.env.VITE_AWS_REGION,
@@ -27,17 +29,21 @@ const s3 = new S3Client({
 
 const AddNewAccessory = () => {
   const nav = useNavigate();
-  const [formValues, setFormValues] = useState<IAccessories>({
+  const [formValues, setFormValues] = useState<IAccessoriesInput>({
     Description__c: "",
     Name: "",
     Price__c: "",
     Quantity__c: "",
+    Accessory_URL__c: "",
+    Meta_Title__c: "",
   });
   const { addNotification } = useNotification();
-  const [errors, setErrors] = useState<IAccessories>({
+  const [errors, setErrors] = useState<IAccessoriesInput>({
     Description__c: "",
     Name: "",
     Price__c: "",
+    Accessory_URL__c: "",
+    Meta_Title__c: "",
     Quantity__c: "",
   });
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -52,6 +58,15 @@ const AddNewAccessory = () => {
   const [isResSaving, setIsResSaving] = useState(false);
   const [currentStatus, setCurrentStatus] = useState("");
   const [imageUploadError, setImageUploadError] = useState(false);
+  const formRef = useRef(null);
+  const imagesRef = useRef(null);
+
+  useEffect(() => {
+    if (formRef.current && imagesRef.current) {
+      const formHeight = formRef.current.offsetHeight;
+      imagesRef.current.style.maxHeight = `${formHeight}px`;
+    }
+  }, [images]);
 
   const uploadImageToS3 = async (image: File): Promise<string> => {
     const uploadParams = {
@@ -99,12 +114,39 @@ const AddNewAccessory = () => {
     }
   };
 
-  const handleInputChange = (
-    e: ChangeEvent<HTMLInputElement> | ChangeEvent<HTMLTextAreaElement>
-  ) => {
+  const handleInputChange = (e: ChangeEvent<HTMLInputElement|HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormValues({ ...formValues, [name]: value ?? "" });
-    setErrors({ ...errors, [name]: "" });
+
+    setFormValues((prevValues) => {
+      const updatedValues = { ...prevValues, [name]: value };
+
+      if (name === "Meta_Title__c") {
+        updatedValues.Accessory_URL__c = value
+          .toLowerCase()
+          .trim()
+          .replace(/[^a-z0-9\s-]/g, "")
+          .replace(/\s+/g, "-");
+      }
+
+      return updatedValues;
+    });
+
+    setErrors((prevErrors) => {
+      const updatedErrors = { ...prevErrors ,[name]: ""};
+
+      if (name === "Meta_Title__c") {
+        updatedErrors.Meta_Title__c = "";
+        updatedErrors.Accessory_URL__c = "";
+      }
+
+      if (name === "Product_URL__c") {
+        updatedErrors.Accessory_URL__c = "";
+      }
+
+      return updatedErrors;
+    });
+    // console.log(formValues)
+    console.log(errors)
   };
 
   const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
@@ -173,33 +215,49 @@ const AddNewAccessory = () => {
       Price__c: Number(formValues.Price__c),
       Quantity__c: Number(formValues.Quantity__c),
     };
-    console.log(accessoriesData)
+    console.log(accessoriesData);
 
     const result = AccessoriesSchema.safeParse(accessoriesData);
-    console.log(result)
-    if (images.length == 0) {
-      setImageUploadError(true);
-    }
+    console.log(result);
+ 
     if (!result.success) {
       const newErrors: IAccessories = {
         Description__c: "",
         Name: "",
         Price__c: "",
         Quantity__c: "",
+        Accessory_URL__c:"",
+        Meta_Title__c:""
       };
       result.error.issues.forEach((issue) => {
         const fieldName = issue.path[0] as keyof IAccessories;
-        console.log(fieldName)
+        console.log(fieldName);
         newErrors[fieldName] = String(issue.message);
       });
       setErrors(newErrors);
-      console.log(errors)
+      if (images.length == 0) {
+        setImageUploadError(true);
+ 
+ 
+      }
       return;
     }
-
     if (images.length == 0) {
       setImageUploadError(true);
-      addNotification("error", "At least one image is required.");
+
+      return;
+    }
+    
+    const slug: string = formValues.Accessory_URL__c;
+    const isUnique = await AccessoriesService.isSlugUnique(slug);
+  
+    if (!isUnique) {
+      setErrors((prevErrors) => ({
+        ...prevErrors,
+        Accessory_URL__c:
+          "This URL is already in use. Please modify the Meta Title.",
+      }));
+      console.log(errors);
       return;
     }
 
@@ -208,6 +266,7 @@ const AddNewAccessory = () => {
 
     const token = SfAccessToken;
     try {
+
       const response = await fetch(
         "/api/services/data/v52.0/sobjects/Accessory__c/",
         {
@@ -217,12 +276,7 @@ const AddNewAccessory = () => {
             "Content-Type": "application/json",
           },
           credentials: "include",
-          body: JSON.stringify({
-            Name: formValues.Name,
-            Description__c: formValues.Description__c,
-            Price__c: Number(formValues.Price__c),
-            Quantity__c: Number(formValues.Quantity__c),
-          }),
+          body: JSON.stringify(formValues),
         }
       );
 
@@ -272,12 +326,9 @@ const AddNewAccessory = () => {
       <div className="flex w-[90%] gap-6 mx-auto my-10">
         {isResSaving && <Loader message={currentStatus} />}
         {/* Details section */}
-        <form
-          onSubmit={handleSave}
-          className="flex-1 bg-white p-5 shadow-md rounded-sm h-fit"
-        >
-          <p className="font-roboto text-lg font-bold">General Information</p>
-          <hr className="my-3 border-1 border-gray-400" />
+        <form onSubmit={handleSave} ref={formRef} className="flex-1 bg-white p-5 shadow-md rounded-sm h-fit">
+          <h2 className="text-2xl font-semibold mb-4">General Information</h2>
+          <hr className="mb-6" />
           <div className="grid my-1 grid-cols-1 gap-5">
             <InputField
               id="name"
@@ -334,14 +385,47 @@ const AddNewAccessory = () => {
               error={errors.Quantity__c as string}
               label="Quantity"
             />
+            {/* additional info */}
+            <h2 className="text-2xl font-semibold my-4 mb-2">
+              Additional Information
+            </h2>
+            <hr className="mb-3" />
+            {/* Meta Title */}
+            <div className="grid grid-cols-1 gap-4">
+              <InputField
+                id="metatitle"
+                type="text"
+                label="Meta Title"
+                placeholder="Meta Title"
+                name="Meta_Title__c"
+                value={formValues.Meta_Title__c}
+                onChange={handleInputChange}
+                error={errors.Meta_Title__c}
+              />
+              <InputField
+                id="producturl"
+                type="text"
+                readonly={true}
+                label="Accessory URL"
+                placeholder="Generated URL"
+                name="Accessory_URL__c"
+                value={formValues.Accessory_URL__c.toLocaleLowerCase()}
+                onChange={handleInputChange}
+                error={errors.Accessory_URL__c}
+                classes="text-gray-400 border-gray-200 bg-[#f9f9f9] text-[#666] border-[#ccc] cursor-not-allowed"
+              />
+            </div>
             <div className="flex justify-end space-x-4 ">
               <button
-                className="px-6 py-2 border border-gray-400 text-gray-500 shadow-xl hover:bg-gray-100"
-                onClick={() => nav("/admin/accessories")}
+                className="px-6 py-2 border border-gray-300 text-gray-600 rounded-md hover:bg-gray-100"
+                onClick={() => nav("/admin/products")}
+                type="button">Cancel</button>
+              <button
+                className={`px-6 py-2 btn-yellow text-white rounded ${
+                  isResSaving ? "opacity-50 cursor-not-allowed" : ""
+                }`}
+                type="submit"
               >
-                Cancel
-              </button>
-              <button className="btn-yellow hover:bg-yellow-600" type="submit">
                 {isResSaving ? <LoaderSpinner /> : "Save"}
               </button>
             </div>
@@ -349,15 +433,9 @@ const AddNewAccessory = () => {
         </form>
 
         {/* Image section */}
-        <div
-          className={`bg-white p-5 shadow-md flex-1 rounded-sm space-y-3 ${
-            images.length >= 3
-              ? "h-[624px] overflow-y-scroll scrollbar-custom"
-              : ""
-          }`}
-        >
-          <p className="font-roboto text-lg font-bold">Upload Images</p>
-          <hr className="my-3 border-1 border-gray-400" />
+        <div ref={imagesRef} className={`bg-white p-6 shadow-md flex-1 rounded-md space-y-4 h-fit overflow-auto `}>
+          <h2 className="text-2xl font-semibold mb-2">Upload Images</h2>
+          <hr className="mb-6" />
           {featuredImage && (
             <>
               <p className="font-roboto text-md font-medium">Featured Image:</p>
@@ -371,12 +449,11 @@ const AddNewAccessory = () => {
             </>
           )}
 
-          <p className="font-medium">Accessory Images:</p>
-          {/* upload input */}
+          {/* Upload Input */}
           <label
-            className={`relative block w-full border border-dashed border-gray-400 p-2 rounded-md cursor-pointer ${
+            className={`relative block w-full border-2 border-dashed border-gray-300 p-3 text-center rounded-md cursor-pointer hover:border-blue-400 ${
               isUploading ? "animate-pulse duration-500" : ""
-            } ${imageUploadError ? "border-red-500 border-1" : ""}`}
+            } ${imageUploadError ? "border-red-500" : ""}`}
           >
             <input
               type="file"
@@ -385,7 +462,7 @@ const AddNewAccessory = () => {
               onChange={handleImageUpload}
               className="hidden"
             />
-            <p className={`text-center text-gray-500 `}>
+            <p className="text-gray-500">
               {isUploading ? "Uploading images..." : "Click to upload images"}
             </p>
           </label>
@@ -394,8 +471,11 @@ const AddNewAccessory = () => {
               Minimum one accessory Image is required
             </p>
           )}
+          {images.length > 0 && (
+            <p className="font-medium">Accessory Images:</p>
+          )}
           {/* all images */}
-          <div className="flex justify-start flex-wrap gap-5 mt-5">
+          <div className="flex justify-start flex-wrap gap-4 mt-4">
             {images.map((image, index) => (
               <div
                 key={index}
@@ -407,7 +487,7 @@ const AddNewAccessory = () => {
                   className="w-full h-full object-cover"
                 />
                 <button
-                  className="absolute top-2 right-2 bg-red-60 text-red-600 text-md hover:scale-125 duration-100 ease-linear rounded-full px1"
+                  className="absolute top-2 right-2 bg-white bg-opacity-75 text-red-600 text-md hover:text-red-800 rounded-full p-1"
                   title="Delete"
                   onClick={(e) => {
                     e.stopPropagation();
@@ -417,7 +497,7 @@ const AddNewAccessory = () => {
                   <FontAwesomeIcon icon={faTrash} />
                 </button>
                 <button
-                  className="absolute top-2 right-8  bg-red-60 text-green-600 text-md hover:scale-125 duration-100 ease-linear rounded-full px1"
+                  className="absolute top-2 right-10 bg-white bg-opacity-75 text-blue-600 text-md hover:text-blue-800 rounded-full p-1"
                   title="Preview"
                   onClick={(e) => {
                     e.stopPropagation();
@@ -453,10 +533,10 @@ const AddNewAccessory = () => {
                       <FontAwesomeIcon icon={faTimes} /> Close
                     </button>
                     <button
-                      className="bg-yellow-600 text-white px-4 py-2 rounded-md"
+                      className="btn-yellow text-white px-4 py-2 rounded"
                       onClick={() => setAsFeaturedImage(previewImage.index)}
                     >
-                      <FontAwesomeIcon icon={faStar} /> Make Featured Image
+                      <FontAwesomeIcon icon={faStar} /> Make Feature Image
                     </button>
                     <button
                       className="bg-gray-600 text-white px-4 py-2 rounded-md"

@@ -1,15 +1,17 @@
-import ErrorBoundary from "./components/utils/ErrorBoundary";
+import { HelmetProvider } from "react-helmet-async";
+// import ErrorBoundary from "./components/utils/ErrorBoundary";
 import Header from "./components/utils/Header";
 import Router from "./components/utils/Router";
-
 
 export default function App() {
   return (
     <>
-      {/* <ErrorBoundary> */}
+      <HelmetProvider>
+        {/* <ErrorBoundary> */}
         <Header />
         <Router />
-      {/* </ErrorBoundary> */}
+        {/* </ErrorBoundary> */}
+      </HelmetProvider>
     </>
   );
 }

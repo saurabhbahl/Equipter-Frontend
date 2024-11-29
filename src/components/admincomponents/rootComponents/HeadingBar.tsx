@@ -102,7 +102,7 @@ const HeadingBar = ({
         </button>
         <div className="">
           <p className="text-xs text-custom-orange">{subHeading}</p>
-          <h1 className="text-lg font-semibold text-gray-800 text-white">
+          <h1 className="text-lg font-semibold  text-white">
             {heading}
           </h1>
         </div>

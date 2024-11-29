@@ -1,22 +1,72 @@
-import { useNavigate } from "react-router-dom";
 import AccessoriesTable from "./AccessoriesTable";
+import SubTitle from "../rootComponents/SubTitle";
+import BreadCrump from "../rootComponents/BreadCrump";
+import { useAdminContext } from "../../../hooks/useAdminContext";
+import AccessoriesService from "./AccessoriesService";
+import { useEffect } from "react";
+import MetaComponent from "../../../utils/MetaComponent";
 
 const Accessories = () => {
-  const nav=useNavigate()
+  const breadcrumbs = [
+    { label: "Dashboard", link: "/" },
+    { label: "Accessories", link: "/accessories" },
+  ];
+  const {
+    accessories,
+    setAccessories,
+    setError,
+    loading,
+    setLoading,
+  } = useAdminContext();
+
+  const fetchAccessoriesData = async () => {
+    try {
+      setLoading((prev) => ({ ...prev, accessories: true }));
+      setError((prev) => ({ ...prev, accessories: "" }));
+      const data = await AccessoriesService.fetchAccessoriesWithImages();
+      console.log(data);
+      setAccessories(data);
+    } catch (error) {
+      console.log(error);
+      setError((prev) => ({
+        ...prev,
+        accessories: error.message || "Unexpected error occured",
+      }));
+    } finally {
+      setLoading({ accessories: false });
+    }
+  };
+
+  useEffect(() => {
+    if (accessories.length > 0) {
+      return;
+    } else {
+      fetchAccessoriesData();
+    }
+  }, []);
+
   return (
-    <div className="mx-auto p-8 bg-white my-5">
-      <div className="flex items-center my-4 justify-between pb-4 bg-white p-4 rounded-sm shadow-md">
-        <h1 className="text-2xl font-semibold text-gray-700">Accessories</h1>
-        <button
-          className="btn-yellow text-sm !p-2"
-          onClick={() => {
-            nav("/admin/accessories/new");}}
-        >
-          Add New Accessory
-        </button>
+    <>
+    <MetaComponent title="Accessories" />
+      <div className="mx-auto  font-sans  bg-gray-200 h-full ">
+        {/* header */}
+        <div className="flex justify-between bg-gradient-to-b p-5 border shadow- outline-none  from-gray-800 to-black/90">
+          <p className="text-white ">Accessories</p>
+          <BreadCrump breadcrumbs={breadcrumbs} />
+        </div>
+        {/* Table and Searchbar,Add New Button */}
+        <div className="p-5">
+          <SubTitle
+            title="Accessories"
+            reloadBtnFn={fetchAccessoriesData}
+            buttonLink="/admin/accessories/new"
+            loading={loading.accessories}
+            buttonText={`Add New Accessory `}
+          />
+          <AccessoriesTable />
+        </div>
       </div>
-      <AccessoriesTable />
-    </div>
+    </>
   );
 };
 

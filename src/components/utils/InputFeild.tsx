@@ -3,6 +3,7 @@ interface InputFieldProps {
   type: string;
   id: string;
   name: string;
+  readonly?:boolean;
   placeholder?: string;
   required?: boolean;
   value?: string;
@@ -20,6 +21,7 @@ const InputField = ({
   value,
   onChange,
   placeholder,
+  readonly=false,
   error,
   classes,
 }: InputFieldProps) => {
@@ -32,6 +34,7 @@ const InputField = ({
         <input
           type={type}
           id={id}
+          readOnly={readonly}
           name={name}
           min={1}
           required={required}

@@ -1,69 +1,47 @@
-import { useEffect, useState } from "react";
 import AccessoriesTableRow from "./AccessoriesTableRow";
 import LoaderSpinner from "../../utils/LoaderSpinner";
 import { useAdminContext } from "../../../hooks/useAdminContext";
-import AccessoriesService from "./AccessoriesService";
 import TableHeading from "../../Table/TableHeading";
 
 const AccessoriesTable = () => {
-  // const [accessories, setAccessories] = useState([]);
-  // const [loading, setLoading] = useState(true);
-  // const [error, setError] = useState<string | null>(null);
-  const headers = ["Sr.No.", "Name", "Price", "Stock", "Actions"];
-  const {
-    accessories,
-    error,
-    loading,
-    setAccessories,
-    setError,
-    setLoading,
-  } = useAdminContext();
+  const headers = ["Sr.No.", "ID", "Name", "Price", "Stock", "Actions"];
+  const { accessories, error, loading } = useAdminContext();
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading((prev) => ({ ...prev, accessories: false }));
-      setError((prev) => ({ ...prev, accessories: "" }));
-
-      try {
-        const data = await AccessoriesService.fetchAccessories();
-        console.log(data);
-        setAccessories(data);
-      } catch (error) {
-        console.log(error);
-        setError((prev) => ({
-          ...prev,
-          accessories: error.message || "Unexpected error occured",
-        }));
-      } finally {
-        setLoading({ accessories: false });
-      }
-    };
-    fetchData();
-  }, []);
   if (loading.accessories)
     return (
       <div className="w-full h-96 my-10 text-center mx-auto flex justify-center items-center ">
         <LoaderSpinner classes="w-[2rem] h-[2rem]" />
       </div>
     );
-  if (error?.accessories) return <div> {error.accessories}</div>;
+
+  if (error?.accessories) {
+    return <p className="text-red-600 text-center">{error.accessories}</p>;
+  }
 
   return (
-    <div className="overflow-auto shadow-lg rounded">
-      <table className="w-full mx-auto   bg-white">
-      
-        <TableHeading headers={headers} />
-        <tbody>
-          {accessories?.map((accessory, index) => (
-            <AccessoriesTableRow
-              key={index}
-              accessory={accessory}
-              id={index + 1}
-            />
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <>
+      {accessories.length > 0 ? (
+        <div className="overflow-x-auto relative shadow-md rounded-lg">
+          <table className="w-full text-sm !text-center text-gray-500 ">
+            <TableHeading headers={headers} />
+            <tbody className="bg-white">
+              {accessories?.map((accessory, index) => (
+                <AccessoriesTableRow
+                  key={index}
+                  accessory={accessory}
+                  id={index + 1}
+                />
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <div>
+          <p className="text-custom-orange text-center">No Accessories Found</p>
+          ;
+        </div>
+      )}
+    </>
   );
 };
 

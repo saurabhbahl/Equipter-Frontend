@@ -1,94 +1,42 @@
 import { useEffect, useState } from "react";
 import HeadingBar from "../rootComponents/HeadingBar";
-import { SfAccessToken } from "../../../utils/useEnv";
 import { useNavigate, useParams } from "react-router-dom";
 import LoaderSpinner from "../../utils/LoaderSpinner";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faArrowUp, faChevronLeft, faChevronRight, faCube, faMoneyBillWave, faTag, faWeightHanging } from "@fortawesome/free-solid-svg-icons";
+import {
+  faArrowUp,
+  faChevronLeft,
+  faChevronRight,
+  faCube,
+  faMoneyBillWave,
+  faTag,
+  faWeightHanging,
+} from "@fortawesome/free-solid-svg-icons";
+import { ProductsService } from "./ProductsService";
+import AccessoriesService from "../Accessories/AccessoriesService";
+
+import MetaComponent from "../../../utils/MetaComponent";
 
 const ViewProduct = () => {
+  const { id } = useParams();
   const [product, setProduct] = useState(null);
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const { id } = useParams();
   const [isAnimating, setIsAnimating] = useState(false);
-  const fetchProductDetails = async (productId: string) => {
-    const productUrl = `/api/services/data/v52.0/query/?q=SELECT+Id%2C+Name%2C+Product_Price__c%2C+Down_Payment_Cost__c%2C+GVWR__c%2C+Lift_Capacity__c%2C+Lift_Height__c%2C+Container__c%2C+%28SELECT+Id%2C+Image_URL__c%2C+Is_Featured__c%2C+Product_Id__c%2C+Name%2C+Image_Description__c+FROM+Product_Images__r%29+FROM+Product__c+WHERE+Id+%3D+%27${productId}%27`;
-
-    try {
-      const response = await fetch(productUrl, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${SfAccessToken}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Error fetching product: ${response.statusText}`);
-      }
-      const data = await response.json();
-      return data.records[0];
-    } catch (error) {
-      console.error("Error fetching product details:", error);
-      throw error;
-    }
-  };
   const nav = useNavigate();
 
-  const fetchAccessoryProducts = async (productId: string) => {
-    const accessoryProductUrl = `/api/services/data/v52.0/query/?q=SELECT+Id%2C+Accessory_Id__c%2C+Product_Id__c%2C+Name+FROM+Accessory_Product__c+WHERE+Product_Id__c+%3D+%27${productId}%27`;
-
-    try {
-      const response = await fetch(accessoryProductUrl, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${SfAccessToken}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(
-          `Error fetching accessory products: ${response.statusText}`
-        );
-      }
-      const data = await response.json();
-      return data.records;
-    } catch (error) {
-      console.error("Error fetching accessory products:", error);
-      throw error;
-    }
-  };
-
-  const fetchAccessories = async () => {
-    const accessoriesUrl =
-      "/api/services/data/v52.0/query/?q=SELECT+Id%2C+Name%2C+CreatedById%2C+Description__c%2C+LastModifiedById%2C+OwnerId%2C+Price__c%2C+Quantity__c+FROM+Accessory__c";
-
-    try {
-      const response = await fetch(accessoriesUrl, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${SfAccessToken}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Error fetching accessories: ${response.statusText}`);
-      }
-      const data = await response.json();
-      return data.records;
-    } catch (error) {
-      console.error("Error fetching accessories:", error);
-      throw error;
-    }
-  };
-
   const getProductWithDetails = async (productId: string) => {
-    const productDetails = await fetchProductDetails(productId);
-    const accessoryProducts = await fetchAccessoryProducts(productId);
-    const allAccessories = await fetchAccessories();
+    const productDetails = await ProductsService.fetchProductsDetailsWithImages(
+      productId
+    );
+    console.log(productDetails)
+
+    const accessoryProducts = await ProductsService.fetchProductsWithAccessories(
+      productDetails.Id
+    );
+
+    const allAccessories = await AccessoriesService.fetchAccessoriesWithImages();
 
     const accessoryProductMap = accessoryProducts.reduce((map, ap) => {
       map[ap.Accessory_Id__c] = ap;
@@ -109,12 +57,13 @@ const ViewProduct = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const productId = id;
+        const productId = id as string;
         const result = await getProductWithDetails(productId);
         setProduct(result);
         setLoading(false);
       } catch (error) {
         console.error("Error fetching product details:", error);
+        setError(error.message || "Error Fetching Product Details");
         setLoading(false);
       }
     };
@@ -144,24 +93,36 @@ const ViewProduct = () => {
 
   if (loading) {
     return (
-      <div className="w-full h-full flex justify-center my-20">
-        <LoaderSpinner />
-      </div>
+      <>
+        <HeadingBar buttonLink="/admin/products" heading="Product Details" />
+        <div className="w-full h-full flex justify-center my-20">
+          <LoaderSpinner />
+        </div>
+      </>
     );
   }
-
+  if (error) {
+    <>
+      <HeadingBar buttonLink="/admin/products" heading="Edit Product" />
+      return <p className="text-red-600 text-center my-60">{error}</p>;
+    </>;
+  }
   return (
     <>
+      <MetaComponent
+        title={product?.Meta_Title__c}
+        description={product?.Product_Price__c}
+      />
       <HeadingBar buttonLink="/admin/products" heading="Product Details" />
-      <div className="p-6 lg:p-10 bg-custom-sky min-h-screen capitalize">
-        <div className="space-y-8">
+      <div className="p-6 lg:p-8 bg-custom-sky min-h-screen capitalize">
+        <div className="space-y-6">
           {/* Product Images Section */}
-          <div className="bg-white p-4 rounded-xl shadow-lg">
+          <div className="bg-white p-4 rounded shadow-lg">
             <h3 className="text-3xl font-semibold text-custom-black-200 mb-4">
               Product Images
             </h3>
             <div className="relative w-full overflow-hidden rounded-lg border border-gray-200 shadow-md">
-              {product.images && product.images.length > 0 ? (
+              {product?.images && product?.images.length > 0 ? (
                 <>
                   <div
                     className={`w-full h-full transition-opacity duration-500 ${
@@ -172,7 +133,7 @@ const ViewProduct = () => {
                     <img
                       src={product.images[currentImageIndex].Image_URL__c}
                       alt={`Product image ${currentImageIndex + 1}`}
-                      className="rounded-lg w-full h-[650px] object-cover shadow-md"
+                      className="rounded w-full h-[650px] object-cover shadow-md"
                       // className="rounded-md w-full h-[500px] object-cover"
                     />
                     {product.images[currentImageIndex].Is_Featured__c && (
@@ -187,7 +148,7 @@ const ViewProduct = () => {
                         onClick={handlePrevImage}
                         className="absolute top-1/2 left-4 transform -translate-y-1/2 bg-custom-orange bg-opacity-75 hover:bg-opacity-100 text-white rounded-full p-3 shadow-md focus:outline-none"
                       >
-                        <FontAwesomeIcon icon={faChevronLeft  } />
+                        <FontAwesomeIcon icon={faChevronLeft} />
                       </button>
                       <button
                         onClick={handleNextImage}
@@ -322,42 +283,39 @@ const ViewProduct = () => {
               <h3 className="text-3xl font-semibold text-custom-black-200 mb-6">
                 Accessories
               </h3>
-              <ul className="space-y-6">
-                {product.accessories.map((accessory, index) => (
-                  <li
-                    key={index}
-                    className="flex items-start hover:bg-gray-50 p-3 rounded-lg transition"
-                  >
-                    {accessory.Image_URL__c && (
-                      <img
-                        src={accessory.Image_URL__c}
-                        alt={accessory.Name}
-                        className="w-16 h-16 object-cover rounded-md shadow-sm mr-4"
-                      />
-                    )}
-                    <div
-                      className="bg-custom-gray-300 w-full cursor-pointer p-4 rounded-lg"
-                      title="See Details"
-                      onClick={() =>
-                        nav(`/admin/accessories/view/${accessory.Id}`)
-                      }
-                    >
-                      <h4 className="text-lg font-semibold capitalize text-gray-800">
-                        {accessory.Name}
-                      </h4>
-                      <p className="text-sm text-gray-600">
-                        {accessory.Description__c}
-                      </p>
-                      <p className="text-md font-medium text-custom-black-200 mt-4">
-                        ${accessory.Price__c.toFixed(2)}
-                      </p>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {product?.accessories?.map((accessory, index) => {
+                  const featuredImageUrl = accessory?.Accesory_Images__r?.records?.filter(
+                    (data) => data.Is_Featured__c == true
+                  );
+                  return (
+                    <>
+                      {" "}
+                      <label
+                        key={index+1}
+                        onClick={() =>
+                          nav(`/admin/accessories/view/${accessory.Id}`)
+                        }
+                        className="flex items-center space-x-2 bg-gray-50 p-3 rounded-md hover:bg-gray-100 cursor-pointer"
+                      >
+                        <span className="capitalize flex gap-2 items-center text-gray-700">
+                          <img
+                            className="shadow-sm w-[30px] h-[30px] object-cover rounded border border-gray-300"
+                            src={featuredImageUrl[0]?.Image_URL__c}
+                            alt="Img"
+                          />
+                          {accessory?.Name} -{" "}
+                          <span className="text-gray-600 font-bold">
+                            ${accessory?.Price__c}
+                          </span>
+                        </span>
+                      </label>
+                    </>
+                  );
+                })}
+              </div>
             </div>
           )}
-
         </div>
       </div>
     </>
@@ -365,5 +323,3 @@ const ViewProduct = () => {
 };
 
 export default ViewProduct;
-
-

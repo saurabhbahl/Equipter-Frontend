@@ -67,18 +67,18 @@ interface TableRowProps {
 
 const TableRow: React.FC<TableRowProps> = ({ columns, actions }) => {
   return (
-    <tr className="bg-white border-b capitalize hover:bg-gray-50 transition-colors">
+    <tr className="bg-gray-100  border-b border-gray-400 capitalize hover:bg-gray-200 transition-colors">
       {columns.map((col, index) => (
         <td
           key={index}
-          className="px-6 py-4 text-sm text-gray-700 whitespace-nowrap"
+          className="px-5 py-3 text-sm text-left text-gray-700 whitespace-nowrap"
         >
           {col}
         </td>
       ))}
       {actions && (
-        <td className="px-6 py-4 text-right">
-          <div className="flex items-center  justify-end space-x-2">
+        <td className="px-6 py-3 text-right">
+          <div className="flex items-left  justify-end space-x-1">
             {actions.map((action, index) => (
               <button
                 key={index}

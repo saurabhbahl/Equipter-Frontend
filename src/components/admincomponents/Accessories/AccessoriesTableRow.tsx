@@ -1,51 +1,12 @@
-// import TableRow from "../../Table/TableRow";
-
-// const AccessoriesTableRow = ({ accessory ,id}: any) => {
-//   const columns = [
-//     <span className="font-semibold text-gray-700">{id}</span>,
-//     // accessory.image ? (
-//     //   <img
-//     //     src={accessory.image}
-//     //     alt={accessory.name}
-//     //     className="w-12 h-12 rounded-full object-cover mx-auto"
-//     //   />
-//     // ) : (
-//     //   <div className="w-12 h-12 mx-auto bg-gray-200 flex items-center justify-center">
-//     //     No Image
-//     //   </div>
-//     // ),
-//     <span className="font-semibold text-gray-700">{accessory.Name}</span>,
-//      <span className="text-blue-500 font-semibold">${accessory.Price__c}</span>,
-//     <span
-//       className={`font-semibold text-sm px-3 py-1 rounded-full ${
-//         accessory.Quantity__c === "In Stock"
-//           ? "bg-green-100 text-green-500"
-//           : accessory.stockStatus === "Low Stock"
-//           ? "bg-yellow-100 text-yellow-500"
-//           : "bg-red-100 text-red-500"
-//       }`}
-//     >
-//       {accessory.Quantity__c}
-//     </span>,
-//     <span className="text-gray-500">{accessory.country}</span>,
-//   ];
-
-//   return <TableRow columns={columns} />;
-// };
-
-// export default AccessoriesTableRow;
-
-// AccessoriesTableRow.tsx
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrashAlt, faEdit, faEye } from "@fortawesome/free-solid-svg-icons";
 import TableRow from "../../Table/TableRow";
 import { useNavigate } from "react-router-dom";
 import { SfAccessToken } from "../../../utils/useEnv";
 import { useNotification } from "../../../contexts/NotificationContext";
-import {
-  DeleteObjectsCommand,
-  S3Client,
-} from "@aws-sdk/client-s3";
+import { DeleteObjectsCommand, S3Client } from "@aws-sdk/client-s3";
+import Loader from "../../utils/Loader";
+import { useState } from "react";
 
 const s3 = new S3Client({
   region: import.meta.env.VITE_AWS_REGION,
@@ -58,11 +19,19 @@ const s3 = new S3Client({
 const AccessoriesTableRow = ({ accessory, id }: any) => {
   const nav = useNavigate();
   const { addNotification } = useNotification();
+  const [isResSaving, setIsResSaving] = useState(false);
+  const [currentStatus, setCurrentStatus] = useState("");
+
+  const { Accesory_Images__r } = accessory;
+  const featuredImageUrl =
+    Accesory_Images__r?.records?.filter(
+      (data) => data.Is_Featured__c == true
+    ) || [];
 
   const deleteImagesFromS3 = async (imageUrls: string[]): Promise<void> => {
     const bucketName = import.meta.env.VITE_AWS_BUCKET_NAME;
     const region = import.meta.env.VITE_AWS_REGION;
-
+    setCurrentStatus("Deleting Images...");
     // Extract S3 keys from URLs
     const objectsToDelete = imageUrls.map((url) => {
       const key = url.split(
@@ -91,7 +60,8 @@ const AccessoriesTableRow = ({ accessory, id }: any) => {
     if (!window.confirm("Are you sure you want to delete this accessory?")) {
       return;
     }
-
+    setIsResSaving(true);
+    setCurrentStatus("Deleting Product...");
     try {
       // Fetch associated images for the accessory
       const imagesResponse = await fetch(
@@ -159,25 +129,36 @@ const AccessoriesTableRow = ({ accessory, id }: any) => {
       );
       if (errors.length > 0) {
         console.error("Batch delete errors:", errors);
-        throw new Error("Some items could not be deleted. Check logs for details.");
+        throw new Error(
+          "Some items could not be deleted. Check logs for details."
+        );
       }
 
       addNotification(
         "success",
         "Accessory and related records deleted successfully."
       );
+      setIsResSaving(false);
       window.location.reload();
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error deleting accessory:", error);
       addNotification("error", error.message || "Error deleting accessory.");
     }
   };
 
   const columns = [
-    <span className="font-semibold text-gray-700">{id}</span>,
-    <span className="font-semibold text-gray-700">{accessory.Name}</span>,
-    <span className="text-blue-500 font-semibold">${accessory.Price__c}</span>,
-    <span className="text-gray-500">{accessory.Quantity__c}</span>,
+    id,
+    accessory?.Id,
+    <span className=" flex justify-start items-center gap-4">
+      <img
+        className="shadow-sm w-[40px] h-[40px] object-cover rounded border border-gray-300"
+        src={featuredImageUrl[0]?.Image_URL__c}
+        alt="Img"
+      />{" "}
+      {accessory.Name}
+    </span>,
+    `$${accessory.Price__c}`,
+    accessory.Quantity__c,
   ];
 
   const actions = [
@@ -185,23 +166,28 @@ const AccessoriesTableRow = ({ accessory, id }: any) => {
       icon: <FontAwesomeIcon icon={faEye} />,
       title: "View Accessory",
       onClick: () => nav(`/admin/accessories/view/${accessory.Id}`),
-      className: "hover:text-blue-500",
+      className: "text-sky-500 hover:text-blue-700",
     },
     {
       icon: <FontAwesomeIcon icon={faEdit} />,
       title: "Edit Accessory",
       onClick: () => nav(`/admin/accessories/edit/${accessory.Id}`),
-      className: "hover:text-blue-500",
+      className: "text-green-500 hover:text-green-700",
     },
     {
       icon: <FontAwesomeIcon icon={faTrashAlt} />,
       title: "Delete Accessory",
       onClick: () => deleteAccessory(accessory.Id),
-      className: "hover:text-red-500",
+      className: "text-red-500 hover:text-red-700",
     },
   ];
 
-  return <TableRow columns={columns} actions={actions} />;
+  return (
+    <>
+      {isResSaving && <Loader message={currentStatus} />}
+      <TableRow columns={columns} actions={actions} />
+    </>
+  );
 };
 
 export default AccessoriesTableRow;

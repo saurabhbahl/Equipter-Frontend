@@ -1,6 +1,7 @@
 import ReactEChartsCore from "echarts-for-react/lib/core";
 import * as echarts from "echarts/core";
 import { BarChart, LineChart, PieChart, MapChart } from "echarts/charts";
+
 import usaJson from "./mapData.json";
 import {
   GridComponent,
@@ -14,6 +15,7 @@ import { CanvasRenderer } from "echarts/renderers";
 import Topbar from "./Topbar";
 import Stats from "./Stats";
 import Map from "./Map";
+import { Helmet } from "react-helmet-async";
 
 echarts.use([
   TitleComponent,
@@ -194,60 +196,66 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="p-6 bg-gray-100 h-full flex flex-col gap-5">
+    <>
+    <Helmet>
+      <title>Dashboard</title>
+      <link rel="canonical" href={window.location.href} />
+    </Helmet>
       <Topbar />
-      <Stats />
-      {/* Charts Section */}
-      <div className="flex w-full gap-6">
-        {/* Sales & Revenue Line Chart */}
-        <div className="bg-white p-6 w-[50%] shadow-lg">
-          <ReactEChartsCore
-            echarts={echarts}
-            option={salesRevenueOptions}
-            style={{ height: "300px", width: "100%" }}
-            notMerge={true}
-            lazyUpdate={true}
-          />
+      <div className="p-4 bg-gray-100 h-full flex flex-col gap-5">
+        <Stats />
+        {/* Charts Section */}
+        <div className="flex w-full gap-6">
+          {/* Sales & Revenue Line Chart */}
+          <div className="bg-white p-6 w-[50%] shadow-lg">
+            <ReactEChartsCore
+              echarts={echarts}
+              option={salesRevenueOptions}
+              style={{ height: "300px", width: "100%" }}
+              notMerge={true}
+              lazyUpdate={true}
+            />
+          </div>
+
+          {/* Product Quantities Bar Chart */}
+          <div className="bg-white p-6 w-[50%] shadow-lg">
+            <ReactEChartsCore
+              echarts={echarts}
+              option={productOptions}
+              style={{ height: "300px", width: "100%" }}
+              notMerge={true}
+              lazyUpdate={true}
+            />
+          </div>
+        </div>
+        <div className="flex w-full gap-6">
+          {/* Customer Segmentation Pie Chart */}
+          <div className="bg-white p-6 shadow-lg w-[35%]">
+            <ReactEChartsCore
+              echarts={echarts}
+              option={customerOptions}
+              style={{ height: "300px", width: "100%" }}
+              notMerge={true}
+              lazyUpdate={true}
+            />
+          </div>
+
+          {/* USA Map Sorted */}
+          <div className="bg-white p-6 shadow-lg w-[65%]">
+            <Map />
+          </div>
         </div>
 
-        {/* Product Quantities Bar Chart */}
-        <div className="bg-white p-6 w-[50%] shadow-lg">
+        {/*  Sales by Product  */}
+        <div className="bg-white p-6 w-full shadow-lg">
           <ReactEChartsCore
             echarts={echarts}
-            option={productOptions}
-            style={{ height: "300px", width: "100%" }}
-            notMerge={true}
-            lazyUpdate={true}
+            option={salesByProductOptions}
+            style={{ height: "400px" }}
           />
         </div>
       </div>
-      <div className="flex w-full gap-6">
-        {/* Customer Segmentation Pie Chart */}
-        <div className="bg-white p-6 shadow-lg w-[35%]">
-          <ReactEChartsCore
-            echarts={echarts}
-            option={customerOptions}
-            style={{ height: "300px", width: "100%" }}
-            notMerge={true}
-            lazyUpdate={true}
-          />
-        </div>
-
-        {/* USA Map Sorted */}
-        <div className="bg-white p-6 shadow-lg w-[65%]">
-          <Map />
-        </div>
-      </div>
-
-      {/*  Sales by Product  */}
-      <div className="bg-white p-6 w-full shadow-lg">
-        <ReactEChartsCore
-          echarts={echarts}
-          option={salesByProductOptions}
-          style={{ height: "400px" }}
-        />
-      </div>
-    </div>
+    </>
   );
 };
 
