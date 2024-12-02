@@ -5,6 +5,8 @@ import { useAdminContext } from "../../../hooks/useAdminContext";
 import AccessoriesService from "./AccessoriesService";
 import { useEffect } from "react";
 import MetaComponent from "../../../utils/MetaComponent";
+import { ErrorWithMessage } from "../../../types/componentsTypes";
+import { GlobalLoadingState } from "../../../contexts/AdminContext";
 
 const Accessories = () => {
   const breadcrumbs = [
@@ -30,10 +32,11 @@ const Accessories = () => {
       console.log(error);
       setError((prev) => ({
         ...prev,
-        accessories: error.message || "Unexpected error occured",
+        accessories:
+          (error as ErrorWithMessage).message || "Unexpected error occurred",
       }));
     } finally {
-      setLoading({ accessories: false });
+      setLoading((prev:GlobalLoadingState)=>({...prev, accessories: false }));
     }
   };
 
@@ -47,7 +50,7 @@ const Accessories = () => {
 
   return (
     <>
-    <MetaComponent title="Accessories" />
+      <MetaComponent title="Accessories" />
       <div className="mx-auto  font-sans  bg-gray-200 h-full ">
         {/* header */}
         <div className="flex justify-between bg-gradient-to-b p-5 border shadow- outline-none  from-gray-800 to-black/90">

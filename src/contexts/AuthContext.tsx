@@ -1,15 +1,16 @@
 import { createContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { User } from "../types/zodschemas/UserSchemas";
+import { IUserLogin, User } from "../types/zodschemas/UserSchemas";
 import axios, { AxiosError } from "axios";
 import { BackendUrl } from "../utils/useEnv";
 import { isTokenExpired } from "../utils/axios";
 import { ITokenRes } from "../pages/auth/ResetPassword";
+import { LoginResponse } from "../pages/auth/LoginPage";
 
 export interface AuthContextType {
   token: string | null;
   user: User | null;
-  loginAction: (data: any) => any;
+  loginAction: (data: IUserLogin) => Promise<LoginResponse>;
   logOut: () => void;
   loading: boolean;
 }
@@ -22,7 +23,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  
 
   const navigate = useNavigate();
 
@@ -41,10 +41,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setLoading(false);
   }, []);
 
-  const loginAction = async (data: any) => {
+  const loginAction = async (data: IUserLogin) => {
     try {
+      console.log(data);
       const response = await axios.post(`${BackendUrl}/auth/login`, data);
-      const res = response.data as any;
+      const res = response.data;
 
       if (res.success) {
         setUser({ id: res.userData.id, role: res.userData.role });

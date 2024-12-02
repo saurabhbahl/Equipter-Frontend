@@ -2,6 +2,7 @@ import ProductTableRow from "./ProductTableRow";
 import LoaderSpinner from "../../utils/LoaderSpinner";
 import TableHeading from "../../Table/TableHeading";
 import { useAdminContext } from "../../../hooks/useAdminContext";
+import { Product } from "./ProductSchema";
 
 const ProductTable = () => {
   const { products, loading, error } = useAdminContext();
@@ -33,7 +34,7 @@ const ProductTable = () => {
           <table className="w-full text-sm text-center text-gray-500">
             <TableHeading headers={headers} />
             <tbody className="bg-white">
-              {products.map((product, index: number) => (
+              {products.map((product:Product, index: number) => (
                 <ProductTableRow
                   key={product.Id}
                   product={product}

@@ -18,6 +18,8 @@ import Loader from "../../utils/Loader";
 import LoaderSpinner from "../../utils/LoaderSpinner";
 
 import AccessoriesService from "./AccessoriesService";
+import { ErrorWithMessage } from "../../../types/componentsTypes";
+import { useAdminContext } from "../../../hooks/useAdminContext";
 
 const s3 = new S3Client({
   region: import.meta.env.VITE_AWS_REGION,
@@ -29,6 +31,7 @@ const s3 = new S3Client({
 
 const AddNewAccessory = () => {
   const nav = useNavigate();
+  const {setLoading,setAccessories}=useAdminContext()
   const [formValues, setFormValues] = useState<IAccessoriesInput>({
     Description__c: "",
     Name: "",
@@ -58,8 +61,8 @@ const AddNewAccessory = () => {
   const [isResSaving, setIsResSaving] = useState(false);
   const [currentStatus, setCurrentStatus] = useState("");
   const [imageUploadError, setImageUploadError] = useState(false);
-  const formRef = useRef(null);
-  const imagesRef = useRef(null);
+  const formRef = useRef<HTMLFormElement | null>(null);
+  const imagesRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (formRef.current && imagesRef.current) {
@@ -76,7 +79,7 @@ const AddNewAccessory = () => {
       ContentType: image.type,
     };
     const command = new PutObjectCommand(uploadParams);
-    const data = await s3.send(command);
+     await s3.send(command);
     return `https://${import.meta.env.VITE_AWS_BUCKET_NAME}.s3.${
       import.meta.env.VITE_AWS_REGION
     }.amazonaws.com/${uploadParams.Key}`;
@@ -221,7 +224,7 @@ const AddNewAccessory = () => {
     console.log(result);
  
     if (!result.success) {
-      const newErrors: IAccessories = {
+      const newErrors: IAccessoriesInput = {
         Description__c: "",
         Name: "",
         Price__c: "",
@@ -230,7 +233,7 @@ const AddNewAccessory = () => {
         Meta_Title__c:""
       };
       result.error.issues.forEach((issue) => {
-        const fieldName = issue.path[0] as keyof IAccessories;
+        const fieldName = issue.path[0] as keyof IAccessoriesInput;
         console.log(fieldName);
         newErrors[fieldName] = String(issue.message);
       });
@@ -250,7 +253,7 @@ const AddNewAccessory = () => {
     
     const slug: string = formValues.Accessory_URL__c;
     const isUnique = await AccessoriesService.isSlugUnique(slug);
-  
+  console.log(isUnique)
     if (!isUnique) {
       setErrors((prevErrors) => ({
         ...prevErrors,
@@ -302,11 +305,15 @@ const AddNewAccessory = () => {
         await saveImageToSalesforce(newAccessoryId, imageUrl, index === 0);
       }
 
+      setLoading((prev) => ({ ...prev, accessories: true }));
+      const newProd = await AccessoriesService.fetchAccessoriesWithImages();
+      setAccessories(newProd);
       addNotification("success", "Accessory added successfully");
+      setLoading((prev) => ({ ...prev, accessories: false }));
       nav("/admin/accessories");
     } catch (error) {
       console.error("Error creating accessory:", error);
-      addNotification("error", error.message);
+      addNotification("error", (error as ErrorWithMessage).message);
     } finally {
       setIsResSaving(false);
     }

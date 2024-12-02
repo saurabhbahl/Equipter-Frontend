@@ -20,6 +20,7 @@ import { useNotification } from "../../../contexts/NotificationContext";
 import LoaderSpinner from "../../utils/LoaderSpinner";
 import Loader from "../../utils/Loader";
 import { ProductsService } from "./ProductsService";
+import { ErrorWithMessage } from "../../../types/componentsTypes";
 
 const s3 = new S3Client({
   region: import.meta.env.VITE_AWS_REGION,
@@ -88,8 +89,8 @@ const AddNewProduct = () => {
   const { addNotification } = useNotification();
 
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const formRef = useRef(null);
-  const imagesRef = useRef(null);
+  const formRef = useRef<HTMLFormElement | null>(null);
+  const imagesRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (formRef.current && imagesRef.current) {
@@ -106,7 +107,7 @@ const AddNewProduct = () => {
       ContentType: image.type,
     };
     const command = new PutObjectCommand(uploadParams);
-    const data = await s3.send(command);
+  await s3.send(command);
     return `https://${import.meta.env.VITE_AWS_BUCKET_NAME}.s3.${
       import.meta.env.VITE_AWS_REGION
     }.amazonaws.com/${uploadParams.Key}`;
@@ -382,7 +383,7 @@ const AddNewProduct = () => {
     } catch (error) {
       setError((prev) => ({
         ...prev,
-        accessories: error.message || "An error occurred",
+        accessories: (error as ErrorWithMessage).message || "An error occurred",
       }));
     } finally {
       setLoading((prevState) => ({ ...prevState, accessories: false }));

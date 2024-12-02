@@ -6,6 +6,7 @@ import { useAdminContext } from "../../../hooks/useAdminContext";
 import { ProductsService } from "./ProductsService";
 import { useEffect } from "react";
 import MetaComponent from "../../../utils/MetaComponent";
+import { ErrorWithMessage } from "../../../types/componentsTypes";
 
 const Products = () => {
   const breadcrumbs = [
@@ -31,7 +32,7 @@ const Products = () => {
       console.log(error);
       setError((prev) => ({
         ...prev,
-        products: error.message || "Unexpected error occured",
+        products: (error as ErrorWithMessage).message || "Unexpected error occured",
       }));
     } finally {
       setLoading((prev) => ({ ...prev, products: false }));

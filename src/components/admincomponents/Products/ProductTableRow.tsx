@@ -7,6 +7,9 @@ import { useNotification } from "../../../contexts/NotificationContext";
 import { DeleteObjectsCommand, S3Client } from "@aws-sdk/client-s3";
 import { useState } from "react";
 import Loader from "../../utils/Loader";
+import { Product, ProductImage } from "./ProductSchema";
+import { Accessory } from "../Accessories/AccessoriesSchema";
+import { ErrorWithMessage } from "../../../types/componentsTypes";
 
 const s3 = new S3Client({
   region: import.meta.env.VITE_AWS_REGION,
@@ -16,7 +19,7 @@ const s3 = new S3Client({
   },
 });
 
-const ProductTableRow = ({ product, no }: { product: any; no: number }) => {
+const ProductTableRow = ({ product, no }: { product: Product; no: number }) => {
   const nav = useNavigate();
   const { addNotification } = useNotification();
   const [isResSaving, setIsResSaving] = useState(false);
@@ -45,7 +48,7 @@ const ProductTableRow = ({ product, no }: { product: any; no: number }) => {
 
     // Send the delete request
     const command = new DeleteObjectsCommand(deleteParams);
-    const response = await s3.send(command);
+     await s3.send(command);
   };
 
   const deleteProduct = async (productId: string) => {
@@ -72,7 +75,7 @@ const ProductTableRow = ({ product, no }: { product: any; no: number }) => {
       }
 
       const imageRecords = (await imagesResponse.json()).records;
-      const imageUrls = imageRecords.map((record) => record.Image_URL__c);
+      const imageUrls = imageRecords.map((record:ProductImage) => record.Image_URL__c);
 
       // Delete all images from S3
       await deleteImagesFromS3(imageUrls);
@@ -99,7 +102,7 @@ const ProductTableRow = ({ product, no }: { product: any; no: number }) => {
       const batchRequests = [];
 
       // Add requests for deleting images from Salesforce
-      imageRecords.forEach((image) => {
+      imageRecords.forEach((image:ProductImage) => {
         batchRequests.push({
           method: "DELETE",
           url: `/services/data/v52.0/sobjects/Product_Images__c/${image.Id}`,
@@ -107,7 +110,7 @@ const ProductTableRow = ({ product, no }: { product: any; no: number }) => {
       });
 
       // Add requests for deleting accessory products from Salesforce
-      accessoryRecords.forEach((accessory) => {
+      accessoryRecords.forEach((accessory:Accessory) => {
         batchRequests.push({
           method: "DELETE",
           url: `/services/data/v52.0/sobjects/Accessory_Product__c/${accessory.Id}`,
@@ -143,7 +146,7 @@ const ProductTableRow = ({ product, no }: { product: any; no: number }) => {
 
       // Handle individual errors from batch response
       const errors = batchResult.results.filter(
-        (result) => result.statusCode >= 400
+        (result:{statusCode:number}) => result.statusCode >= 400
       );
       if (errors.length > 0) {
         console.error("Batch delete errors:", errors);
@@ -160,19 +163,19 @@ const ProductTableRow = ({ product, no }: { product: any; no: number }) => {
       window.location.reload();
     } catch (error) {
       console.error("Error deleting product:", error);
-      addNotification("error", error.message || "Error deleting product.");
+      addNotification("error", (error as ErrorWithMessage).message || "Error deleting product.");
     }
   };
   const { Product_Images__r } = product;
 
-  const featuredImageUrl = Product_Images__r.records.filter((data) => data.Is_Featured__c == true);
+  const featuredImageUrl = Product_Images__r?.records.filter((data) => data.Is_Featured__c == true);
   const columns = [
     no,
     product.Id,
     <span className=" flex justify-start items-center gap-4">
       <img
         className="shadow-sm w-[40px] h-[40px] object-cover rounded border border-gray-300"
-        src={featuredImageUrl[0].Image_URL__c}
+        src={featuredImageUrl?.[0].Image_URL__c}
         alt="Img"
       />{" "}
       {product.Name}

@@ -19,7 +19,6 @@ const SubTitle = ({
   buttonText,
 }: Props) => {
   const navigate = useNavigate();
-
   return (
     <div className="mb-6  bg-slate-00 w-full">
       {/* <h1 className="text-3xl font-bold mb-4 text-gray-800">{title}</h1> */}
@@ -29,7 +28,7 @@ const SubTitle = ({
           name="srch"
           type="search"
           placeholder={`Search ${title}`}
-          classes="rounded m-0 text-black border-none shadow-sm"
+          classes="rounded m-0 text-black border-none shadow-sm hidden"
         />
         <div className="flex items-center gap-5">
           {reloadBtnFn && (
@@ -49,7 +48,8 @@ const SubTitle = ({
           )}
           <button
             className="px-4 py-2.5 text-sm bg-custom-orange/85  hover:bg-custom-orange text-white rounded"
-            onClick={() => navigate(buttonLink)}>
+            onClick={() => navigate(buttonLink)}
+          >
             {buttonText}
           </button>
         </div>

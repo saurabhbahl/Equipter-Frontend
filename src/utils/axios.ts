@@ -5,11 +5,16 @@ export const apiClient = axios.create({
   baseURL: BackendUrl,
   timeout: 10000,
 });
-
-export const isTokenExpired = (
-  token: string | null = localStorage.getItem("token") || null
-) => {
-  if (!token) return true;
+interface isExp {
+  isExp: boolean;
+  permission: string;
+}
+export const isTokenExpired = (token: string | null = localStorage.getItem("token") || null): isExp => {
+  if (!token)
+    return {
+      isExp: true,
+      permission: "",
+    };
   try {
     const payload = JSON.parse(atob(token.split(".")[1]));
     const isExpired = payload.exp < Date.now() / 1000;
@@ -24,14 +29,14 @@ export const isTokenExpired = (
     // console.error("Error decoding token or invalid token format", error);
     return {
       isExp: true,
+      permission: "",
     };
   }
 };
 
-apiClient.interceptors.request.use(
-  (config) => {
+apiClient.interceptors.request.use((config) => {
     const token: string | null = localStorage.getItem("token");
-    const isExp: any = isTokenExpired(token);
+    const isExp: isExp = isTokenExpired(token);
     if (token && !isExp.isExp) {
       config.headers.Authorization = `Bearer ${token}`;
     } else {

@@ -13,8 +13,8 @@ import { useNavigate } from "react-router-dom";
 import LoaderSpinner from "../../components/utils/LoaderSpinner";
 import Loader from "../../components/utils/Loader";
 
-interface LoginResponse {
-  success: boolean;             
+export interface LoginResponse {
+  success: boolean;
   message: string;
 }
 
@@ -62,7 +62,7 @@ const LoginPage = () => {
     setLoading(true);
 
     // Login action
-    const loginResponse: LoginResponse = await loginAction(formData);
+    const loginResponse = await loginAction(formData);
 
     setLoading(false);
 

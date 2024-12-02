@@ -7,6 +7,8 @@ import { useNotification } from "../../../contexts/NotificationContext";
 import { DeleteObjectsCommand, S3Client } from "@aws-sdk/client-s3";
 import Loader from "../../utils/Loader";
 import { useState } from "react";
+import { ErrorWithMessage } from "../../../types/componentsTypes";
+import { Accessory } from "./AccessoriesSchema";
 
 const s3 = new S3Client({
   region: import.meta.env.VITE_AWS_REGION,
@@ -15,8 +17,17 @@ const s3 = new S3Client({
     secretAccessKey: import.meta.env.VITE_AWS_SECRET_ACCESS_KEY,
   },
 });
-
-const AccessoriesTableRow = ({ accessory, id }: any) => {
+export interface AccessoryImage {
+  Is_Featured__c: boolean;
+}
+export interface Image {
+  Image_URL__c: string;
+}
+interface Props {
+  accessory: Accessory;
+  id: number;
+}
+const AccessoriesTableRow = ({ accessory, id }: Props) => {
   const nav = useNavigate();
   const { addNotification } = useNotification();
   const [isResSaving, setIsResSaving] = useState(false);
@@ -25,7 +36,7 @@ const AccessoriesTableRow = ({ accessory, id }: any) => {
   const { Accesory_Images__r } = accessory;
   const featuredImageUrl =
     Accesory_Images__r?.records?.filter(
-      (data) => data.Is_Featured__c == true
+      (data: AccessoryImage) => data.Is_Featured__c == true
     ) || [];
 
   const deleteImagesFromS3 = async (imageUrls: string[]): Promise<void> => {
@@ -80,7 +91,9 @@ const AccessoriesTableRow = ({ accessory, id }: any) => {
       }
 
       const imageRecords = (await imagesResponse.json()).records;
-      const imageUrls = imageRecords.map((record) => record.Image_URL__c);
+      const imageUrls = imageRecords.map(
+        (record: Record<string, unknown>) => record.Image_URL__c
+      );
 
       // Delete all images from S3
       await deleteImagesFromS3(imageUrls);
@@ -89,7 +102,7 @@ const AccessoriesTableRow = ({ accessory, id }: any) => {
       const batchRequests = [];
 
       // Add requests for deleting images from Salesforce
-      imageRecords.forEach((image) => {
+      imageRecords.forEach((image: { Id: string }) => {
         batchRequests.push({
           method: "DELETE",
           url: `/services/data/v52.0/sobjects/Accessory_Image__c/${image.Id}`,
@@ -125,7 +138,7 @@ const AccessoriesTableRow = ({ accessory, id }: any) => {
 
       // Handle individual errors from batch response
       const errors = batchResult.results.filter(
-        (result) => result.statusCode >= 400
+        (result: { statusCode: number }) => result.statusCode >= 400
       );
       if (errors.length > 0) {
         console.error("Batch delete errors:", errors);
@@ -142,7 +155,11 @@ const AccessoriesTableRow = ({ accessory, id }: any) => {
       window.location.reload();
     } catch (error) {
       console.error("Error deleting accessory:", error);
-      addNotification("error", error.message || "Error deleting accessory.");
+      addNotification(
+        "error",
+        ((error as ErrorWithMessage).message as string) ||
+          "Error deleting accessory."
+      );
     }
   };
 

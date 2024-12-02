@@ -19,12 +19,14 @@ import HeadingBar from "../rootComponents/HeadingBar";
 import AccessoriesService from "../Accessories/AccessoriesService";
 import { useAdminContext } from "../../../hooks/useAdminContext";
 import { SfAccessToken } from "../../../utils/useEnv";
-import { ProductSchema } from "./ProductSchema";
+import { AccessoryProduct, ProductImage, ProductSchema } from "./ProductSchema";
 import { useNotification } from "../../../contexts/NotificationContext";
 import LoaderSpinner from "../../utils/LoaderSpinner";
 import Loader from "../../utils/Loader";
 import { ProductsService } from "./ProductsService";
 import { IProductInputValues } from "./AddNewProduct";
+import { ErrorWithMessage } from "../../../types/componentsTypes";
+import { ExistingImage, PreviewImage } from "../Accessories/EditAccessory";
 
 const s3 = new S3Client({
   region: import.meta.env.VITE_AWS_REGION,
@@ -40,7 +42,7 @@ const EditProduct = () => {
   const { addNotification } = useNotification();
   const { accessories, setAccessories, setProducts } = useAdminContext();
 
-   const [formValues, setFormValues] = useState<IProductInputValues>({
+  const [formValues, setFormValues] = useState<IProductInputValues>({
     productName: "",
     price: "",
     gvwr: "",
@@ -65,13 +67,11 @@ const EditProduct = () => {
   const [isResSaving, setIsResSaving] = useState(false);
   const [currentStatus, setCurrentStatus] = useState("");
   const [images, setImages] = useState<File[]>([]);
-  const [existingImages, setExistingImages] = useState<any[]>([]);
-  const [featuredImage, setFeaturedImage] = useState<File | any | null>(null);
-  const [previewImage, setPreviewImage] = useState<{
-    url: string;
-    index: number;
-    type: "new" | "existing";
-  } | null>(null);
+  const [existingImages, setExistingImages] = useState<ExistingImage[]>([]);
+  const [featuredImage, setFeaturedImage] = useState<
+    ExistingImage | File | null
+  >(null);
+  const [previewImage, setPreviewImage] = useState<PreviewImage | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [imageUploadError, setImageUploadError] = useState(false);
@@ -84,12 +84,12 @@ const EditProduct = () => {
     []
   );
   const [existingAccessoryProducts, setExistingAccessoryProducts] = useState<
-    any[]
+    AccessoryProduct[]
   >([]);
 
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const formRef = useRef(null);
-  const imagesRef = useRef(null);
+  const formRef = useRef<HTMLFormElement | null>(null);
+  const imagesRef = useRef<HTMLDivElement | null>(null);
   const [formHeight, setFormHeight] = useState(0);
 
   useEffect(() => {
@@ -203,7 +203,11 @@ const EditProduct = () => {
         img.Id === imageId ? { ...img, markedForDeletion: true } : img
       )
     );
-    if (featuredImage?.Id === imageId) {
+    if (
+      featuredImage &&
+      "Id" in featuredImage &&
+      featuredImage.Id === imageId
+    ) {
       const nextFeatured =
         images[0] ||
         existingImages.find(
@@ -351,8 +355,8 @@ const EditProduct = () => {
         productName: "",
         price: "",
         gvwr: "",
-        Meta_Title__c:"",
-        Product_URL__c:"",
+        Meta_Title__c: "",
+        Product_URL__c: "",
         liftCapacity: "",
         liftHeight: "",
         container: "",
@@ -493,9 +497,14 @@ const EditProduct = () => {
       // Reset Is_Featured__c for all existing images
       const resetFeaturedPromises = existingImages
         .filter((img) => !img.markedForDeletion)
-        .map((img) =>
-          updateImageInSalesforce(img.Id, img.Id === featuredImage?.Id)
-        );
+        .map((img) => {
+          // updateImageInSalesforce(img.Id, img.Id === featuredImage?.Id)
+          const isFeatured =
+            featuredImage &&
+            "Id" in featuredImage &&
+            featuredImage.Id === img.Id;
+          return updateImageInSalesforce(img.Id, isFeatured as boolean);
+        });
       await Promise.all(resetFeaturedPromises);
 
       // Upload new images and save to Salesforce
@@ -504,11 +513,11 @@ const EditProduct = () => {
         const imageUrl = await uploadImageToS3(image);
         await saveImageToSalesforce(id!, imageUrl, featuredImage === image);
       }
-      setLoading((prev) => ({ ...prev, products: true }));
+      setLoading(true);
       const newProd = await ProductsService.fetchProductsWithImages();
       console.log(newProd);
       setProducts(newProd);
-      setLoading((prev) => ({ ...prev, products: false }));
+      setLoading(false);
       addNotification("success", "Product updated successfully");
       nav("/admin/products");
     } catch (error) {
@@ -542,7 +551,9 @@ const EditProduct = () => {
       setExistingImages(images);
 
       // Set the featured image
-      const featuredImg = images.find((img) => img.Is_Featured__c);
+      const featuredImg = images.find(
+        (img: ProductImage) => img.Is_Featured__c
+      );
       setFeaturedImage(featuredImg || null);
 
       // Fetch accessory products associated with the product
@@ -561,7 +572,7 @@ const EditProduct = () => {
       const accessoryProductsData = await accessoryProductsResponse.json();
       const accessoryProducts = accessoryProductsData.records;
       const existingAccessoryIds = accessoryProducts.map(
-        (ap) => ap.Accessory_Id__c
+        (ap: AccessoryProduct) => ap.Accessory_Id__c
       );
       setExistingAccessoryIds(existingAccessoryIds);
       setSelectedAccessoryIds(existingAccessoryIds);
@@ -576,11 +587,13 @@ const EditProduct = () => {
 
   const fetchAccessoriesData = async () => {
     try {
-      const accessoriesData = await AccessoriesService.fetchAccessories();
+      const accessoriesData = await AccessoriesService.fetchAccessoriesWithImages();
       setAccessories(accessoriesData);
     } catch (error) {
       console.error("Error fetching accessories:", error);
-      setError(error.message || "Error Editing Product Details");
+      setError(
+        (error as ErrorWithMessage).message || "Error Editing Product Details"
+      );
     }
   };
 
@@ -708,7 +721,7 @@ const EditProduct = () => {
                 onChange={handleInputChange}
               />
             </div>
-         {/* Additional Info */}
+            {/* Additional Info */}
             <h2 className="text-2xl font-semibold my-4 mb-2">
               Additional Information
             </h2>
@@ -884,11 +897,13 @@ const EditProduct = () => {
                         >
                           <FontAwesomeIcon icon={faExpand} />
                         </button>
-                        {featuredImage?.Id === image.Id && (
-                          <span className="absolute bottom-2 left-2 bg-custom-orange text-white text-xs px-2 py-1 rounded">
-                            <FontAwesomeIcon icon={faStar} />
-                          </span>
-                        )}
+                        {featuredImage &&
+                          "Id" in featuredImage &&
+                          featuredImage?.Id === image.Id && (
+                            <span className="absolute bottom-2 left-2 bg-custom-orange text-white text-xs px-2 py-1 rounded">
+                              <FontAwesomeIcon icon={faStar} />
+                            </span>
+                          )}
                       </div>
                     ))}
                 </div>

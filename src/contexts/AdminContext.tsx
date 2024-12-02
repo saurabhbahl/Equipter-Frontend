@@ -1,20 +1,22 @@
 import React, { createContext, useState } from "react";
-import { IAccessoriesRes } from "../components/admincomponents/Accessories/AccessoriesSchema";
-interface IError {
-  accessories: string;
-  products: string;
+import { Accessory } from "../components/admincomponents/Accessories/AccessoriesSchema";
+import { Product } from "../components/admincomponents/Products/ProductSchema";
+export interface GlobalLoadingState {
+  products: boolean;
+  accessories: boolean;
 }
+
 export interface IAdminContext {
   toggleSidebar: () => void;
   isSidebarCollapsed: boolean;
-  accessories: IAccessoriesRes[] | any;
-  products: any;
-  setProducts: any;
-  setAccessories: React.Dispatch<React.SetStateAction<IAccessoriesRes[]>>;
+  accessories: Accessory[] ;
+  products: Product[];
+  setProducts:  React.Dispatch<React.SetStateAction<Product[]>>;
+  setAccessories: React.Dispatch<React.SetStateAction<Accessory[]>>;
   // fetchAccessoriesData: () => Promise<void>;
-  loading: { [key: string]: boolean };
-  setLoading: React.Dispatch<React.SetStateAction<{ [key: string]: boolean }>>;
-  error: IError;
+  loading: GlobalLoadingState;
+  setLoading:React.Dispatch<React.SetStateAction<GlobalLoadingState>>;
+  error: { [key: string]: string };
   setError: React.Dispatch<React.SetStateAction<{ [key: string]: string }>>;
 }
 
@@ -25,14 +27,14 @@ export const AdminContextProvider = ({
 }: {
   children: React.ReactNode;
 }) => {
-  const [accessories, setAccessories] = useState<IAccessoriesRes[]>([]);
-  const [products, setProducts] = useState([]);
+  const [accessories, setAccessories] = useState<Accessory[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const [loading, setLoading] = useState<{ [key: string]: boolean }>({
+  const [loading, setLoading] = useState<GlobalLoadingState>({
     accessories: false,
     products: false,
   });
-  const [error, setError] = useState<IError>({
+  const [error, setError] = useState<{ [key: string]: string }>({
     accessories: "",
     products: "",
   });

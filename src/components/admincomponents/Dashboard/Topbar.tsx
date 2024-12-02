@@ -5,7 +5,7 @@ import { useState } from "react";
 const Topbar = () => {
   const [timeFrame, setTimeFrame] = useState("month");
 
-  const handleTimeFrameChange = (event: any) => {
+  const handleTimeFrameChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     setTimeFrame(event.target.value);
 
     console.log("Selected Time Frame:", event.target.value);

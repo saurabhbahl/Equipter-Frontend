@@ -16,10 +16,16 @@ import { ProductsService } from "./ProductsService";
 import AccessoriesService from "../Accessories/AccessoriesService";
 
 import MetaComponent from "../../../utils/MetaComponent";
-
+import { AccessoryProduct, Product, ProductImage } from "./ProductSchema";
+import { ErrorWithMessage } from "../../../types/componentsTypes";
+import { Accessory } from "../Accessories/AccessoriesSchema";
+interface ProductState extends Product{
+  accessories:Accessory[]
+  images:ProductImage[]
+}
 const ViewProduct = () => {
   const { id } = useParams();
-  const [product, setProduct] = useState(null);
+  const [product, setProduct] = useState<ProductState | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -30,7 +36,7 @@ const ViewProduct = () => {
     const productDetails = await ProductsService.fetchProductsDetailsWithImages(
       productId
     );
-    console.log(productDetails)
+    console.log(productDetails);
 
     const accessoryProducts = await ProductsService.fetchProductsWithAccessories(
       productDetails.Id
@@ -38,10 +44,17 @@ const ViewProduct = () => {
 
     const allAccessories = await AccessoriesService.fetchAccessoriesWithImages();
 
-    const accessoryProductMap = accessoryProducts.reduce((map, ap) => {
-      map[ap.Accessory_Id__c] = ap;
-      return map;
-    }, {});
+    // const accessoryProductMap = accessoryProducts.reduce((map, ap:AccessoryProduct) => {
+    //   map[ap.Accessory_Id__c] = ap;
+    //   return map;
+    // }, {});
+    const accessoryProductMap = accessoryProducts.reduce(
+      (map: { [key: string]: AccessoryProduct }, ap: AccessoryProduct) => {
+        map[ap.Accessory_Id__c] = ap;
+        return map;
+      },
+      {}
+    );
 
     const accessories = allAccessories.filter(
       (acc) => accessoryProductMap[acc.Id]
@@ -50,7 +63,7 @@ const ViewProduct = () => {
     return {
       ...productDetails,
       accessories,
-      images: productDetails.Product_Images__r.records,
+      images: productDetails?.Product_Images__r.records as ProductImage[],
     };
   };
 
@@ -59,11 +72,12 @@ const ViewProduct = () => {
       try {
         const productId = id as string;
         const result = await getProductWithDetails(productId);
+        console.log(result)
         setProduct(result);
         setLoading(false);
       } catch (error) {
         console.error("Error fetching product details:", error);
-        setError(error.message || "Error Fetching Product Details");
+        setError((error as ErrorWithMessage).message || "Error Fetching Product Details");
         setLoading(false);
       }
     };
@@ -72,6 +86,7 @@ const ViewProduct = () => {
   }, [id]);
 
   const handlePrevImage = () => {
+    if (!product || !product.images) return;
     setIsAnimating(true);
     setTimeout(() => {
       setCurrentImageIndex((prevIndex) =>
@@ -82,10 +97,11 @@ const ViewProduct = () => {
   };
 
   const handleNextImage = () => {
+    if (!product || !product.images) return;
     setIsAnimating(true);
     setTimeout(() => {
       setCurrentImageIndex((prevIndex) =>
-        prevIndex === product.images.length - 1 ? 0 : prevIndex + 1
+        prevIndex === product.images?.length - 1 ? 0 : prevIndex + 1
       );
       setIsAnimating(false);
     }, 500);
@@ -109,10 +125,7 @@ const ViewProduct = () => {
   }
   return (
     <>
-      <MetaComponent
-        title={product?.Meta_Title__c}
-        description={product?.Product_Price__c}
-      />
+      <MetaComponent title={product?.Meta_Title__c as string} />
       <HeadingBar buttonLink="/admin/products" heading="Product Details" />
       <div className="p-6 lg:p-8 bg-custom-sky min-h-screen capitalize">
         <div className="space-y-6">
@@ -131,18 +144,18 @@ const ViewProduct = () => {
                     key={currentImageIndex}
                   >
                     <img
-                      src={product.images[currentImageIndex].Image_URL__c}
+                      src={product?.images[currentImageIndex as number].Image_URL__c}
                       alt={`Product image ${currentImageIndex + 1}`}
                       className="rounded w-full h-[650px] object-cover shadow-md"
                       // className="rounded-md w-full h-[500px] object-cover"
                     />
-                    {product.images[currentImageIndex].Is_Featured__c && (
+                    {product?.images[currentImageIndex].Is_Featured__c && (
                       <span className="absolute top-4 left-4 bg-custom-orange text-white text-sm font-bold px-3 py-1 rounded-full shadow-md">
                         Featured
                       </span>
                     )}
                   </div>
-                  {product.images.length > 1 && (
+                  {product.images?.length > 1 && (
                     <>
                       <button
                         onClick={handlePrevImage}
@@ -165,7 +178,7 @@ const ViewProduct = () => {
                 </p>
               )}
             </div>
-            {product.images && product.images.length > 1 && (
+            {product?.images && product.images.length > 1 && (
               <div className="flex justify-center mt-4 space-x-2">
                 {product.images.map((_, index) => (
                   <button
@@ -195,7 +208,7 @@ const ViewProduct = () => {
                 />
                 <div>
                   <h4 className="font-bold text-lg text-gray-800">Name</h4>
-                  <p className="text-custom-black-200">{product.Name}</p>
+                  <p className="text-custom-black-200">{product?.Name}</p>
                 </div>
               </div>
               <div className="flex items-center space-x-4">
@@ -206,7 +219,7 @@ const ViewProduct = () => {
                 <div>
                   <h4 className="font-bold text-lg text-gray-800">Price</h4>
                   <p className="text-custom-orange font-semibold">
-                    ${product.Product_Price__c.toFixed(2)}
+                    ${product?.Product_Price__c.toFixed(2)}
                   </p>
                 </div>
               </div>
@@ -220,7 +233,7 @@ const ViewProduct = () => {
                     Down Payment Cost
                   </h4>
                   <p className="text-custom-black-200">
-                    ${product.Down_Payment_Cost__c.toFixed(2)}
+                    ${product?.Down_Payment_Cost__c.toFixed(2)}
                   </p>
                 </div>
               </div>
@@ -231,7 +244,7 @@ const ViewProduct = () => {
                 />
                 <div>
                   <h4 className="font-bold text-lg text-gray-800">GVWR</h4>
-                  <p className="text-custom-black-200">{product.GVWR__c} lbs</p>
+                  <p className="text-custom-black-200">{product?.GVWR__c} lbs</p>
                 </div>
               </div>
               <div className="flex items-center space-x-4">
@@ -244,7 +257,7 @@ const ViewProduct = () => {
                     Lift Capacity
                   </h4>
                   <p className="text-custom-black-200">
-                    {product.Lift_Capacity__c} lbs
+                    {product?.Lift_Capacity__c} lbs
                   </p>
                 </div>
               </div>
@@ -258,7 +271,7 @@ const ViewProduct = () => {
                     Lift Height
                   </h4>
                   <p className="text-custom-black-200">
-                    {product.Lift_Height__c} feet
+                    {product?.Lift_Height__c} feet
                   </p>
                 </div>
               </div>
@@ -270,7 +283,7 @@ const ViewProduct = () => {
                 <div>
                   <h4 className="font-bold text-lg text-gray-800">Container</h4>
                   <p className="text-custom-black-200">
-                    {product.Container__c}
+                    {product?.Container__c}
                   </p>
                 </div>
               </div>
@@ -278,7 +291,7 @@ const ViewProduct = () => {
           </div>
 
           {/* Accessories Section */}
-          {product.accessories && product.accessories.length > 0 && (
+          {product?.accessories && product.accessories.length > 0 && (
             <div className="w-full bg-white p-6 rounded shadow-lg">
               <h3 className="text-3xl font-semibold text-custom-black-200 mb-6">
                 Accessories
@@ -292,7 +305,7 @@ const ViewProduct = () => {
                     <>
                       {" "}
                       <label
-                        key={index+1}
+                        key={index + 1}
                         onClick={() =>
                           nav(`/admin/accessories/view/${accessory.Id}`)
                         }
