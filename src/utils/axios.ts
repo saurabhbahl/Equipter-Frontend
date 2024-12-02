@@ -9,12 +9,9 @@ interface isExp {
   isExp: boolean;
   permission: string;
 }
-export const isTokenExpired = (token: string | null = localStorage.getItem("token") || null): isExp => {
+export const isTokenExpired = (token: string | null = localStorage.getItem("token") || null) => {
   if (!token)
-    return {
-      isExp: true,
-      permission: "",
-    };
+    return true
   try {
     const payload = JSON.parse(atob(token.split(".")[1]));
     const isExpired = payload.exp < Date.now() / 1000;
@@ -36,8 +33,8 @@ export const isTokenExpired = (token: string | null = localStorage.getItem("toke
 
 apiClient.interceptors.request.use((config) => {
     const token: string | null = localStorage.getItem("token");
-    const isExp: isExp = isTokenExpired(token);
-    if (token && !isExp.isExp) {
+    const isExp = isTokenExpired(token);
+    if (token && !(isExp as isExp)?.isExp) {
       config.headers.Authorization = `Bearer ${token}`;
     } else {
       localStorage.removeItem("token");
