@@ -164,7 +164,7 @@ const AddNewProduct = () => {
     });
 
     setErrors((prevErrors) => {
-      const updatedErrors = { ...prevErrors };
+      const updatedErrors = { ...prevErrors ,[name]: ""};
 
       if (name === "Meta_Title__c") {
         updatedErrors.Meta_Title__c = "";
