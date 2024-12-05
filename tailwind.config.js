@@ -31,6 +31,7 @@ export default {
         "work-sans": ["Work Sans", "sans-serif"],
         arial: ["Arial", "sans-serif"],
         robot: ["Roboto", "sans-serif"],
+        vesper: ['Vesper', 'sans-serif'],
         roboto: ["Roboto", "sans-serif"],
         inter: ["Inter", "sans-serif"],
         "noto-sans": ["Noto Sans", "sans-serif"],

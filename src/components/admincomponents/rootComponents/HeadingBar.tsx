@@ -92,7 +92,7 @@ const HeadingBar = ({
 }: ITopbarProps) => {
   const nav = useNavigate();
   return (
-    <section className="w-full p-1 bg-gradient-to-b outline-none  from-gray-800 to-black/90 text-white border-2  shadow-xl  ">
+    <section className="stick -0 top-30 w-full p-1 bg-gradient-to-b outline-none  from-gray-800 to-black/90 text-white border-2  shadow-xl  ">
       <div className="flex items-center gap-4   w-fit p-3 ">
         <button
           onClick={() => nav(buttonLink)}

@@ -1,4 +1,4 @@
-// this is the naviagation bar
+// this is the global naviagation bar
 import { Link } from "react-router-dom";
 import logo from "../../assets/images/logo.png";
 import { useAuth } from "../../hooks/useAuth";
@@ -98,28 +98,29 @@ const Header = () => {
             <>
               <Link
                 to={"/"}
-                className="text-custom-orange hover:text-custom-orange/70 transition"
-              >
+                className="text-custom-orange hover:text-custom-orange/70 transition">
                 Home
               </Link>
               <Link
                 to={"/sample"}
-                className="text-custom-orange hover:text-custom-orange/70 transition"
-              >
+                className="text-custom-orange hover:text-custom-orange/70 transition">
                 Sample
+              </Link>
+              <Link
+                to={"/products"}
+                className="text-custom-orange hover:text-custom-orange/70 transition">
+                Products
               </Link>
               {isAdmin && (
                 <Link
                   to={"/admin"}
-                  className="text-custom-orange hover:text-custom-orange/70 transition"
-                >
+                  className="text-custom-orange hover:text-custom-orange/70 transition">
                   Admin
                 </Link>
               )}
               <button
                 onClick={() => logOut()}
-                className="btn-yellow text-sm p-2  transition"
-              >
+                className="btn-yellow text-sm p-2  transition">
                 Logout
               </button>
             </>

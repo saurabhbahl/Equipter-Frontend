@@ -8,7 +8,7 @@ import { useEffect } from "react";
 import MetaComponent from "../../../utils/MetaComponent";
 import { ErrorWithMessage } from "../../../types/componentsTypes";
 
-const Products = () => {
+const AllProducts = () => {
   const breadcrumbs = [
     { label: "Dashboard", link: "/" },
     { label: "Products", link: "/products" },
@@ -70,4 +70,4 @@ const Products = () => {
   );
 };
 
-export default Products;
+export default AllProducts;

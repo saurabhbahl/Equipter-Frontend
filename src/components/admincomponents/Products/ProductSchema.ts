@@ -15,13 +15,11 @@ export const ProductSchema = z.object({
     .string()
     .min(1, { message: "This field is required" })
     .max(255, { message: "Maximum 250 characters Allowed" }),
-  // Product_URL__c: z
-  //   .string()
-  //   .min(1, { message: "This field is required" })
-  //   .max(255, { message: "Maximum 250 characters Allowed" }),
+  Product_Title__c: z.string().min(1, { message: "This field is required" }),
+  Product_Description__c: z
+    .string()
+    .min(1, { message: "This field is required" }),
 });
-
-
 
 // ProductSchema.ts
 export interface ProductImageAttributes {
@@ -61,6 +59,8 @@ export interface Product {
   GVWR__c: number;
   Lift_Capacity__c: number;
   Lift_Height__c: number;
+  Product_Description__c: string;
+  Product_Title__c: string;
   Container__c: string;
   Product_Images__r?: ProductImages;
 }

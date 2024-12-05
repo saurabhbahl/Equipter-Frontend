@@ -9,27 +9,19 @@ import AddNewAccessory from "../admincomponents/Accessories/AddNewAccessory";
 import EditProduct from "../admincomponents/Products/EditProduct";
 import ViewAccessory from "../admincomponents/Accessories/ViewAccessory";
 import EditAccessory from "../admincomponents/Accessories/EditAccessory";
-
-const Home = lazy(() => import("../../pages/Home"));
+import Products from "../../pages/client/products/Products";
+import AllProducts from "../admincomponents/Products/AllProducts";
+const Home = lazy(() => import("../../pages/client/Home"));
 const LoginPage = lazy(() => import("../../pages/auth/LoginPage"));
 const ForgetPassword = lazy(() => import("../../pages/auth/ForgetPassword"));
 const ResetPassword = lazy(() => import("../../pages/auth/ResetPassword"));
 const SamplePage = lazy(() => import("../../pages/SamplePage"));
 const NotFound = lazy(() => import("../../pages/NotFound"));
 const AdminPage = lazy(() => import("../../pages/admin/AdminPage"));
-const ViewProduct = lazy(() =>
-  import("../admincomponents/Products/ViewProduct")
-);
-// const Dashboard = React.lazy(() => import('./components/admincomponents/Dashboard/Dashboard'));
-
+const ViewProduct = lazy(() =>import("../admincomponents/Products/ViewProduct"));
 const Customers = lazy(() => import("../admincomponents/Customers/Customers"));
-const Products = lazy(() => import("../admincomponents/Products/Products"));
-const AddNewProduct = lazy(() =>
-  import("../admincomponents/Products/AddNewProduct")
-);
-const Accessories = lazy(() =>
-  import("../admincomponents/Accessories/Accessories")
-);
+const AddNewProduct = lazy(() =>import("../admincomponents/Products/AddNewProduct"));
+const Accessories = lazy(() =>import("../admincomponents/Accessories/Accessories"));
 const Orders = lazy(() => import("../admincomponents/Orders/Orders"));
 
 export default function Router() {
@@ -56,7 +48,7 @@ export default function Router() {
               <Route path="customers" element={<Customers />} />
 
               {/* products */}
-              <Route path="products" element={<Products />} />
+              <Route path="products" element={<AllProducts />} />
               <Route path="products/new" element={<AddNewProduct />} />
               <Route path="products/view/:id" element={<ViewProduct />} />
               <Route path="products/edit/:id" element={<EditProduct />} />
@@ -74,6 +66,7 @@ export default function Router() {
           {/* Authenticated User Routes */}
           <Route element={<PrivateRoute />}>
             <Route path="/sample" element={<SamplePage />} />
+            <Route path="/products" element={<Products />} />
           </Route>
 
           {/* Fallback for Not Found */}

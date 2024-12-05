@@ -5,7 +5,7 @@ export class ProductsService {
   static async fetchProductsWithImages() {
     try {
       const response = await fetch(
-        `/api/services/data/v52.0/query/?q=SELECT+Id,+Name,+Product_Price__c,+Product_URL__c,+Meta_Title__c,+Down_Payment_Cost__c,+GVWR__c,+Lift_Capacity__c,+Lift_Height__c,+Container__c,+%28SELECT+Id,+Image_URL__c,+Is_Featured__c,+Product_Id__c,+Name,+Image_Description__c+FROM+Product_Images__r%29+FROM+Product__c`,
+        `/api/services/data/v52.0/query/?q=SELECT+Id,+Name,+Product_Price__c,+Product_URL__c,+Meta_Title__c,+Product_Title__c,+Product_Description__c,+Down_Payment_Cost__c,+GVWR__c,+Lift_Capacity__c,+Lift_Height__c,+Container__c,+%28SELECT+Id,+Image_URL__c,+Is_Featured__c,+Product_Id__c,+Name,+Image_Description__c+FROM+Product_Images__r%29+FROM+Product__c`,
         {
           method: "GET",
           headers: {
@@ -29,7 +29,7 @@ export class ProductsService {
 // get single product details with images
   static async fetchProductsDetailsWithImages(pID: string) {
     try {
-      const productUrl = `/api/services/data/v52.0/query/?q=SELECT+Id%2C+Name%2C+Product_URL__c%2C+Meta_Title__c%2C+Product_Price__c%2C+Down_Payment_Cost__c%2C+GVWR__c%2C+Lift_Capacity__c%2C+Lift_Height__c%2C+Container__c%2C+%28SELECT+Id%2C+Image_URL__c%2C+Is_Featured__c%2C+Product_Id__c%2C+Name%2C+Image_Description__c+FROM+Product_Images__r%29+FROM+Product__c+WHERE+Id+%3D+%27${pID}%27`;
+      const productUrl = `/api/services/data/v52.0/query/?q=SELECT+Id%2C+Name%2C+Product_URL__c%2C+Meta_Title__c%2C+Product_Title__c%2C+Product_Description__c%2C+Product_Price__c%2C+Down_Payment_Cost__c%2C+GVWR__c%2C+Lift_Capacity__c%2C+Lift_Height__c%2C+Container__c%2C+%28SELECT+Id%2C+Image_URL__c%2C+Is_Featured__c%2C+Product_Id__c%2C+Name%2C+Image_Description__c+FROM+Product_Images__r%29+FROM+Product__c+WHERE+Id+%3D+%27${pID}%27`;
       const response = await fetch(productUrl, {
         method: "GET",
         headers: {

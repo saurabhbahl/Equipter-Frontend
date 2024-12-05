@@ -32,6 +32,8 @@ const s3 = new S3Client({
 
 export interface IProductInputValues {
   productName: string;
+  Product_Title__c: string;
+  Product_Description__c: string;
   price: string;
   gvwr: string;
   liftCapacity: string;
@@ -56,6 +58,8 @@ const AddNewProduct = () => {
   const [errors, setErrors] = useState<IProductInputValues>({
     productName: "",
     price: "",
+    Product_Description__c: "",
+    Product_Title__c: "",
     gvwr: "",
     Down_Payment_Cost__c: "",
     liftCapacity: "",
@@ -69,6 +73,8 @@ const AddNewProduct = () => {
     productName: "",
     price: "",
     Meta_Title__c: "",
+    Product_Description__c: "",
+    Product_Title__c: "",
     gvwr: "",
     liftCapacity: "",
     Down_Payment_Cost__c: "",
@@ -107,7 +113,7 @@ const AddNewProduct = () => {
       ContentType: image.type,
     };
     const command = new PutObjectCommand(uploadParams);
-  await s3.send(command);
+    await s3.send(command);
     return `https://${import.meta.env.VITE_AWS_BUCKET_NAME}.s3.${
       import.meta.env.VITE_AWS_REGION
     }.amazonaws.com/${uploadParams.Key}`;
@@ -146,7 +152,9 @@ const AddNewProduct = () => {
       console.log(error);
     }
   };
-  const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (
+    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
 
     setFormValues((prevValues) => {
@@ -164,7 +172,7 @@ const AddNewProduct = () => {
     });
 
     setErrors((prevErrors) => {
-      const updatedErrors = { ...prevErrors ,[name]: ""};
+      const updatedErrors = { ...prevErrors, [name]: "" };
 
       if (name === "Meta_Title__c") {
         updatedErrors.Meta_Title__c = "";
@@ -253,6 +261,8 @@ const AddNewProduct = () => {
       const newErrors: { [key in keyof IProductInputValues]: string } = {
         productName: "",
         price: "",
+        Product_Description__c: "",
+        Product_Title__c: "",
         gvwr: "",
         Down_Payment_Cost__c: "",
         Meta_Title__c: "",
@@ -272,7 +282,7 @@ const AddNewProduct = () => {
         return;
       }
       const isUnique = await ProductsService.isSlugUnique(slug);
-  
+
       if (!isUnique) {
         setErrors((prevErrors) => ({
           ...prevErrors,
@@ -296,6 +306,8 @@ const AddNewProduct = () => {
         Container__c: formValues.container,
         Meta_Title__c: formValues.Meta_Title__c,
         Product_URL__c: formValues.Product_URL__c,
+        Product_Title__c: formValues.Product_Title__c,
+        Product_Description__c: formValues.Product_Description__c,
       };
       try {
         // add product
@@ -410,23 +422,55 @@ const AddNewProduct = () => {
           <h2 className="text-2xl font-semibold mb-4">General Information</h2>
           <hr className="mb-6" />
 
-          {/* Product Name and Price, Downpayment cost */}
+          {/* Product Name and Price, Description Downpayment cost */}
           <div className="grid grid-cols-1 gap-4">
             <InputField
               id="productName"
               type="text"
               label="Product Name"
-              placeholder="Enter Product Name"
+              placeholder="4000"
               name="productName"
               value={formValues.productName}
               onChange={handleInputChange}
               error={errors.productName}
             />
             <InputField
+              id="productTitle"
+              type="text"
+              label="Product Title"
+              placeholder="Drivable Dumpster For Derbis Removal"
+              name="Product_Title__c"
+              value={formValues.Product_Title__c}
+              onChange={handleInputChange}
+              error={errors.Product_Title__c}
+            />
+            <div className="mb-3">
+              <label
+                htmlFor="description"
+                className="font-medium text-custom-gray "
+              >
+                Description
+              </label>
+              <textarea
+                value={formValues.Product_Description__c}
+                name="Product_Description__c"
+                onChange={handleInputChange}
+                className={`mt-1 font-arial block w-full text-xs p-2 border border-inset h-[111px] border-custom-gray-200 outline-none py-2 px-3 ${
+                  errors.Product_Description__c
+                    ? "border-red-500"
+                    : "border-custom-gray-200"
+                } `}
+                placeholder="DescrGo beyond the standard scissor lift with the Equipter 4000 drivable dumpster. Originally designed as a self-propelled roofing trailer and known as one of the best roofing tools for debris management......."
+              />
+              <span className="text-red-500 h-6 text-[10px] font-bold">
+                {errors.Product_Description__c}
+              </span>
+            </div>
+            <InputField
               id="price"
               label="Price"
               type="number"
-              placeholder="Enter Price"
+              placeholder="$8000"
               name="price"
               value={formValues.price}
               error={errors.price}
@@ -436,7 +480,7 @@ const AddNewProduct = () => {
               id="Down_Payment_Cost__c"
               type="number"
               label="Down Payment Cost"
-              placeholder="Down Payment Cost"
+              placeholder="$1200"
               name="Down_Payment_Cost__c"
               value={formValues.Down_Payment_Cost__c}
               error={errors.Down_Payment_Cost__c}

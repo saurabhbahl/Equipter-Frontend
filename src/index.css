@@ -3,6 +3,13 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: "Vesper";
+  src: url("./assets/fonts/Vesper-BoldLargeOblique.woff2") format("woff2");
+  font-weight: bold;
+  font-style: oblique;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -55,8 +62,11 @@ html.modal-open footer {
   .scrollbar-custom::-webkit-scrollbar-thumb:hover {
     background-color: #444444; /* Thumb color on hover */
   }
-}
 
+  .font-Vesper {
+    font-family: Versper;
+  }
+}
 
 /* Tailwind css custom components */
 @layer components {
@@ -64,6 +74,7 @@ html.modal-open footer {
   .btn-yellow {
     @apply font-arial rounded-none bg-custom-orange/80 transition-all ease-out duration-200  text-white hover:bg-custom-orange focus:outline-none cursor-pointer px-8 py-2.5 uppercase hover:shadow-2xl shadow-md;
   }
+  
 }
 
 /**/

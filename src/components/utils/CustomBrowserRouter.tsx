@@ -9,7 +9,7 @@ import { PrivateRoute } from "./PrivateRoute";
 import { PublicRoute } from "./PublicRoute";
 import Loader from "./Loader";
 
-const Home = lazy(() => import("../../pages/Home"));
+const Home = lazy(() => import("../../pages/client/Home"));
 const LoginPage = lazy(() => import("../../pages/auth/LoginPage"));
 const ForgetPassword = lazy(() => import("../../pages/auth/ForgetPassword"));
 const ResetPassword = lazy(() => import("../../pages/auth/ResetPassword"));
@@ -18,7 +18,7 @@ const NotFound = lazy(() => import("../../pages/NotFound"));
 const AdminPage = lazy(() => import("../../pages/admin/AdminPage"));
 const Dashboard = lazy(() => import("../admincomponents/Dashboard/Dashboard"));
 const Customers = lazy(() => import("../admincomponents/Customers/Customers"));
-const Products = lazy(() => import("../admincomponents/Products/Products"));
+const Products = lazy(() => import("../admincomponents/Products/AllProducts"));
 const AddNewProduct = lazy(() =>
   import("../admincomponents/Products/AddNewProduct")
 );

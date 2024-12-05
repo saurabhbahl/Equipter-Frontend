@@ -1,6 +1,6 @@
 import { useState } from "react";
-import InputField from "../components/utils/InputFeild";
-import SelectField from "../components/utils/SelectFeild";
+import InputField from "../../components/utils/InputFeild";
+import SelectField from "../../components/utils/SelectFeild";
 
 const Home = () => {
   const [formData, setFormData] = useState({

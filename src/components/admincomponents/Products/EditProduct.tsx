@@ -47,6 +47,8 @@ const EditProduct = () => {
     price: "",
     gvwr: "",
     liftCapacity: "",
+    Product_Description__c: "",
+    Product_Title__c: "",
     Meta_Title__c: "",
     Product_URL__c: "",
     liftHeight: "",
@@ -58,6 +60,8 @@ const EditProduct = () => {
     price: "",
     gvwr: "",
     liftCapacity: "",
+    Product_Description__c: "",
+    Product_Title__c: "",
     Meta_Title__c: "",
     Product_URL__c: "",
     liftHeight: "",
@@ -100,7 +104,9 @@ const EditProduct = () => {
     }
   }, [images, existingImages, imagesRef]);
 
-  const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (
+    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
 
     setFormValues((prevValues) => {
@@ -116,7 +122,7 @@ const EditProduct = () => {
     });
 
     setErrors((prevErrors) => {
-      const updatedErrors = { ...prevErrors ,[name]: ""};
+      const updatedErrors = { ...prevErrors, [name]: "" };
 
       if (name === "Meta_Title__c") {
         updatedErrors.Meta_Title__c = "";
@@ -351,9 +357,11 @@ const EditProduct = () => {
     }
 
     if (!validation.success) {
-      const newErrors: IProductInputValues = {
+      const newErrors: { [key in keyof IProductInputValues]: string }= {
         productName: "",
         price: "",
+        Product_Description__c: "",
+        Product_Title__c: "",
         gvwr: "",
         Meta_Title__c: "",
         Product_URL__c: "",
@@ -392,6 +400,8 @@ const EditProduct = () => {
         Lift_Height__c: parseFloat(formValues.liftHeight),
         Meta_Title__c: formValues.Meta_Title__c,
         Product_URL__c: formValues.Product_URL__c,
+        Product_Description__c: formValues.Product_Description__c,
+        Product_Title__c: formValues.Product_Title__c,
         Container__c: formValues.container,
       };
       const response = await fetch(
@@ -515,7 +525,7 @@ const EditProduct = () => {
       }
       setLoading(true);
       const newProd = await ProductsService.fetchProductsWithImages();
-      console.log(newProd);
+     
       setProducts(newProd);
       setLoading(false);
       addNotification("success", "Product updated successfully");
@@ -537,6 +547,8 @@ const EditProduct = () => {
       // Set form values
       setFormValues({
         productName: product.Name,
+        Product_Description__c:product.Product_Description__c,
+        Product_Title__c:product.Product_Title__c,
         Meta_Title__c: product.Meta_Title__c,
         Product_URL__c: product.Product_URL__c,
         price: product.Product_Price__c.toString(),
@@ -638,7 +650,7 @@ const EditProduct = () => {
           >
             <h2 className="text-2xl font-semibold mb-4">General Information</h2>
             <hr className="mb-6" />
-            {/* Product Name and Price, Downpayment cost */}
+            {/* Product Name and Price,Title,Description, Downpayment cost */}
             <div className="grid grid-cols-1 gap-4">
               <InputField
                 id="productName"
@@ -650,16 +662,41 @@ const EditProduct = () => {
                 onChange={handleInputChange}
                 error={errors.productName}
               />
-              <InputField
-                id="Down_Payment_Cost__c"
-                type="number"
-                label="Down Payment Cost"
-                placeholder="Down Payment Cost"
-                name="Down_Payment_Cost__c"
-                value={formValues.Down_Payment_Cost__c}
-                error={errors.Down_Payment_Cost__c}
+              {/* Title */}
+               <InputField
+              id="productTitle"
+              type="text"
+              label="Product Title"
+              placeholder="Drivable Dumpster For Derbis Removal"
+              name="Product_Title__c"
+              value={formValues.Product_Title__c}
+              onChange={handleInputChange}
+              error={errors.Product_Title__c}
+            />
+            {/* description */}
+            <div className="mb-3">
+              <label
+                htmlFor="description"
+                className="font-medium text-custom-gray "
+              >
+                Description
+              </label>
+              <textarea
+                value={formValues.Product_Description__c}
+                name="Product_Description__c"
                 onChange={handleInputChange}
+                className={`mt-1 font-arial block w-full text-xs p-2 border border-inset h-[111px] border-custom-gray-200 outline-none py-2 px-3 ${
+                  errors.Product_Description__c
+                    ? "border-red-500"
+                    : "border-custom-gray-200"
+                } `}
+                placeholder="DescrGo beyond the standard scissor lift with the Equipter 4000 drivable dumpster. Originally designed as a self-propelled roofing trailer and known as one of the best roofing tools for debris management......."
               />
+              <span className="text-red-500 h-6 text-[10px] font-bold">
+                {errors.Product_Description__c}
+              </span>
+            </div>
+            
               <InputField
                 id="price"
                 label="Price"
@@ -668,6 +705,16 @@ const EditProduct = () => {
                 name="price"
                 value={formValues.price}
                 error={errors.price}
+                onChange={handleInputChange}
+              /> 
+               <InputField
+                id="Down_Payment_Cost__c"
+                type="number"
+                label="Down Payment Cost"
+                placeholder="Down Payment Cost"
+                name="Down_Payment_Cost__c"
+                value={formValues.Down_Payment_Cost__c}
+                error={errors.Down_Payment_Cost__c}
                 onChange={handleInputChange}
               />
             </div>
