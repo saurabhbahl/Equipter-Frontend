@@ -3,6 +3,7 @@ import { Accessory } from "../Accessories/AccessoriesSchema";
 
 export const ProductSchema = z.object({
   productName: z.string().min(1, { message: "This field is required" }),
+  qty: z.string().min(1, { message: "This field is required" }),
   price: z.string().min(1, { message: "This field is required" }),
   gvwr: z.string().min(1, { message: "This field is required" }),
   liftCapacity: z.string().min(1, { message: "This field is required" }),

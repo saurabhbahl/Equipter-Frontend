@@ -10,18 +10,21 @@ import { useNavigate } from "react-router-dom";
 import { useState, ChangeEvent, useRef, useEffect } from "react";
 import InputField from "../../utils/InputFeild";
 
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import {
+  S3Client,
+  PutObjectCommand,
+} from "@aws-sdk/client-s3";
 import HeadingBar from "../rootComponents/HeadingBar";
-import AccessoriesService from "../Accessories/AccessoriesService";
 import { useAdminContext } from "../../../hooks/useAdminContext";
-import { SfAccessToken } from "../../../utils/useEnv";
 import { ProductSchema } from "./ProductSchema";
 import { useNotification } from "../../../contexts/NotificationContext";
 import LoaderSpinner from "../../utils/LoaderSpinner";
 import Loader from "../../utils/Loader";
-import { ProductsService } from "./ProductsService";
-import { ErrorWithMessage } from "../../../types/componentsTypes";
 
+import { apiClient } from "../../../utils/axios"; 
+
+
+// Initialize S3 client
 const s3 = new S3Client({
   region: import.meta.env.VITE_AWS_REGION,
   credentials: {
@@ -30,128 +33,83 @@ const s3 = new S3Client({
   },
 });
 
-export interface IProductInputValues {
-  productName: string;
-  Product_Title__c: string;
-  Product_Description__c: string;
-  price: string;
-  gvwr: string;
-  liftCapacity: string;
-  liftHeight: string;
-  Meta_Title__c: string;
-  container: string;
-  Down_Payment_Cost__c: string;
-  Product_URL__c: string;
-}
-
 const AddNewProduct = () => {
-  const {
-    accessories,
-    setProducts,
-    setLoading,
-    setError,
-    setAccessories,
-  } = useAdminContext();
+  const navigate = useNavigate();
+  const { addNotification } = useNotification();
+  const { accessories, setAccessories, setProducts, setLoading } = useAdminContext();
 
-  const nav = useNavigate();
-  const [isResSaving, setIsResSaving] = useState(false);
-  const [errors, setErrors] = useState<IProductInputValues>({
-    productName: "",
-    price: "",
-    Product_Description__c: "",
-    Product_Title__c: "",
-    gvwr: "",
-    Down_Payment_Cost__c: "",
-    liftCapacity: "",
-    liftHeight: "",
-    container: "",
-    Product_URL__c: "",
-    Meta_Title__c: "",
-  });
-  const [featuredImage, setFeaturedImage] = useState<File | null>(null);
+  // State for form inputs
   const [formValues, setFormValues] = useState<IProductInputValues>({
     productName: "",
     price: "",
-    Meta_Title__c: "",
-    Product_Description__c: "",
-    Product_Title__c: "",
+    qty: "",
     gvwr: "",
     liftCapacity: "",
-    Down_Payment_Cost__c: "",
+    Product_Description__c: "",
+    Product_Title__c: "",
+    Meta_Title__c: "",
+    Product_URL__c: "",
     liftHeight: "",
     container: "",
-    Product_URL__c: "",
+    Down_Payment_Cost__c: "",
   });
-  const [previewImage, setPreviewImage] = useState<{
-    url: string;
-    index: number;
-  } | null>(null);
+
+  // State for form errors
+  const [errors, setErrors] = useState<{ [key in keyof IProductInputValues]: string }>({
+    productName: "",
+    price: "",
+    gvwr: "",
+    qty: "",
+    liftCapacity: "",
+    Product_Description__c: "",
+    Product_Title__c: "",
+    Meta_Title__c: "",
+    Product_URL__c: "",
+    liftHeight: "",
+    container: "",
+    Down_Payment_Cost__c: "",
+  });
+
+  // State for handling images
   const [images, setImages] = useState<File[]>([]);
+  const [featuredImage, setFeaturedImage] = useState<File | null>(null);
+  const [previewImage, setPreviewImage] = useState<{ url: string; id: string; type: "new" | "existing" } | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [currentStatus, setCurrentStatus] = useState("");
   const [imageUploadError, setImageUploadError] = useState(false);
-  const [newAccessories, setNewAccessories] = useState<string[]>([]);
-  const { addNotification } = useNotification();
 
+  // State for handling submission
+  const [isResSaving, setIsResSaving] = useState(false);
+  const [currentStatus, setCurrentStatus] = useState("");
+
+  // State for selected accessories
+  const [selectedAccessoryIds, setSelectedAccessoryIds] = useState<string[]>([]);
+
+  // Refs for form and images container
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const formRef = useRef<HTMLFormElement | null>(null);
   const imagesRef = useRef<HTMLDivElement | null>(null);
+  const [formHeight, setFormHeight] = useState(0);
 
+  // Adjust images container height based on form height
   useEffect(() => {
     if (formRef.current && imagesRef.current) {
-      const formHeight = formRef.current.offsetHeight;
-      imagesRef.current.style.maxHeight = `${formHeight}px`;
+      const formHeightFn = formRef.current.offsetHeight;
+      setFormHeight(formHeightFn);
+      imagesRef.current.style.maxHeight = `${formHeightFn}px`;
     }
   }, [images]);
 
-  const uploadImageToS3 = async (image: File): Promise<string> => {
-    const uploadParams = {
-      Bucket: import.meta.env.VITE_AWS_BUCKET_NAME,
-      Key: `images/products/${Date.now()}-${image.name}`,
-      Body: image,
-      ContentType: image.type,
+  // Cleanup object URLs to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      images.forEach((image) => URL.revokeObjectURL(image.name));
     };
-    const command = new PutObjectCommand(uploadParams);
-    await s3.send(command);
-    return `https://${import.meta.env.VITE_AWS_BUCKET_NAME}.s3.${
-      import.meta.env.VITE_AWS_REGION
-    }.amazonaws.com/${uploadParams.Key}`;
-  };
+  }, [images]);
 
-  const saveImageToSalesforce = async (
-    productId: string,
-    imageUrl: string,
-    isFeatured: boolean
-  ) => {
-    try {
-      const imagePayload = {
-        Name: formValues.productName,
-        Product_Id__c: productId,
-        Is_Featured__c: isFeatured,
-        Image_URL__c: imageUrl,
-      };
-
-      const response = await fetch(
-        "/api/services/data/v52.0/sobjects/Product_Images__c",
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${SfAccessToken}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(imagePayload),
-        }
-      );
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Failed to save image to Salesforce: ${errorText}`);
-      }
-    } catch (error) {
-      console.log(error);
-    }
-  };
+  /**
+   * Handle input changes for form fields
+   */
   const handleInputChange = (
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
@@ -159,52 +117,51 @@ const AddNewProduct = () => {
 
     setFormValues((prevValues) => {
       const updatedValues = { ...prevValues, [name]: value };
-
       if (name === "Meta_Title__c") {
         updatedValues.Product_URL__c = value
           .toLowerCase()
           .trim()
           .replace(/[^a-z0-9\s-]/g, "")
           .replace(/\s+/g, "-");
+
+          setErrors((prevErrors) => ({
+            ...prevErrors,
+            Product_URL__c:
+              "",
+          }));
       }
 
       return updatedValues;
     });
 
-    setErrors((prevErrors) => {
-      const updatedErrors = { ...prevErrors, [name]: "" };
-
-      if (name === "Meta_Title__c") {
-        updatedErrors.Meta_Title__c = "";
-        updatedErrors.Product_URL__c = "";
-      }
-
-      if (name === "Product_URL__c") {
-        updatedErrors.Product_URL__c = "";
-      }
-
-      return updatedErrors;
-    });
+    setErrors((prevErrors) => ({
+      ...prevErrors,
+      [name]: "",
+    }));
   };
 
+  /**
+   * Handle accessory selection
+   */
   const handleAccessoryChange = (accessoryId: string) => {
-    setNewAccessories((prev) =>
+    setSelectedAccessoryIds((prev) =>
       prev.includes(accessoryId)
         ? prev.filter((id) => id !== accessoryId)
         : [...prev, accessoryId]
     );
   };
 
+  /**
+   * Handle image uploads
+   */
   const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
     setImageUploadError(false);
     const files = Array.from(e.target.files || []).filter((file) =>
       file.type.startsWith("image/")
     );
-
     if (files.length > 0) {
       setIsUploading(true);
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
-
       timeoutRef.current = setTimeout(() => {
         setImages((prevImages) => {
           const updatedImages = [...prevImages, ...files];
@@ -218,194 +175,270 @@ const AddNewProduct = () => {
     }
   };
 
-  const setAsFeaturedImage = (index: number) => {
-    if (images[index]) {
-      setFeaturedImage(images[index]);
-      closeImagePreview();
+  /**
+   * Set a new featured image
+   */
+  const setAsFeaturedImage = (id: string, type: "new" | "existing") => {
+    if (type === "new") {
+      const image = images.find((img, index) => index.toString() === id);
+      if (image) {
+        setFeaturedImage(image);
+      }
     }
+    closeImagePreview();
   };
 
+  /**
+   * Remove an image from the list
+   */
   const removeImage = (index: number) => {
     setImages((prevImages) => {
+      const removedImage = prevImages[index];
       const updatedImages = prevImages.filter((_, i) => i !== index);
-      if (index === 0 && updatedImages.length > 0) {
-        setFeaturedImage(updatedImages[0]);
-      } else if (updatedImages.length === 0) {
-        setFeaturedImage(null);
-      } else {
-        setFeaturedImage(updatedImages[index - 1]);
+      if (featuredImage === removedImage) {
+        const nextFeatured = updatedImages[0] || null;
+        setFeaturedImage(nextFeatured);
       }
       return updatedImages;
     });
     setPreviewImage(null);
+
+    // Check if there are no images left
+    if (images.length - 1 === 0) {
+      setImageUploadError(true);
+    }
   };
 
-  const openImagePreview = (image: string, index: number) => {
-    setPreviewImage({ url: image, index });
+  /**
+   * Open image preview modal
+   */
+  const openImagePreview = (
+    image: string,
+    id: string,
+    type: "new" | "existing"
+  ) => {
+    setPreviewImage({ url: image, id, type });
     setShowPreview(true);
   };
 
+  /**
+   * Close image preview modal
+   */
   const closeImagePreview = () => {
     setShowPreview(false);
     setTimeout(() => setPreviewImage(null), 350);
   };
 
+  /**
+   * Upload an image to S3 and return its URL
+   */
+  const uploadImageToS3 = async (image: File): Promise<string> => {
+    const uploadParams = {
+      Bucket: import.meta.env.VITE_AWS_BUCKET_NAME,
+      Key: `images/products/${Date.now()}-${image.name}`,
+      Body: image,
+      ContentType: image.type,
+    };
+    const command = new PutObjectCommand(uploadParams);
+    await s3.send(command);
+    return `https://${import.meta.env.VITE_AWS_BUCKET_NAME}.s3.${import.meta.env.VITE_AWS_REGION}.amazonaws.com/${uploadParams.Key}`;
+  };
+
+  /**
+   * Handle form submission to add a new product
+   */
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    const slug: string = formValues.Product_URL__c;
-    const result = ProductSchema.safeParse(formValues);
+    const validation = ProductSchema.safeParse(formValues);
+
+    
+    // Check if at least one image is uploaded
     if (images.length === 0) {
       setImageUploadError(true);
+  
+
     }
-    if (!result.success) {
+
+    // Validate form inputs
+    if (!validation.success) {
       const newErrors: { [key in keyof IProductInputValues]: string } = {
         productName: "",
         price: "",
+        gvwr: "",
+        qty:"",
+        liftCapacity: "",
         Product_Description__c: "",
         Product_Title__c: "",
-        gvwr: "",
-        Down_Payment_Cost__c: "",
         Meta_Title__c: "",
         Product_URL__c: "",
-        liftCapacity: "",
         liftHeight: "",
         container: "",
+        Down_Payment_Cost__c: "",
       };
-      result.error.issues.forEach((issue) => {
+      validation.error.issues.forEach((issue) => {
         const fieldName = issue.path[0] as keyof IProductInputValues;
         newErrors[fieldName] = issue.message;
       });
       setErrors(newErrors);
-    } else {
-      if (images.length === 0) {
-        setImageUploadError(true);
-        return;
-      }
-      const isUnique = await ProductsService.isSlugUnique(slug);
+      return;
+    }
 
-      if (!isUnique) {
+    // Check if at least one image is uploaded
+    if (images.length === 0) {
+      setImageUploadError(true);
+      addNotification("error", "At least one product image is required.");
+      return;
+    }
+
+    const slug: string = formValues.Product_URL__c;
+
+    // Validate slug uniqueness
+    try {
+      const slugCheckResponse = await apiClient.get(`/product/slug?slug=${slug}`);
+      if (!slugCheckResponse.data.success) {
         setErrors((prevErrors) => ({
           ...prevErrors,
           Product_URL__c:
             "This URL is already in use. Please modify the Meta Title.",
         }));
-        console.log(errors);
+
         return;
       }
-      setIsResSaving(true);
-      setCurrentStatus("Creating product...");
-
-      const token = SfAccessToken;
-      const productData = {
-        Name: formValues.productName,
-        Product_Price__c: parseFloat(formValues.price),
-        Down_Payment_Cost__c: formValues.Down_Payment_Cost__c,
-        GVWR__c: parseFloat(formValues.gvwr),
-        Lift_Capacity__c: parseFloat(formValues.liftCapacity),
-        Lift_Height__c: parseFloat(formValues.liftHeight),
-        Container__c: formValues.container,
-        Meta_Title__c: formValues.Meta_Title__c,
-        Product_URL__c: formValues.Product_URL__c,
-        Product_Title__c: formValues.Product_Title__c,
-        Product_Description__c: formValues.Product_Description__c,
-      };
-      try {
-        // add product
-        const productResponse = await fetch(
-          "/api/services/data/v52.0/sobjects/Product__c/",
-          {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(productData),
-          }
-        );
-        setCurrentStatus("Adding product...");
-        if (!productResponse.ok) {
-          const errorText = await productResponse.text();
-          throw new Error(`Product creation failed: ${errorText}`);
-        }
-        const productDataResponse = await productResponse.json();
-        const newProductId = productDataResponse.id;
-
-        // add accessories
-        if (newAccessories.length > 0) {
-          const accessoryRequests = newAccessories.map((accessoryId) => ({
-            method: "POST",
-            url: "/api/services/data/v52.0/sobjects/Accessory_Product__c",
-            richInput: {
-              Name: formValues.productName,
-              Accessory_Id__c: accessoryId,
-              Product_Id__c: newProductId,
-            },
-          }));
-
-          const batchRequestData = { batchRequests: accessoryRequests };
-          setCurrentStatus("Attaching accessories...");
-
-          const accessoryResponse = await fetch(
-            "/api/services/data/v52.0/composite/batch",
-            {
-              method: "POST",
-              headers: {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify(batchRequestData),
-            }
-          );
-          if (!accessoryResponse.ok) {
-            const errorText = await accessoryResponse.text();
-            throw new Error(`Accessory creation failed: ${errorText}`);
-          }
-        }
-
-        setCurrentStatus("Uploading images...");
-        const orderedImages = featuredImage
-          ? [featuredImage, ...images.filter((img) => img !== featuredImage)]
-          : images;
-
-        for (const [index, image] of orderedImages.entries()) {
-          const imageUrl = await uploadImageToS3(image);
-          await saveImageToSalesforce(newProductId, imageUrl, index === 0);
-        }
-        setIsResSaving(false);
-        addNotification("success", "Product Added Successfully");
-
-        setLoading((prev) => ({ ...prev, products: true }));
-        const newProd = await ProductsService.fetchProductsWithImages();
-        setProducts(newProd);
-        setLoading((prev) => ({ ...prev, products: false }));
-        nav("/admin/products");
-      } catch (error) {
-        console.error("Error creating product or accessory:", error);
-        setIsResSaving(false);
-        addNotification("error", "Error while creating product");
-      }
+    } catch (err) {
+      console.error("Error validating slug uniqueness:", err);
+      addNotification("error", "Failed to validate URL uniqueness.");
+      return;
     }
-  };
 
-  const fetchAccessoriesData = async () => {
-    setLoading((prevState) => ({ ...prevState, accessories: true }));
+    setIsResSaving(true);
+    setCurrentStatus("Creating product...");
+
     try {
-      const accessoriesData = await AccessoriesService.fetchAccessoriesWithImages();
-      setAccessories(accessoriesData);
+      // Step 1: Create the product
+      const productData = {
+        name: formValues.productName,
+        price: parseFloat(formValues.price),
+        downpayment_cost: parseFloat(formValues.Down_Payment_Cost__c),
+        gvwr: parseFloat(formValues.gvwr),
+        stock_quantity:formValues.qty,
+        lift_capacity: parseFloat(formValues.liftCapacity),
+        lift_height: parseFloat(formValues.liftHeight),
+        meta_title: formValues.Meta_Title__c,
+        product_url: formValues.Product_URL__c,
+        description: formValues.Product_Description__c,
+        product_title: formValues.Product_Title__c,
+        container_capacity: formValues.container,
+      };
+
+      const createProductResponse = await apiClient.post(`/product`, productData);
+      const newProduct = createProductResponse.data.data; 
+      console.log(newProduct)
+
+      // Step 2: Attach accessories
+      setCurrentStatus("Attaching accessories...");
+      await attachAccessories(newProduct[0].id);
+
+      // Step 3: Upload images to S3 and save image URLs
+      setCurrentStatus("Uploading images...");
+      await uploadImages(newProduct[0].id);
+
+      setCurrentStatus("Finalizing...");
+      addNotification("success", "Product added successfully!");
+
+      // Refresh the product list
+      setLoading((prev) => ({ ...prev, products: true }));
+      const updatedProducts = await apiClient.get("/product");
+      setProducts(updatedProducts.data.data);
+      setLoading((prev) => ({ ...prev, products: false }));
+
+      navigate("/admin/products");
     } catch (error) {
-      setError((prev) => ({
-        ...prev,
-        accessories: (error as ErrorWithMessage).message || "An error occurred",
-      }));
+      console.error("Error adding product:", error);
+      addNotification("error", "Failed to add product. Please try again.");
     } finally {
-      setLoading((prevState) => ({ ...prevState, accessories: false }));
+      setIsResSaving(false);
+      setCurrentStatus("");
     }
   };
 
+  /**
+   * Attach selected accessories to the product
+   */
+  const attachAccessories = async (productId: string) => {
+    if (selectedAccessoryIds.length === 0) return;
+
+    try {
+      await Promise.all(
+        selectedAccessoryIds.map((accId) =>
+          apiClient.post(`/accessory/accessory-products`, {
+            product_id: productId,
+            accessory_id: accId,
+          })
+        )
+      );
+    } catch (error) {
+      console.error("Error attaching accessories:", error);
+      throw new Error("Failed to attach some accessories.");
+    }
+  };
+
+  /**
+   * Upload images to S3 and save their URLs as product images
+   */
+  const uploadImages = async (productId: string) => {
+    if (images.length === 0) return;
+
+    try {
+      const uploadedImages = await Promise.all(
+        images.map(async (image, index) => {
+          const imageUrl = await uploadImageToS3(image);
+          const isFeatured = featuredImage === image;
+          const response = await apiClient.post(`/product/product-images`, {
+            product_id: productId,
+            image_url: imageUrl,
+            is_featured: isFeatured,
+            image_descripton:formValues.name
+          });
+          return response.data.data; 
+        })
+      );
+
+      // Ensure at least one image is featured
+      const hasFeaturedImage = uploadedImages.some((img: any) => img.is_featured);
+      if (!hasFeaturedImage && uploadedImages.length > 0) {
+        // Set the first uploaded image as featured
+        await apiClient.put(`/product/product-images/${uploadedImages[0].id}`, {
+          is_featured: true,
+        });
+      }
+    } catch (error) {
+      console.error("Error uploading images:", error);
+      throw new Error("Failed to upload some images.");
+    }
+  };
+
+  /**
+   * Fetch accessories data from the API
+   */
+  const fetchAccessoriesData = async () => {
+    setLoading((prev) => ({ ...prev, accessories: true }));
+    try {
+      const accessoriesData = await apiClient.get(`/accessory`);
+      setAccessories(accessoriesData.data.data);
+    } catch (error) {
+      console.error("Error fetching accessories:", error);
+      addNotification("error", "Failed to fetch accessories.");
+    } finally {
+      setLoading((prev) => ({ ...prev, accessories: false }));
+    }
+  };
+
+  // Fetch accessories on component mount if not already fetched
   useEffect(() => {
     if (accessories.length === 0) {
       fetchAccessoriesData();
     }
+   
   }, []);
 
   return (
@@ -422,13 +455,13 @@ const AddNewProduct = () => {
           <h2 className="text-2xl font-semibold mb-4">General Information</h2>
           <hr className="mb-6" />
 
-          {/* Product Name and Price, Description Downpayment cost */}
+          {/* Product Name, Title, Description, Price, Downpayment Cost */}
           <div className="grid grid-cols-1 gap-4">
             <InputField
               id="productName"
               type="text"
               label="Product Name"
-              placeholder="4000"
+              placeholder="Enter Product Name"
               name="productName"
               value={formValues.productName}
               onChange={handleInputChange}
@@ -438,16 +471,17 @@ const AddNewProduct = () => {
               id="productTitle"
               type="text"
               label="Product Title"
-              placeholder="Drivable Dumpster For Derbis Removal"
+              placeholder="Drivable Dumpster For Debris Removal"
               name="Product_Title__c"
               value={formValues.Product_Title__c}
               onChange={handleInputChange}
               error={errors.Product_Title__c}
             />
+            {/* Description */}
             <div className="mb-3">
               <label
                 htmlFor="description"
-                className="font-medium text-custom-gray "
+                className="font-medium text-custom-gray"
               >
                 Description
               </label>
@@ -455,22 +489,25 @@ const AddNewProduct = () => {
                 value={formValues.Product_Description__c}
                 name="Product_Description__c"
                 onChange={handleInputChange}
-                className={`mt-1 font-arial block w-full text-xs p-2 border border-inset h-[111px] border-custom-gray-200 outline-none py-2 px-3 ${
+                className={`mt-1 font-arial block w-full text-xs p-2 border h-[111px] border-custom-gray-200 outline-none ${
                   errors.Product_Description__c
                     ? "border-red-500"
                     : "border-custom-gray-200"
-                } `}
-                placeholder="DescrGo beyond the standard scissor lift with the Equipter 4000 drivable dumpster. Originally designed as a self-propelled roofing trailer and known as one of the best roofing tools for debris management......."
+                }`}
+                placeholder="Enter product description..."
               />
-              <span className="text-red-500 h-6 text-[10px] font-bold">
-                {errors.Product_Description__c}
-              </span>
+              {errors.Product_Description__c && (
+                <span className="text-red-500 h-6 text-[10px] font-bold">
+                  {errors.Product_Description__c}
+                </span>
+              )}
             </div>
+
             <InputField
               id="price"
               label="Price"
               type="number"
-              placeholder="$8000"
+              placeholder="Enter Price"
               name="price"
               value={formValues.price}
               error={errors.price}
@@ -480,10 +517,20 @@ const AddNewProduct = () => {
               id="Down_Payment_Cost__c"
               type="number"
               label="Down Payment Cost"
-              placeholder="$1200"
+              placeholder="Enter Down Payment Cost"
               name="Down_Payment_Cost__c"
               value={formValues.Down_Payment_Cost__c}
               error={errors.Down_Payment_Cost__c}
+              onChange={handleInputChange}
+            />
+            <InputField
+              id="qty"
+              type="number"
+              label="Stock"
+              placeholder="Enter Stock"
+              name="qty"
+              value={formValues.qty}
+              error={errors.qty}
               onChange={handleInputChange}
             />
           </div>
@@ -513,7 +560,7 @@ const AddNewProduct = () => {
             />
           </div>
 
-          {/* Lift height and Container */}
+          {/* Lift Height and Container */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
             <InputField
               id="liftHeight"
@@ -538,17 +585,18 @@ const AddNewProduct = () => {
             />
           </div>
 
+          {/* Additional Information */}
           <h2 className="text-2xl font-semibold my-4 mb-2">
             Additional Information
           </h2>
           <hr className="mb-3" />
-          {/* Meta Title */}
+          {/* Meta Title and Slug */}
           <div className="grid grid-cols-1 gap-4">
             <InputField
               id="metatitle"
               type="text"
               label="Meta Title"
-              placeholder="Meta Title"
+              placeholder="Enter Meta Title"
               name="Meta_Title__c"
               value={formValues.Meta_Title__c}
               onChange={handleInputChange}
@@ -557,11 +605,11 @@ const AddNewProduct = () => {
             <InputField
               id="producturl"
               type="text"
-              readonly={true}
+              readonly
               label="Product URL"
               placeholder="Generated URL"
               name="Product_URL__c"
-              value={formValues.Product_URL__c.toLocaleLowerCase()}
+              value={formValues.Product_URL__c.toLowerCase()}
               onChange={handleInputChange}
               error={errors.Product_URL__c}
               classes="text-gray-400 border-gray-200 bg-[#f9f9f9] text-[#666] border-[#ccc] cursor-not-allowed"
@@ -572,57 +620,42 @@ const AddNewProduct = () => {
           <hr className="my-6" />
           <h3 className="text-xl font-semibold mb-4">Accessories</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {accessories.map((accessory, index) => {
-              console.log(accessory.Accesory_Images__r);
-              const featuredImageUrl =
-                accessory?.Accesory_Images__r?.records?.filter(
-                  (data) => data.Is_Featured__c == true
-                ) || [];
-              return (
-                <>
-                  <label
-                    key={index}
-                    className="flex items-center space-x-2 bg-gray-50 p-3 rounded-md hover:bg-gray-100"
-                  >
-                    <input
-                      type="checkbox"
-                      className="h-5 w-5 text-blue-600"
-                      onChange={() => handleAccessoryChange(accessory.Id)}
-                    />
-
-                    <span className="capitalize flex gap-1 items-center text-gray-700">
-                      {featuredImageUrl.length > 0 &&
-                        featuredImageUrl[0]?.Image_URL__c && (
-                          <img
-                            className="shadow-sm w-[30px] h-[30px] object-cover rounded border border-gray-300"
-                            src={featuredImageUrl[0]?.Image_URL__c}
-                            alt="Img"
-                          />
-                        )}
-                      {accessory?.Name} -{" "}
-                      <span className="text-gray-600 font-bold">
-                        ${accessory?.Price__c}
-                      </span>
-                    </span>
-                  </label>{" "}
-                </>
-              );
-            })}
+            {accessories?.map((accessory) => (
+              <label
+                key={accessory.id}
+                className="flex items-center space-x-2 bg-gray-50 p-3 rounded-md hover:bg-gray-100"
+              >
+                <input
+                  type="checkbox"
+                  className="h-5 w-5 text-blue-600"
+                  checked={selectedAccessoryIds.includes(accessory.id)}
+                  onChange={() => handleAccessoryChange(accessory.id)}
+                />
+                <span className="capitalize text-gray-700">
+                  {accessory.name} -{" "}
+                  <span className="text-gray-600 font-bold">
+                    ${Number(accessory.price).toFixed(2)}
+                  </span>
+                </span>
+              </label>
+            ))}
           </div>
 
           {/* Action Buttons */}
-          <div className="flex  justify-end space-x-4 mt-8">
+          <div className="flex justify-end space-x-4 mt-8">
             <button
               className="px-6 py-2 border border-gray-300 text-gray-600 rounded-md hover:bg-gray-100"
-              onClick={() => nav("/admin/products")}
+              onClick={() => navigate("/admin/products")}
+              type="button"
             >
               Cancel
             </button>
             <button
-              className={`px-6 py-2 btn-yellow  rounded-md ${
+              className={`px-6 py-2 btn-yellow text-white rounded ${
                 isResSaving ? "opacity-50 cursor-not-allowed" : ""
               }`}
               type="submit"
+              disabled={isResSaving}
             >
               {isResSaving ? <LoaderSpinner /> : "Save"}
             </button>
@@ -631,24 +664,27 @@ const AddNewProduct = () => {
 
         {/* Image Section */}
         <div
-          // className={`bg-white p-6 shadow-md flex-1 rounded-md space-y-4 ${
-          //   images.length >= 3
-          //     ? "max-h-auto overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300"
-          //     : "h-"
-          // }`}
           ref={imagesRef}
-          className={`bg-white p-6 shadow-md flex-1 rounded-md space-y-4 h-fit overflow-auto `}
+          className={`bg-white p-6 shadow-md flex-1 rounded-md space-y-4 h-fit overflow-auto`}
+          style={{
+            maxHeight: formHeight ? `${formHeight}px` : "auto",
+          }}
         >
           <h2 className="text-2xl font-semibold mb-4">Upload Images</h2>
           <hr className="mb-6" />
 
+          {/* Featured Image */}
           {featuredImage && (
             <>
               <h3 className="font-semibold text-lg mb-2">Featured Image:</h3>
               <div className="relative w-full h-[358px] mb-6">
                 <img
-                  src={URL.createObjectURL(featuredImage)}
-                  className="w-full h-full object-cover rounded-md shadow-md"
+                  src={
+                    featuredImage instanceof File
+                      ? URL.createObjectURL(featuredImage)
+                      : featuredImage?.image_url
+                  }
+                  className="w-full h-full object-cover rounded shadow-md"
                   alt="Featured"
                 />
               </div>
@@ -674,11 +710,11 @@ const AddNewProduct = () => {
           </label>
           {imageUploadError && (
             <p className="text-sm text-red-500">
-              Minimum one product image is required.
+              At least one product image is required.
             </p>
           )}
 
-          {/* All Images */}
+          {/* Uploaded Images */}
           {images.length > 0 && (
             <>
               <h3 className="font-semibold text-lg mt-6">Product Images:</h3>
@@ -692,6 +728,9 @@ const AddNewProduct = () => {
                       src={URL.createObjectURL(image)}
                       alt="Product"
                       className="w-full h-full object-cover"
+                      onClick={() =>
+                        openImagePreview(URL.createObjectURL(image), index.toString(), "new")
+                      }
                     />
                     <button
                       className="absolute top-2 right-2 bg-white bg-opacity-75 text-red-600 text-md hover:text-red-800 rounded-full p-1"
@@ -708,14 +747,18 @@ const AddNewProduct = () => {
                       title="Preview"
                       onClick={(e) => {
                         e.stopPropagation();
-                        openImagePreview(URL.createObjectURL(image), index);
+                        openImagePreview(
+                          URL.createObjectURL(image),
+                          index.toString(),
+                          "new"
+                        );
                       }}
                     >
                       <FontAwesomeIcon icon={faExpand} />
                     </button>
                     {featuredImage === image && (
                       <span className="absolute bottom-2 left-2 bg-custom-orange text-white text-xs px-2 py-1 rounded">
-                        <FontAwesomeIcon icon={faStar} />
+                        <FontAwesomeIcon icon={faStar} /> 
                       </span>
                     )}
                   </div>
@@ -723,16 +766,19 @@ const AddNewProduct = () => {
               </div>
             </>
           )}
-          {/* full screen */}
+
+          {/* Full Screen Image Preview */}
           {previewImage &&
             ReactDOM.createPortal(
               <div
                 className={`fixed inset-0 h-full p-5 bg-black bg-opacity-40 flex items-center justify-center transition-all duration-500 ${
-                  showPreview ? "opacity-100" : "opacity-0 pointer-events-none"
+                  showPreview
+                    ? "opacity-100"
+                    : "opacity-0 pointer-events-none"
                 }`}
               >
                 <div className="h-[90%]">
-                  <div className="max-w-[90%] min-h-[90%] object-cove mx-auto max-h-[90%]  h-[90%]">
+                  <div className="max-w-[90%] min-h-[90%] object-cover mx-auto max-h-[90%] h-[90%]">
                     <img
                       src={previewImage.url}
                       alt="Preview"
@@ -748,13 +794,26 @@ const AddNewProduct = () => {
                     </button>
                     <button
                       className="btn-yellow text-white px-4 py-2 rounded"
-                      onClick={() => setAsFeaturedImage(previewImage.index)}
+                      onClick={() =>
+                        setAsFeaturedImage(
+                          previewImage.id,
+                          previewImage.type
+                        )
+                      }
                     >
-                      <FontAwesomeIcon icon={faStar} /> Make Feature Image
+                      <FontAwesomeIcon icon={faStar} /> Make Featured Image
                     </button>
                     <button
                       className="bg-gray-600 text-white px-4 py-2 rounded-md"
-                      onClick={() => removeImage(previewImage.index)}
+                      onClick={() => {
+                        if (previewImage.type === "new") {
+                          const index = images.findIndex((img, idx) => idx.toString() === previewImage.id);
+                          if (index !== -1) {
+                            removeImage(index);
+                          }
+                        }
+                        // If existing images are handled in AddNewProduct, adjust accordingly
+                      }}
                     >
                       <FontAwesomeIcon icon={faTrash} /> Delete
                     </button>

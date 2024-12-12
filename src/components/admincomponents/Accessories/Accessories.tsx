@@ -2,11 +2,12 @@ import AccessoriesTable from "./AccessoriesTable";
 import SubTitle from "../rootComponents/SubTitle";
 import BreadCrump from "../rootComponents/BreadCrump";
 import { useAdminContext } from "../../../hooks/useAdminContext";
-import AccessoriesService from "./AccessoriesService";
+
 import { useEffect } from "react";
 import MetaComponent from "../../../utils/MetaComponent";
 import { ErrorWithMessage } from "../../../types/componentsTypes";
 import { GlobalLoadingState } from "../../../contexts/AdminContext";
+import { apiClient } from "../../../utils/axios";
 
 const Accessories = () => {
   const breadcrumbs = [
@@ -25,9 +26,9 @@ const Accessories = () => {
     try {
       setLoading((prev) => ({ ...prev, accessories: true }));
       setError((prev) => ({ ...prev, accessories: "" }));
-      const data = await AccessoriesService.fetchAccessoriesWithImages();
+      const data = await apiClient.get("/accessory")
       console.log(data);
-      setAccessories(data);
+      setAccessories(data.data.data);
     } catch (error) {
       console.log(error);
       setError((prev) => ({

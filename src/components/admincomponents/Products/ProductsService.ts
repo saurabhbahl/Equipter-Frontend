@@ -74,27 +74,6 @@ export class ProductsService {
     }
   }
 
-  static async isSlugUnique1(slug: string): Promise<boolean> {
-    try {
-      const encodedSlug = encodeURIComponent(slug);
-      console.log(encodedSlug);
-      const response = await fetch(
-        `/api/services/data/v52.0/query/?q=SELECT Id FROM Product__c WHERE Product_URL__c = '${encodedSlug}'`,
-        {
-          headers: {
-            Authorization: `Bearer ${SfAccessToken}`,
-          },
-        }
-      );
-
-      const data = await response.json();
-      console.log(data);
-      return data.records.length === 0;
-    } catch (error) {
-      console.error("Error checking slug uniqueness:", error);
-      return false;
-    }
-  }
 
   static async isSlugUnique(slug: string,productId?: string): Promise<boolean> {
     try {

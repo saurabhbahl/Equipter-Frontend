@@ -35,6 +35,9 @@ html.modal-open footer {
   background-color: hsla(0, 0%, 94%, 0.88);
 }
 
+
+
+
 @layer utilities {
   .scrollbar-custom {
     scrollbar-width: thin;
@@ -74,6 +77,22 @@ html.modal-open footer {
   .btn-yellow {
     @apply font-arial rounded-none bg-custom-orange/80 transition-all ease-out duration-200  text-white hover:bg-custom-orange focus:outline-none cursor-pointer px-8 py-2.5 uppercase hover:shadow-2xl shadow-md;
   }
+  .slick-dots li.slick-active div div {
+    @apply bg-orange-500;
+  }
+  .slick-dots {
+    @apply flex justify-center gap-6 mt-4;
+  }
+  
+  .slick-dots li {
+    @apply w-[90px] h-[14px] mt-16 bg-gray-300 opacity-50 transition-opacity duration-300;
+  }
+  
+  .slick-dots li.slick-active {
+    @apply bg-orange-500 opacity-100;
+  }
+  
+  
   
 }
 

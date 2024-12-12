@@ -11,6 +11,7 @@ import ViewAccessory from "../admincomponents/Accessories/ViewAccessory";
 import EditAccessory from "../admincomponents/Accessories/EditAccessory";
 import Products from "../../pages/client/products/Products";
 import AllProducts from "../admincomponents/Products/AllProducts";
+import ViewSingleProduct from "../../pages/client/products/ViewSingleProduct";
 const Home = lazy(() => import("../../pages/client/Home"));
 const LoginPage = lazy(() => import("../../pages/auth/LoginPage"));
 const ForgetPassword = lazy(() => import("../../pages/auth/ForgetPassword"));
@@ -67,6 +68,7 @@ export default function Router() {
           <Route element={<PrivateRoute />}>
             <Route path="/sample" element={<SamplePage />} />
             <Route path="/products" element={<Products />} />
+            <Route path="/products/:productUrl" element={<ViewSingleProduct />} />
           </Route>
 
           {/* Fallback for Not Found */}

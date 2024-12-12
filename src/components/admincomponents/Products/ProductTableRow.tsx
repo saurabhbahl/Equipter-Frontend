@@ -2,16 +2,14 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrashAlt, faEdit, faEye } from "@fortawesome/free-solid-svg-icons";
 import TableRow from "../../Table/TableRow";
 import { useNavigate } from "react-router-dom";
-import { SfAccessToken } from "../../../utils/useEnv";
 import { useNotification } from "../../../contexts/NotificationContext";
 import { DeleteObjectsCommand, S3Client } from "@aws-sdk/client-s3";
 import { useState } from "react";
 import Loader from "../../utils/Loader";
-import { Product, ProductImage } from "./ProductSchema";
-import { Accessory } from "../Accessories/AccessoriesSchema";
-import { ErrorWithMessage } from "../../../types/componentsTypes";
-import { ProductsService } from "./ProductsService";
+import { Product } from "./ProductSchema"; 
 import { useAdminContext } from "../../../hooks/useAdminContext";
+import { apiClient } from "../../../utils/axios";
+import axios from "axios"; 
 
 const s3 = new S3Client({
   region: import.meta.env.VITE_AWS_REGION,
@@ -22,20 +20,23 @@ const s3 = new S3Client({
 });
 
 const ProductTableRow = ({ product, no }: { product: Product; no: number }) => {
-  const nav = useNavigate();
+  const navigate = useNavigate();
   const { addNotification } = useNotification();
   const [isResSaving, setIsResSaving] = useState(false);
   const [currentStatus, setCurrentStatus] = useState("");
   const { setLoading, setProducts } = useAdminContext();
+
+  /**
+   * Function to delete images from S3
+   * @param imageUrls Array of image URLs to delete
+   */
   const deleteImagesFromS3 = async (imageUrls: string[]): Promise<void> => {
     const bucketName = import.meta.env.VITE_AWS_BUCKET_NAME;
     const region = import.meta.env.VITE_AWS_REGION;
-    setCurrentStatus("Deleting Images...");
+
     // Extract S3 keys from URLs
     const objectsToDelete = imageUrls.map((url) => {
-      const key = url.split(
-        `https://${bucketName}.s3.${region}.amazonaws.com/`
-      )[1];
+      const key = url.split(`https://${bucketName}.s3.${region}.amazonaws.com/`)[1];
       if (!key) throw new Error(`Invalid image URL: ${url}`);
       return { Key: key };
     });
@@ -51,170 +52,104 @@ const ProductTableRow = ({ product, no }: { product: Product; no: number }) => {
     // Send the delete request
     const command = new DeleteObjectsCommand(deleteParams);
     await s3.send(command);
+    console.log("Deleted images from S3:", objectsToDelete);
   };
 
+  /**
+   * Function to delete a product along with its associated images from S3
+   * @param productId The ID of the product to delete
+   */
   const deleteProduct = async (productId: string) => {
-    if (!window.confirm("Are you sure you want to delete this product?")) {
+    // Confirmation prompt
+    if (!window.confirm("Are you sure you want to delete this product? Deleting this product will delete all its related data.")) {
       return;
     }
+
     setIsResSaving(true);
     setCurrentStatus("Deleting Product...");
+
     try {
-      // Fetch associated images for the product
-      const imagesResponse = await fetch(
-        `/api/services/data/v52.0/query/?q=SELECT+Id,+Image_URL__c+FROM+Product_Images__c+WHERE+Product_Id__c='${productId}'`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${SfAccessToken}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      // Step 1: Extract image URLs from the product data
+      const imagesData = product.images as Array<{ image_url: string; id: string }>;
+      const imageUrls = imagesData.map((record) => record.image_url);
 
-      if (!imagesResponse.ok) {
-        throw new Error("Failed to fetch product images");
+      // Step 2: Delete images from S3
+      if (imageUrls.length > 0) {
+        setCurrentStatus("Deleting Images from S3...");
+        await deleteImagesFromS3(imageUrls);
       }
 
-      const imageRecords = (await imagesResponse.json()).records;
-      const imageUrls = imageRecords.map(
-        (record: ProductImage) => record.Image_URL__c
-      );
+      // Step 3: Delete the product from the database
+      setCurrentStatus("Deleting Product from Database...");
+      await apiClient.delete(`/product/${productId}`);
 
-      // Delete all images from S3
-      await deleteImagesFromS3(imageUrls);
-
-      // Fetch all accessory products related to this product
-      const accessoryResponse = await fetch(
-        `/api/services/data/v52.0/query/?q=SELECT+Id+FROM+Accessory_Product__c+WHERE+Product_Id__c='${productId}'`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${SfAccessToken}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      if (!accessoryResponse.ok) {
-        throw new Error("Failed to fetch accessory products");
-      }
-
-      const accessoryRecords = (await accessoryResponse.json()).records;
-
-      // Prepare the batch delete requests
-      const batchRequests = [];
-
-      // Add requests for deleting images from Salesforce
-      imageRecords.forEach((image: ProductImage) => {
-        batchRequests.push({
-          method: "DELETE",
-          url: `/services/data/v52.0/sobjects/Product_Images__c/${image.Id}`,
-        });
-      });
-
-      // Add requests for deleting accessory products from Salesforce
-      accessoryRecords.forEach((accessory: Accessory) => {
-        batchRequests.push({
-          method: "DELETE",
-          url: `/services/data/v52.0/sobjects/Accessory_Product__c/${accessory.Id}`,
-        });
-      });
-
-      // Add request for deleting the product itself
-      batchRequests.push({
-        method: "DELETE",
-        url: `/services/data/v52.0/sobjects/Product__c/${productId}`,
-      });
-
-      // Send the batch request
-      const batchResponse = await fetch(
-        `/api/services/data/v52.0/composite/batch`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${SfAccessToken}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            batchRequests,
-          }),
-        }
-      );
-
-      if (!batchResponse.ok) {
-        throw new Error("Failed to execute batch deletion");
-      }
-
-      const batchResult = await batchResponse.json();
-
-      // Handle individual errors from batch response
-      const errors = batchResult.results.filter(
-        (result: { statusCode: number }) => result.statusCode >= 400
-      );
-      if (errors.length > 0) {
-        console.error("Batch delete errors:", errors);
-        throw new Error(
-          "Some items could not be deleted. Check logs for details."
-        );
-      }
+      // Step 4: Refresh the product list
       setLoading((prev) => ({ ...prev, products: true }));
-      const newProd = await ProductsService.fetchProductsWithImages();
-
-      setProducts(newProd);
+      const newProd = await apiClient.get("/product");
+      setProducts(newProd.data.data);
       setLoading((prev) => ({ ...prev, products: false }));
-      addNotification(
-        "success",
-        "Product and related records deleted successfully."
-      );
-      setIsResSaving(false);
-      // window.location.reload();
+
+      // Step 5: Notify the user
+      addNotification("success", "Product deleted successfully.");
     } catch (error) {
       console.error("Error deleting product:", error);
-      addNotification(
-        "error",
-        (error as ErrorWithMessage).message || "Error deleting product."
-      );
+
+      // Extract error message if available
+      let errorMessage = "Error deleting product.";
+      if (axios.isAxiosError(error) && error.response) {
+        errorMessage = error.response.data.message || errorMessage;
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+
+      addNotification("error", errorMessage);
+    } finally {
+      setIsResSaving(false);
+      setCurrentStatus("");
     }
   };
-  const { Product_Images__r } = product;
 
-  const featuredImageUrl = Product_Images__r?.records.filter(
-    (data) => data.Is_Featured__c == true
-  );
+  const { images, id, name, downpayment_cost, price, gvwr,stock_quantity } = product;
+
+  // Find the featured image
+  const featuredImageUrl = images?.find((img) => img.is_featured)?.image_url;
+
   const columns = [
     no,
-    product.Id,
-    <span className=" flex justify-start items-center gap-4">
-      <img
-        className="shadow-sm w-[40px] h-[40px] object-cover rounded border border-gray-300"
-        src={featuredImageUrl?.[0].Image_URL__c}
-        alt="Img"
-      />{" "}
-      {product.Name}
+    ` ${id?.slice(-10)}`, 
+    <span className="flex justify-start items-center gap-4" key={`name-${id}`}>
+      {featuredImageUrl && (
+        <img
+          className="shadow-sm w-[40px] h-[40px] object-cover rounded border border-gray-300"
+          src={featuredImageUrl}
+          alt={`${name} Image`}
+        />
+      )}
+      {name}
     </span>,
-    `$${product.Product_Price__c}`,
-    product.GVWR__c,
-    `$${product.Down_Payment_Cost__c}`,
+    `$${Number(price)?.toFixed(2)}`,
+    gvwr,
+    stock_quantity,
+    `$${Number(downpayment_cost)?.toFixed(2)}`,
   ];
 
   const actions = [
     {
       icon: <FontAwesomeIcon icon={faEye} />,
       title: "View Product",
-      onClick: () => nav(`/admin/products/view/${product.Id}`),
+      onClick: () => navigate(`/admin/products/view/${id}`),
       className: "text-sky-500 hover:text-blue-700",
     },
     {
       icon: <FontAwesomeIcon icon={faEdit} />,
       title: "Edit Product",
-      onClick: () => nav(`/admin/products/edit/${product.Id}`),
+      onClick: () => navigate(`/admin/products/edit/${id}`),
       className: "text-green-500 hover:text-green-700",
     },
     {
       icon: <FontAwesomeIcon icon={faTrashAlt} />,
       title: "Delete Product",
-      onClick: () => deleteProduct(product.Id),
+      onClick: () => deleteProduct(id),
       className: "text-red-500 hover:text-red-700",
     },
   ];

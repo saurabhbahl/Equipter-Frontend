@@ -2,7 +2,7 @@ import ProductTableRow from "./ProductTableRow";
 import LoaderSpinner from "../../utils/LoaderSpinner";
 import TableHeading from "../../Table/TableHeading";
 import { useAdminContext } from "../../../hooks/useAdminContext";
-import { Product } from "./ProductSchema";
+
 
 const ProductTable = () => {
   const { products, loading, error } = useAdminContext();
@@ -12,9 +12,11 @@ const ProductTable = () => {
     "Name",
     "Price",
     "GVWR",
+    "Stock",
     "Downpayment",
     "Actions",
   ];
+
   if (loading.products) {
     return (
       <div className="w-full h-96 my-10 text-center mx-auto flex justify-center items-center ">
@@ -29,14 +31,14 @@ const ProductTable = () => {
 
   return (
     <>
-      {products.length > 0 ? (
+      {products?.length > 0 ? (
         <div className="overflow-x-auto relative shadow-md rounded-lg">
           <table className="w-full text-sm text-center text-gray-500">
             <TableHeading headers={headers} />
             <tbody className="bg-white">
-              {products.map((product:Product, index: number) => (
+              {products?.map((product:any, index: number) => (
                 <ProductTableRow
-                  key={product.Id}
+                  key={index}
                   product={product}
                   no={index + 1}
                 />

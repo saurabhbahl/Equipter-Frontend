@@ -3,10 +3,11 @@ import SubTitle from "../rootComponents/SubTitle";
 
 import BreadCrump from "../rootComponents/BreadCrump";
 import { useAdminContext } from "../../../hooks/useAdminContext";
-import { ProductsService } from "./ProductsService";
+
 import { useEffect } from "react";
 import MetaComponent from "../../../utils/MetaComponent";
 import { ErrorWithMessage } from "../../../types/componentsTypes";
+import { apiClient } from "../../../utils/axios";
 
 const AllProducts = () => {
   const breadcrumbs = [
@@ -25,9 +26,10 @@ const AllProducts = () => {
     try {
       setLoading((prev) => ({ ...prev, products: true }));
       setError((prev) => ({ ...prev, products: "" }));
-      const data = await ProductsService.fetchProductsWithImages();
+      // const data = await ProductsService.fetchProductsWithImages();
+      const data=await apiClient.get("/product")
       console.log(data);
-      setProducts(data);
+      setProducts(data?.data?.data);
     } catch (error) {
       console.log(error);
       setError((prev) => ({

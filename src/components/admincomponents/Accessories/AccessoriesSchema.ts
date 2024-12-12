@@ -6,6 +6,7 @@ export interface IAccessoriesInput {
   Price__c: string;
   Quantity__c: string;
   Accessory_URL__c: string;
+  accessory_title: string;
   Meta_Title__c: string;
 }
 export interface IAccessoriesRes extends IAccessoriesInput {
@@ -57,6 +58,7 @@ export const AccessoriesSchema = z.object({
   Name: z.string().min(1, { message: "This field is required" }),
 
   Description__c: z.string().min(1, { message: "This field is required" }),
+  accessory_title: z.string().min(1, { message: "This field is required" }),
 
   Price__c: z.number().min(1, { message: "This field is required" }),
 

@@ -101,11 +101,7 @@ const Header = () => {
                 className="text-custom-orange hover:text-custom-orange/70 transition">
                 Home
               </Link>
-              <Link
-                to={"/sample"}
-                className="text-custom-orange hover:text-custom-orange/70 transition">
-                Sample
-              </Link>
+          
               <Link
                 to={"/products"}
                 className="text-custom-orange hover:text-custom-orange/70 transition">

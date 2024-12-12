@@ -6,16 +6,27 @@ export interface GlobalLoadingState {
   accessories: boolean;
 }
 
-export interface IClientContext {
-  accessories: Accessory[];
-  products: Product[];
-  setProducts: React.Dispatch<React.SetStateAction<Product[]>>;
-  setAccessories: React.Dispatch<React.SetStateAction<Accessory[]>>;
+// export interface IClientContext {
+//   accessories: Accessory[];
+//   products: Product[];
+//   setProducts: React.Dispatch<React.SetStateAction<Product[]>>;
+//   setAccessories: React.Dispatch<React.SetStateAction<Accessory[]>>;
 
-  loading: GlobalLoadingState;
-  setLoading: React.Dispatch<React.SetStateAction<GlobalLoadingState>>;
-  error: { [key: string]: string };
-  setError: React.Dispatch<React.SetStateAction<{ [key: string]: string }>>;
+//   loading: GlobalLoadingState;
+//   setLoading: React.Dispatch<React.SetStateAction<GlobalLoadingState>>;
+//   error: { [key: string]: string };
+//   setError: React.Dispatch<React.SetStateAction<{ [key: string]: string }>>;
+// }
+export interface IClientContext {
+  accessories: any;
+  products: any[];
+  setProducts: any;
+  setAccessories: any;
+
+  loading: any;
+  setLoading: any;
+  error: any;
+  setError: any;
 }
 
 export const ClientContext = createContext<IClientContext | null>(null);
