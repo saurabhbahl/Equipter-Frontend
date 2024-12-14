@@ -109,6 +109,10 @@ const AddNewAccessory = () => {
           .replace(/[^a-z0-9\s-]/g, "")
           .replace(/\s+/g, "-");
       }
+      setErrors((prevErrors) => ({
+        ...prevErrors,
+        Accessory_URL__c: "",
+      }));
       return updatedValues;
     });
 
@@ -181,7 +185,7 @@ const AddNewAccessory = () => {
     setPreviewImage(null);
 
     // Check if there are no images left
-    const totalImages = images.length - 1; 
+    const totalImages = images.length - 1;
     if (totalImages === 0) {
       setImageUploadError(true);
       addNotification("error", "At least one accessory image is required.");
@@ -233,8 +237,8 @@ const AddNewAccessory = () => {
 
     const accessoriesData = {
       ...formValues,
-      Price__c: parseFloat(formValues.Price__c  )|| 0,
-      Quantity__c: parseFloat(formValues.Quantity__c)||0,
+      Price__c: parseFloat(formValues.Price__c) || 0,
+      Quantity__c: parseFloat(formValues.Quantity__c) || 0,
     };
 
     const validation = AccessoriesSchema.safeParse(accessoriesData);
@@ -243,7 +247,7 @@ const AddNewAccessory = () => {
     if (!validation.success) {
       const newErrors: IAccessoriesInput = {
         Name: "",
-        accessory_title:"",
+        accessory_title: "",
         Description__c: "",
         Price__c: "",
         Quantity__c: "",
@@ -257,7 +261,6 @@ const AddNewAccessory = () => {
       setErrors(newErrors);
       if (images.length === 0) {
         setImageUploadError(true);
-       
       }
       return;
     }
@@ -303,45 +306,96 @@ const AddNewAccessory = () => {
       // Step 1: Create the accessory via custom REST API
       const accessoryPayload = {
         name: formValues.Name,
-        accessory_title:formValues.accessory_title,
+        accessory_title: formValues.accessory_title,
         description: formValues.Description__c,
         price: parseFloat(formValues.Price__c),
         stock_quantity: parseInt(formValues.Quantity__c),
         meta_title: formValues.Meta_Title__c,
         accessory_url: formValues.Accessory_URL__c,
       };
-      console.log(accessoryPayload)
+      console.log(accessoryPayload);
 
-      const createAccessoryResponse = await apiClient.post(`/accessory`,accessoryPayload);
+      const createAccessoryResponse = await apiClient.post(
+        `/accessory`,
+        accessoryPayload
+      );
+      console.log(createAccessoryResponse);
+      // After creating the new accessory:
       const newAccessory = createAccessoryResponse.data.data;
       const newAccessoryId = newAccessory.id;
 
-      // Step 2: Upload images to S3 and save their URLs via custom REST API
+      // Upload images and capture their responses
       setCurrentStatus("Uploading images...");
       const orderedImages = featuredImage
         ? [featuredImage, ...images.filter((img) => img !== featuredImage)]
         : images;
 
-      for (const [, image] of orderedImages.entries()) {
+      const imageResponses = [];
+      for (const image of orderedImages) {
         const imageUrl = await uploadImageToS3(image);
-        // const isFeatured = featuredImage === image && index === 0;
         const isFeatured = featuredImage === image;
 
-        await apiClient.post(`/accessory/accessory-images`, {
+        // Capture the response data, which should include the new image's ID
+        const imageResp = await apiClient.post(`/accessory/accessory-images`, {
           accessory_id: newAccessoryId,
           image_url: imageUrl,
           image_description: formValues.Name,
           is_featured: isFeatured,
         });
+
+        imageResponses.push({ data: imageResp.data.data, isFeatured });
       }
 
-      // Step 3: Ensure at least one image is featured
-      await apiClient.post(
-        `/accessory/${newAccessoryId}/images/ensure-featured`
-      );
+      // Once all images are posted, find the featured image's ID
+      const featuredImageResp = imageResponses.find((res) => res.isFeatured);
+      if (featuredImageResp) {
+        // We have a featured image ID, pass it along
+        await apiClient.post(
+          `/accessory/${newAccessoryId}/images/ensure-featured`,
+          {
+            featuredImageId: featuredImageResp.data.id,
+          }
+        );
+      } else {
+        // No explicitly featured image found, let the backend ensure one is featured
+        await apiClient.post(
+          `/accessory/${newAccessoryId}/images/ensure-featured`
+        );
+      }
 
+      // Final steps...
       setCurrentStatus("Finalizing...");
       addNotification("success", "Accessory added successfully!");
+
+      // const newAccessory = createAccessoryResponse.data.data;
+      // const newAccessoryId = newAccessory.id;
+
+      // // Step 2: Upload images to S3 and save their URLs via custom REST API
+      // setCurrentStatus("Uploading images...");
+      // const orderedImages = featuredImage
+      //   ? [featuredImage, ...images.filter((img) => img !== featuredImage)]
+      //   : images;
+
+      // for (const [, image] of orderedImages.entries()) {
+      //   const imageUrl = await uploadImageToS3(image);
+      //   // const isFeatured = featuredImage === image && index === 0;
+      //   const isFeatured = featuredImage === image;
+
+      //   await apiClient.post(`/accessory/accessory-images`, {
+      //     accessory_id: newAccessoryId,
+      //     image_url: imageUrl,
+      //     image_description: formValues.Name,
+      //     is_featured: isFeatured,
+      //   });
+      // }
+
+      // // Step 3: Ensure at least one image is featured
+      // await apiClient.post(
+      //   `/accessory/${newAccessoryId}/images/ensure-featured`
+      // );
+
+      // setCurrentStatus("Finalizing...");
+      // addNotification("success", "Accessory added successfully!");
 
       // Refresh the accessories list
       setLoading((prev) => ({ ...prev, accessories: true }));
@@ -588,7 +642,7 @@ const AddNewAccessory = () => {
                 </button>
                 {featuredImage === image && (
                   <span className="absolute bottom-2 left-2 bg-custom-orange text-white text-xs px-2 py-1 rounded">
-                    <FontAwesomeIcon icon={faStar} /> 
+                    <FontAwesomeIcon icon={faStar} />
                   </span>
                 )}
               </div>
@@ -603,7 +657,7 @@ const AddNewAccessory = () => {
                   showPreview ? "opacity-100" : "opacity-0 pointer-events-none"
                 }`}
               >
-                <div className="h-[90%]">
+                <div className="h-[90%] max-w-[90%] bg-gray-300 p-3 rounded">
                   <div className="max-w-[90%] min-h-[90%] object-cover mx-auto max-h-[90%] h-[90%]">
                     <img
                       src={previewImage.url}
@@ -635,7 +689,6 @@ const AddNewAccessory = () => {
                         if (previewImage.type === "new") {
                           removeImage(previewImage.index);
                         }
-              
                       }}
                     >
                       <FontAwesomeIcon icon={faTrash} /> Delete

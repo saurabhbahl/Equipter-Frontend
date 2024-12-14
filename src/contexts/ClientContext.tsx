@@ -22,7 +22,8 @@ export interface IClientContext {
   products: any[];
   setProducts: any;
   setAccessories: any;
-
+  firstPageForm;
+  setFirstPageForm;
   loading: any;
   setLoading: any;
   error: any;
@@ -47,13 +48,24 @@ export const ClientContextProvider = ({
     accessories: "",
     products: "",
   });
-
+  const [firstPageForm, setFirstPageForm] = useState({
+    fName: "",
+    lName: "",
+    company: "",
+    phNo: "",
+    email: "",
+    jobTitle: "",
+    state: "",
+    industry: "",
+isFormFilled: false,
+  });
   return (
     <ClientContext.Provider
       value={{
         products,
         setProducts,
-
+        firstPageForm,
+        setFirstPageForm,
         accessories,
         setAccessories,
         loading,

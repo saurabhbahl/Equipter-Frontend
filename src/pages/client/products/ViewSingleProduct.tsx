@@ -1,96 +1,707 @@
-import { useState, useEffect } from "react";
+// import ReactDOM from "react-dom";
+// import React, { useState, useEffect, useCallback } from "react";
+// import CustomSlider from "../components/CustomSlider";
+
+// import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+// import { faInfo } from "@fortawesome/free-solid-svg-icons";
+// import { publicApiClient } from "../../../utils/axios";
+// import { useParams } from "react-router-dom";
+// import LoaderSpinner from "../../../components/utils/LoaderSpinner";
+// import { useClientContext } from "../../../hooks/useClientContext";
+// import InputField from "../../../components/utils/InputFeild";
+// import MetaComponent from "../../../utils/MetaComponent";
+
+// const ViewSingleProduct = () => {
+//   const { firstPageForm } = useClientContext();
+//   const { productUrl } = useParams();
+
+//   const [activeTab, setActiveTab] = useState("cash");
+//   const [modalAccessory, setModalAccessory] = useState(null);
+//   const [showAccessories, setShowAccessories] = useState(false);
+//   const [productDetails, setProductDetails] = useState({});
+//   const [loading, setLoading] = useState(true);
+//   const [slides, setSlides] = useState([]);
+//   const [buildList, setBuildList] = useState([]);
+//   const [accessoryList, setAccessoryList] = useState([]);
+//   const [selections, setSelections] = useState({
+//     baseUnitQty: 1,
+//     accessories: {},
+//     shippingOption: null,
+//   });
+//   const [totalPrices, setTotalPrices] = useState({
+//     basePrice: 0,
+//     addOns: 0,
+//     netPrice: 0,
+//   });
+
+//   // Shipping options data
+//   const shippingOptions = [
+//     { id: "pickup", name: "Pick-up", price: 0 },
+//     {
+//       id: "delivery",
+//       name: `Delivery to the State of ${firstPageForm.state}`,
+//       price: 400,
+//     },
+//   ];
+
+//   // Fetch product data
+//   const fetchData = async () => {
+//     try {
+//       const resData = await publicApiClient.get(`/product/url/${productUrl}`);
+//       const data = resData.data.data;
+//       setProductDetails(data);
+//       setLoading(false);
+
+//       setBuildList([
+//         { title: "GVWR", value: `${data.gvwr} lbs` },
+//         { title: "Lift Capacity", value: `${data.lift_capacity} lbs` },
+//         { title: "Lift Height", value: `${data.lift_height}` },
+//         { title: "Container", value: `${data.container_capacity} cu yds` },
+//       ]);
+
+//       if (data.images && data.images.length > 0) {
+//         const imgs = data.images.map((e) => e.image_url);
+//         setSlides(imgs);
+//       }
+
+//       setAccessoryList(data.accessories || []);
+
+//       const initialAccessoriesState = {};
+//       (data.accessories || []).forEach((acc) => {
+//         initialAccessoriesState[acc.id] = { selected: false, qty: 1 };
+//       });
+
+//       setSelections((prevState) => ({
+//         ...prevState,
+//         accessories: initialAccessoriesState,
+//       }));
+
+//       // Set total prices based on base price
+//       const basePrice = parseFloat(data.price) || 0;
+//       setTotalPrices({
+//         basePrice,
+//         addOns: 0,
+//         netPrice: basePrice,
+//       });
+//     } catch (error) {
+//       console.error("Error fetching product data:", error);
+//       setLoading(false);
+//     }
+//   };
+
+//   useEffect(() => {
+//     fetchData();
+//   }, [productUrl]);
+
+//   // Update total prices when selections change
+//   useEffect(() => {
+//     if (!productDetails.price) return;
+
+//     const basePrice = parseFloat(productDetails.price) * selections.baseUnitQty;
+//     let addOns = 0;
+
+//     Object.keys(selections.accessories).forEach((accId) => {
+//       const accessory = selections.accessories[accId];
+//       if (accessory.selected) {
+//         const accessoryInfo = accessoryList.find((item) => item.id === accId);
+//         if (accessoryInfo) {
+//           addOns += accessoryInfo.price * accessory.qty;
+//         }
+//       }
+//     });
+
+//     let shippingPrice = 0;
+//     if (selections.shippingOption) {
+//       const shippingOption = shippingOptions.find(
+//         (option) => option.id === selections.shippingOption
+//       );
+//       if (shippingOption) {
+//         shippingPrice = shippingOption.price;
+//       }
+//     }
+
+//     const netPrice = basePrice + addOns + shippingPrice;
+
+//     setTotalPrices({
+//       basePrice,
+//       addOns,
+//       netPrice,
+//     });
+//   }, [selections, productDetails.price, accessoryList]);
+
+//   // Handle tab click
+//   const handleTabClick = useCallback(
+//     (tab) => {
+//       setActiveTab(tab);
+//     },
+//     [accessoryList]
+//   );
+
+//   // Handle accessory selection
+//   const handleAccessoryChange = (accId, isChecked) => {
+//     setSelections((prevState) => ({
+//       ...prevState,
+//       accessories: {
+//         ...prevState.accessories,
+//         [accId]: {
+//           ...prevState.accessories[accId],
+//           selected: isChecked,
+//         },
+//       },
+//     }));
+//   };
+
+//   // Handle accessory quantity change
+//   const handleAccessoryQtyChange = (accId, qty) => {
+//     setSelections((prevState) => ({
+//       ...prevState,
+//       accessories: {
+//         ...prevState.accessories,
+//         [accId]: {
+//           ...prevState.accessories[accId],
+//           qty: qty < 1 ? 1 : qty,
+//         },
+//       },
+//     }));
+//   };
+
+//   // Handle shipping option change
+//   const handleShippingChange = (optionId) => {
+//     setSelections((prevState) => ({
+//       ...prevState,
+//       shippingOption: optionId,
+//     }));
+//   };
+
+//   // In your modal render:
+//   const reorderedAccessories = React.useMemo(() => {
+//     if (!modalAccessory || !productDetails.accessories) return [];
+//     const allAccessories = [...productDetails.accessories];
+//     const selectedIndex = allAccessories.findIndex(
+//       (acc) => acc.id === modalAccessory.id
+//     );
+//     if (selectedIndex > -1) {
+//       const [selected] = allAccessories.splice(selectedIndex, 1);
+//       // Put the selected accessory at the front
+//       allAccessories.unshift(selected);
+//     }
+//     return allAccessories;
+//   }, [modalAccessory, productDetails.accessories]);
+
+//   if (loading) {
+//     return (
+//       <div className="w-full h-full flex justify-center items-center my-20">
+//         <LoaderSpinner />
+//       </div>
+//     );
+//   }
+
+//   return (
+//     <>
+//       <MetaComponent
+//         title={productDetails.meta_title}
+//         description={productDetails.description}
+//       />
+//       <div className="products-component md:px-20 xl:w-[90%] mx-auto">
+//         {/* Main content */}
+//         <section className="content-with-sidebar p-5">
+//           <div className=" mx-auto flex flex-col xl:flex-row gap-3">
+//             {/* Left content */}
+//             <div className="w-full xl:w-[63%]">
+//               {/* Build + Buy heading */}
+//               <div className="main-heading relative top-16 lg:block lg:mb-8">
+//                 <h1 className="uppercase text-sm lg:text-[10px] font-robot text-gray-700">
+//                   Build + Buy
+//                 </h1>
+//               </div>
+//               {/* Image Slider */}
+//               <div className="relative lg:pb-14 pb-6 lg:my-8">
+//                 {slides.length > 1 ? (
+//                   <CustomSlider slides={slides} />
+//                 ) : (
+//                   <img
+//                     src={slides[0]}
+//                     alt={productDetails.name}
+//                     draggable="false"
+//                     className="w-full transition-transform ease-in-out duration-300 max-h-[611px] object-contain"
+//                   />
+//                 )}
+//               </div>
+
+//               {/* Build lists content */}
+//               <div className="grid grid-cols-2 md:grid-cols-4  px-5 text-left w-full">
+//                 {buildList.map((item, index) => (
+//                   <div key={index} className="w-full my-2 lg:m-0">
+//                     <h4 className="font-roboto lg:text-lg  ">{item.title}</h4>
+//                     <h3 className="font-robot lg:text-2xl text-xl text-gray-800  heading-bottom-border">
+//                       {item.value}
+//                     </h3>
+//                   </div>
+//                 ))}
+//               </div>
+//             </div>
+//             {/* Sidebar content */}
+//             <ProductSidebar
+//               setShowAccessory={setShowAccessories}
+//               productDetails={productDetails}
+//               activeTab={activeTab}
+//               handleTabClick={handleTabClick}
+//               selections={selections}
+//               setSelections={setSelections}
+//               accessoryList={accessoryList}
+//               handleAccessoryChange={handleAccessoryChange}
+//               handleAccessoryQtyChange={handleAccessoryQtyChange}
+//               shippingOptions={shippingOptions}
+//               handleShippingChange={handleShippingChange}
+//               totalPrices={totalPrices}
+//               setModalAccessory={setModalAccessory}
+//             />
+//           </div>
+//         </section>
+//       </div>
+//       {showAccessories &&
+//   ReactDOM.createPortal(
+//     <div className="fixed z-50 inset-0 h-full p-5 bg-black bg-opacity-40 flex items-center justify-center">
+//       <div className="relative bg-white p-5 rounded-md w-full max-w-3xl shadow-lg">
+//         <button
+//           onClick={() => setShowAccessories(false)}
+//           className="absolute top-3 right-3 text-black hover:text-gray-600"
+//         >
+//           X
+//         </button>
+
+//         {reorderedAccessories.map((acc, idx) => (
+//           <div key={acc.id} className={`mb-4 ${idx === 0 ? 'border-b pb-4' : ''}`}>
+//             <h3 className="font-bold text-xl mb-2">{acc.name}</h3>
+//             <p className="text-gray-600 mb-2">{acc.description}</p>
+//             <img src={acc.image_url} alt={acc.name} className="max-h-48 object-cover mb-2" />
+//             <button
+//               className="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600 transition-colors"
+//               onClick={() => {
+//                 // Logic to add the accessory
+//               }}
+//             >
+//               Add
+//             </button>
+//           </div>
+//         ))}
+//       </div>
+//     </div>,
+//     document.body
+//   )
+// }
+
+//     </>
+//   );
+// };
+
+// export default ViewSingleProduct;
+
+// // Subcomponent for Sidebar
+// const ProductSidebar = ({
+//   setShowAccessory,
+//   productDetails,
+//   activeTab,
+//   handleTabClick,
+//   selections,
+//   setSelections,
+//   accessoryList,
+//   handleAccessoryChange,
+//   handleAccessoryQtyChange,
+//   shippingOptions,
+//   handleShippingChange,
+//   totalPrices,
+//   setModalAccessory,
+// }) => {
+//   return (
+//     <div className="w-full  xl:w-[37%] md:p-3  ">
+//       <div className="text-center font-robot my-3">
+//         <h2 className="text-xl lg:text-5xl font-semibold text-custom-black-200">
+//           {productDetails.name}
+//         </h2>
+//         <p className="my-1 text-xl text-custom-black-200">
+//           {productDetails.product_title}
+//         </p>
+//       </div>
+//       {/* Tabs Section */}
+//       <div className="tabs-section font-robot my-5">
+//         <ul className="flex gap-4 md:gap-12 border-b-4 border-orange-500">
+//           {["cash", "financing"].map((tab) => (
+//             <li
+//               key={tab}
+//               className={`flex-1 text-center cursor-pointer pb-2 transition-colors duration-300 ${
+//                 activeTab === tab
+//                   ? "text-orange-500 border-b-8 border-orange-500 "
+//                   : "text-gray-600"
+//               }`}
+//               onClick={() => handleTabClick(tab)}
+//             >
+//               <span className="font-semibold text-lg md:text-xl leading-6 capitalize">
+//                 {tab}
+//               </span>
+//             </li>
+//           ))}
+//         </ul>
+//         {/* Tab Content */}
+//         <div className="tabs-content pt-5 md:pt-8 transition-all duration-500 ease-in-out">
+//           {activeTab === "cash" ? (
+//             // Cash tab content
+//             <div className="tab-content">
+//               {/* Price content block */}
+//               <table className="min-w-full overflow-hidden">
+//                 <thead>
+//                   <tr>
+//                     <th className="text-left text-custom-black-25 text-xs  md:text-sm lg:text-md font-semibold">
+//                       Base Price
+//                     </th>
+//                     <th></th>
+//                     <th className="text-left text-custom-black-25 text-xs md:text-sm lg:text-md font-semibold">
+//                       Add-Ons
+//                     </th>
+//                     <th></th>
+//                     <th className="text-left text-custom-black-25 text-xs md:text-sm lg:text-md font-semibold">
+//                       Net Price
+//                     </th>
+//                   </tr>
+//                 </thead>
+//                 <tbody>
+//                   <tr className="">
+//                     <td className="text-custom-orange-100 align-middle font-semibold text-lg  md:text-xl lg:text-2xl xl:text-3xl">
+//                       ${totalPrices.basePrice.toLocaleString()}{" "}
+//                       <span className="text-15 leading-9 font-semibold text-custom-black-25 float-right pr-4 md:pr-2 2xl:pr-4">
+//                         +
+//                       </span>
+//                     </td>
+//                     <td></td>
+//                     <td className="text-custom-orange-100 align-middle  font-semibold text-lg  md:text-xl lg:text-2xl xl:text-3xl">
+//                       ${totalPrices.addOns.toLocaleString()}{" "}
+//                       <span className="text-15 leading-9 font-semibold text-custom-black-25 float-right pr-4 md:pr-2 2xl:pr-4">
+//                         =
+//                       </span>
+//                     </td>
+//                     <td></td>
+//                     <td className="text-custom-orange-100 align-middle font-semibold text-lg  md:text-xl lg:text-2xl xl:text-3xl">
+//                       ${totalPrices.netPrice.toLocaleString()}
+//                     </td>
+//                   </tr>
+//                 </tbody>
+//               </table>
+//               {/* Base unit quantity */}
+//               <div className=" py-2 flex flex-col justify-center md:flex-row gap-3  items-center pt-5">
+//                 <h3 className="font-semibold w-[90%] md:w-[65%] text-center xl:text-left text-xl">{`Equipter ${productDetails.name} Base Unit`}</h3>
+//                 <form className="flex justify-end  md:flex-1 items-center gap-3">
+//                   <label
+//                     htmlFor="baseQty"
+//                     className="text-md font-bold text-gray-500"
+//                   >
+//                     QTY
+//                   </label>
+//                   <InputField
+//                     name="qty"
+//                     placeholder="1"
+//                     required
+//                     id="baseQty"
+//                     classes="flex-1 max-w-16 h-auto"
+//                     type="number"
+//                     value={selections.baseUnitQty}
+//                     onChange={(e) => {
+//                       const value = parseInt(e.target.value, 10);
+//                       setSelections((prevState) => ({
+//                         ...prevState,
+//                         baseUnitQty: isNaN(value) || value < 1 ? 1 : value,
+//                       }));
+//                     }}
+//                   />
+//                 </form>
+//               </div>
+//               {/* Accessories */}
+//               <div className="my-3">
+//                 <h3 className="font-semibold text-lg md:text-xl text-center ">
+//                   Add-On Accessories
+//                 </h3>
+//                 <div className="space-y-3">
+//                   {accessoryList.map((accessory) => (
+//                     <div
+//                       key={accessory.id}
+//                       className={`p-2  transition-all duration-300 ${
+//                         selections.accessories[accessory.id]?.selected
+//                           ? "text-black"
+//                           : " "
+//                       }`}
+//                     >
+//                       <div className="flex flex-row items-center justify-between gap-2">
+//                         <div className="flex items-center gap-3">
+//                           <InputField
+//                             name="accessory"
+//                             type="checkbox"
+//                             id={accessory.id}
+//                             classes="form-checkbox   text-black"
+//                             // checked={
+//                             //   selections.accessories[accessory.id]?.selected ||
+//                             //   false
+//                             // }
+//                             onChange={(e) =>
+//                               handleAccessoryChange(
+//                                 accessory.id,
+//                                 e.target.checked
+//                               )
+//                             }
+//                           />
+//                           <label
+//                             htmlFor={accessory.id}
+//                             className={`font-semibold  capitalize text-sm xl:text-lg ${
+//                               selections.accessories[accessory.id]?.selected
+//                                 ? "text-gray-800"
+//                                 : "text-gray-400"
+//                             }`}
+//                           >
+//                             {accessory.name}
+//                           </label>
+//                         </div>
+//                         <div className="flex items-center gap-3">
+//                           <span className="text-lg font-semibold text-gray-800">
+//                             ${accessory.price}
+//                           </span>
+//                           <button
+//                             type="button"
+//                             onClick={() => {
+//                               setShowAccessory(true);
+
+//                               setModalAccessory(accessory);
+//                             }}
+//                             className="px-2 rotate-6 text-sm text-gray-500 border border-gray-500      bg-gray-100 rounded-full transition"
+//                             aria-label={`Info about ${accessory.name}`}
+//                           >
+//                             <FontAwesomeIcon icon={faInfo} />
+//                           </button>
+//                         </div>
+//                       </div>
+//                       {selections.accessories[accessory.id]?.selected && (
+//                         <div className="mt-4 flex justify-end">
+//                           {accessory.slides && (
+//                             <CustomSlider slides={accessory.slides} />
+//                           )}
+//                           <form className="flex fle justify-end items-center gap-3 w-fit">
+//                             <label
+//                               htmlFor={`${accessory.id}-qty`}
+//                               className="text-md font-bold text-gray-500"
+//                             >
+//                               QTY
+//                             </label>
+//                             <InputField
+//                               name={`${accessory.id}-qty`}
+//                               placeholder="1"
+//                               required
+//                               id={`${accessory.id}-qty`}
+//                               classes="max-w-16 h-fit  "
+//                               type="number"
+//                               value={
+//                                 selections.accessories[accessory.id]?.qty || 1
+//                               }
+//                               onChange={(e) => {
+//                                 const qty = parseInt(e.target.value, 10);
+//                                 handleAccessoryQtyChange(
+//                                   accessory.id,
+//                                   isNaN(qty) || qty < 1 ? 1 : qty
+//                                 );
+//                               }}
+//                             />
+//                           </form>
+//                         </div>
+//                       )}
+//                     </div>
+//                   ))}
+//                 </div>
+//               </div>
+//               {/* Shipping options */}
+//               <div className="my-3">
+//                 <h3 className="font-semibold text-lg md:text-xl text-center my-5">
+//                   Shipping Options
+//                 </h3>
+//                 <div className="space-y-4">
+//                   {shippingOptions.map((option) => (
+//                     <div
+//                       key={option.id}
+//                       className="flex items-center justify-between"
+//                     >
+//                       <div className="flex items-center gap-3">
+//                         <input
+//                           type="radio"
+//                           id={option.id}
+//                           name="shippingOption"
+//                           className="form-radio text-black"
+//                           checked={selections.shippingOption === option.id}
+//                           onChange={() => handleShippingChange(option.id)}
+//                         />
+//                         <label
+//                           htmlFor={option.id}
+//                           className="font-semibold text-base md:text-lg text-gray-600"
+//                         >
+//                           {option.name}
+//                         </label>
+//                       </div>
+//                       <span className="text-lg font-semibold text-gray-800">
+//                         ${option.price}
+//                       </span>
+//                     </div>
+//                   ))}
+//                   <p className="text-sm md:text-base text-gray-500">
+//                     *Tax, title, and registration fees will be additional costs.
+//                   </p>
+//                 </div>
+//               </div>
+//             </div>
+//           ) : (
+//             // Financing tab content
+//             <div className="tab-content">
+//               <p className="text-gray-700">
+//                 Financing options will be displayed here.
+//               </p>
+//             </div>
+//           )}
+//         </div>
+
+//         <div className="order-block border-t border-gray-400 pt-9 mt-7 max-w-7xl mx-auto px-4">
+//           <h2 className="text-2xl md:text-3xl font-semibold text-center">
+//             Order Your Equipter {productDetails.name}
+//           </h2>
+//           <h3 className="font-semibold text-base md:text-lg text-gray-600 text-center mt-2">
+//             Est. Delivery: Jul – Aug 2024
+//           </h3>
+//           <div className="flex flex-col sm:flex-row items-center gap-6 mt-6 justify-center">
+//             <a
+//               href="#"
+//               className="inline-block bg-black bg-opacity-10 text-white px-7 py-3  hover:bg-custom-orange  transition"
+//             >
+//               Send Build
+//             </a>
+//             <a
+//               href="#"
+//               className="inline-block bg-custom-orange  text-white px-7 py-3  hover:bg-black hover:bg-opacity-20 transition"
+//             >
+//               Continue
+//             </a>
+//           </div>
+//           <p className="text-center text-gray-500 text-sm mt-7">
+//             To talk to a rep call:{" "}
+//             <a
+//               href="tel:717-661-3591"
+//               className="underline hover:no-underline text-gray-700"
+//             >
+//               717-661-3591
+//             </a>
+//           </p>
+//         </div>
+//       </div>
+//     </div>
+//   );
+// };
+
+import Slider from "react-slick";
+import ReactDOM from "react-dom";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import CustomSlider from "../components/CustomSlider";
-import InputField from "../../../components/utils/InputFeild";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faInfo } from "@fortawesome/free-solid-svg-icons";
+import { publicApiClient } from "../../../utils/axios";
+import { useParams } from "react-router-dom";
+import LoaderSpinner from "../../../components/utils/LoaderSpinner";
+import { useClientContext } from "../../../hooks/useClientContext";
+import InputField from "../../../components/utils/InputFeild";
+import MetaComponent from "../../../utils/MetaComponent";
 
 const ViewSingleProduct = () => {
+  const { firstPageForm } = useClientContext();
+  const { productUrl } = useParams();
+
   const [activeTab, setActiveTab] = useState("cash");
   const [modalAccessory, setModalAccessory] = useState(null);
-
-  // Build lists data
-  const buildLists = [
-    { title: "GVWR", value: "7,500 lbs" },
-    { title: "Lift Capacity", value: "4,000 lbs" },
-    { title: "Lift Height", value: "12’-0”" },
-    { title: "Container", value: "4.1 cu yds" },
-  ];
-
-  // Accessories data
-  const accessoriesList = [
-    {
-      id: "RoofChute",
-      name: "8' Roof Chute",
-      price: 165,
-      description: "Roof chute description.",
-    },
-    {
-      id: "GutterProtector",
-      name: "8' Gutter Protector",
-      price: 154,
-      description: "Gutter protector description.",
-    },
-    {
-      id: "RearKit",
-      name: "Rear Extension Kit",
-      price: 489,
-      description: "Rear extension kit description.",
-    },
-    {
-      id: "TrackMat",
-      name: "2' x 6' Track Mat",
-      price: 329,
-      description: "Track mat description.",
-    },
-    {
-      id: "Outrigger",
-      name: '18" x 18" Outrigger Pad',
-      price: 79,
-      description: "Outrigger pad description.",
-    },
-    {
-      id: "TireSealant",
-      name: "Tire Sealant Kit",
-      price: 195,
-      description: "Tire sealant kit description.",
-    },
-  ];
-
-  // Shipping options data
-  const shippingOptions = [
-    { id: "pickup", name: "Pick-up", price: 0 },
-    { id: "delivery", name: "Delivery to the State of: PA", price: 400 },
-  ];
-
-  // Initialize accessories state
-  const initialAccessoriesState = {};
-  accessoriesList.forEach((acc) => {
-    initialAccessoriesState[acc.id] = { selected: false, qty: 1 };
-  });
-
-  // Selections state
+  const [showAccessories, setShowAccessories] = useState(false);
+  const [productDetails, setProductDetails] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [slides, setSlides] = useState([]);
+  const [buildList, setBuildList] = useState([]);
+  const [accessoryList, setAccessoryList] = useState([]);
   const [selections, setSelections] = useState({
     baseUnitQty: 1,
-    accessories: initialAccessoriesState,
+    accessories: {},
     shippingOption: null,
   });
-
-  // Total prices state
   const [totalPrices, setTotalPrices] = useState({
-    basePrice: 38900,
+    basePrice: 0,
     addOns: 0,
-    netPrice: 38900,
+    netPrice: 0,
   });
+
+  const shippingOptions = [
+    { id: "pickup", name: "Pick-up", price: 0 },
+    {
+      id: "delivery",
+      name: `Delivery to the State of ${firstPageForm.state}`,
+      price: 400,
+    },
+  ];
+
+  // Fetch product data
+  const fetchData = async () => {
+    try {
+      const resData = await publicApiClient.get(`/product/url/${productUrl}`);
+      const data = resData.data.data;
+      setProductDetails(data);
+      setLoading(false);
+
+      setBuildList([
+        { title: "GVWR", value: `${data.gvwr} lbs` },
+        { title: "Lift Capacity", value: `${data.lift_capacity} lbs` },
+        { title: "Lift Height", value: `${data.lift_height}` },
+        { title: "Container", value: `${data.container_capacity} cu yds` },
+      ]);
+
+      if (data.images && data.images.length > 0) {
+        const imgs = data.images.map((e) => e.image_url);
+        setSlides(imgs);
+      }
+
+      setAccessoryList(data.accessories || []);
+
+      const initialAccessoriesState = {};
+      (data.accessories || []).forEach((acc) => {
+        initialAccessoriesState[acc.id] = { selected: false, qty: 1 };
+      });
+
+      setSelections((prevState) => ({
+        ...prevState,
+        accessories: initialAccessoriesState,
+      }));
+
+      // Set total prices based on base price
+      const basePrice = parseFloat(data.price) || 0;
+      setTotalPrices({
+        basePrice,
+        addOns: 0,
+        netPrice: basePrice,
+      });
+    } catch (error) {
+      console.error("Error fetching product data:", error);
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, [productUrl]);
 
   // Update total prices when selections change
   useEffect(() => {
-    let basePrice = 38900 * selections.baseUnitQty;
+    if (!productDetails.price) return;
+
+    const basePrice = parseFloat(productDetails.price) * selections.baseUnitQty;
     let addOns = 0;
 
     Object.keys(selections.accessories).forEach((accId) => {
       const accessory = selections.accessories[accId];
       if (accessory.selected) {
-        const accessoryInfo = accessoriesList.find((item) => item.id === accId);
+        const accessoryInfo = accessoryList.find((item) => item.id === accId);
         if (accessoryInfo) {
           addOns += accessoryInfo.price * accessory.qty;
         }
@@ -114,578 +725,551 @@ const ViewSingleProduct = () => {
       addOns,
       netPrice,
     });
-  }, [selections]);
+  }, [selections, productDetails.price, accessoryList]);
 
-  // Handle tab click
-  const handleTabClick = (tab) => {
-    setActiveTab(tab);
+  const handleTabClick = useCallback(
+    (tab) => {
+      setActiveTab(tab);
+    },
+    [accessoryList]
+  );
+
+  const handleAccessoryChange = (accId, isChecked) => {
+    setSelections((prevState) => ({
+      ...prevState,
+      accessories: {
+        ...prevState.accessories,
+        [accId]: {
+          ...prevState.accessories[accId],
+          selected: isChecked,
+        },
+      },
+    }));
   };
 
-  // TabSlider component
-  const TabSlider = ({ slides }) => {
-    const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
+  const handleAccessoryQtyChange = (accId, qty) => {
+    setSelections((prevState) => ({
+      ...prevState,
+      accessories: {
+        ...prevState.accessories,
+        [accId]: {
+          ...prevState.accessories[accId],
+          qty: qty < 1 ? 1 : qty,
+        },
+      },
+    }));
+  };
 
-    const nextSlide = () => {
-      setCurrentSlideIndex((prevIndex) => (prevIndex + 1) % slides.length);
-    };
+  const handleShippingChange = (optionId) => {
+    setSelections((prevState) => ({
+      ...prevState,
+      shippingOption: optionId,
+    }));
+  };
 
-    const prevSlide = () => {
-      setCurrentSlideIndex(
-        (prevIndex) => (prevIndex - 1 + slides.length) % slides.length
-      );
-    };
+  // Reorder accessories so that the clicked one is first
+  const reorderedAccessories = useMemo(() => {
+    if (!modalAccessory || !productDetails.accessories) return [];
+    const allAccessories = [...productDetails.accessories];
+    const selectedIndex = allAccessories.findIndex(
+      (acc) => acc.id === modalAccessory.id
+    );
+    if (selectedIndex > -1) {
+      const [selected] = allAccessories.splice(selectedIndex, 1);
+      allAccessories.unshift(selected);
+    }
+    return allAccessories;
+  }, [modalAccessory, productDetails.accessories]);
 
+  if (loading) {
     return (
-      <div className="tab-slider-wrapper pt-4">
-        <div className="tab-slider slider-custom-nav">
-          <div className="tab-slide-item">
-            <img
-              src={slides[currentSlideIndex].imageSrc}
-              alt={slides[currentSlideIndex].title}
-              className="slide-image w-full"
-            />
-            <div className="slide-details tab-slide-content bg-custom-gray-300 flex justify-between items-center px-5 py-7 w-full -mt-10 relative">
-              <h3 className="font-semibold text-black text-25 md:text-27">
-                {slides[currentSlideIndex].title}
-              </h3>
-              <img
-                src="https://via.placeholder.com/20x20?text=i"
-                alt="Info"
-                className="info-icon w-5 cursor-pointer"
-                onClick={() => setModalAccessory(slides[currentSlideIndex])}
-              />
-            </div>
-          </div>
-          {/* Navigation */}
-          <div className="slider-navigation flex justify-between mt-4">
-            <button onClick={prevSlide} className="px-4 py-2 bg-gray-300">
-              Prev
-            </button>
-            <button onClick={nextSlide} className="px-4 py-2 bg-gray-300">
-              Next
-            </button>
-          </div>
-        </div>
+      <div className="w-full h-full flex justify-center items-center my-20">
+        <LoaderSpinner />
       </div>
     );
-  };
+  }
 
   return (
-    <div className="products-component">
-      {/* Main content */}
-      <main>
-        <section className="content-with-sidebar py-20">
-          <div className="w-[80%] mx-auto ">
-            <div className="block md:flex gap-5 w-full">
-              {/* Left content */}
-              <div className="content-block w-full md:w-2/3 xs:px-4 md:px-0">
-                {/* Build + Buy heading */}
-                <div className="main-heading -mb-16 top-6 relative z-10 hidden md:block">
-                  <h1 className="uppercase font-robot">Build + Buy</h1>
-                </div>
-                {/* Image Slider */}
-                <div className="images-slides-wrapper relative z-10 pb-14 my-8">
-                  <CustomSlider />
-                </div>
-
-                {/* Build lists content */}
-                <div className="build-lists-content md:px-10 flex">
-                  {buildLists.map((item, index) => (
-                    <div key={index} className="build-lists-col w-3/12 px-3">
-                      <h4 className="font-roboto text-xxs md:text-lg">
-                        {item.title}
-                      </h4>
-                      <h3 className="font-robot text-sm md:text-3xl heading-bottom-border">
-                        {item.value}
-                      </h3>
-                    </div>
-                  ))}
-                </div>
+    <>
+      <MetaComponent
+        title={productDetails.meta_title}
+        description={productDetails.description}
+      />
+      <div className="products-component md:px-20 xl:w-[90%] mx-auto">
+        {/* Main content */}
+        <section className="content-with-sidebar p-5">
+          <div className=" mx-auto flex flex-col xl:flex-row gap-3">
+            {/* Left content */}
+            <div className="w-full xl:w-[63%]">
+              {/* Build + Buy heading */}
+              <div className="main-heading relative top-16 lg:block lg:mb-8">
+                <h1 className="uppercase text-sm lg:text-[10px] font-robot text-gray-700">
+                  Build + Buy
+                </h1>
               </div>
-              {/* Sidebar content */}
-              <div className="sidebar-block w-full md:w-1/3 md:pl-8 xs:px-4 md:px-0 pt-12 md:pt-0">
-                <div className="text-center font-robot mb-9">
-                  <h2 className="text-custom-black-200 text-6xl md:text-5xl 3xl:text-64">
-                    4000
-                  </h2>
-                  <p className="text-custom-black-200 text-lg md:text-19">
-                    The Towable Roofing Trailer
-                  </p>
-                </div>
-                {/* Tabs Section */}
-                <div className="tabs-section tabs font-robot sidebar-tabs-block">
-                  <ul className="tabs-nav roofing-tabs-nav flex gap-12 border-b-4 border-custom-orange-100">
-                    <li
-                      className={`tab-title min-w-36 ${
-                        activeTab === "cash" ? "active" : ""
-                      }`}
-                      onClick={() => handleTabClick("cash")}
-                    >
-                      <p className="tab-title-link cursor-pointer pb-2 inline-block text-custom-black-25 font-semibold text-lg md:text-xl leading-6">
-                        Cash
-                      </p>
-                    </li>
-                    <li
-                      className={`tab-title min-w-36 ${
-                        activeTab === "financing" ? "active" : ""
-                      }`}
-                      onClick={() => handleTabClick("financing")}
-                    >
-                      <p className="tab-title-link pb-2 cursor-pointer inline-block text-custom-black-25 font-semibold text-lg md:text-xl leading-6">
-                        Financing
-                      </p>
-                    </li>
-                  </ul>
-                  {/* Tab Content */}
-                  <div className="tabs-content pt-5 md:pt-8">
-                    {activeTab === "cash" ? (
-                      // Cash tab content
-                      <div className="tab-content">
-                        {/* Price content block */}
-                        <div className="price-content-block pb-3">
-                          <table className="min-w-full overflow-hidden">
-                            <thead>
-                              <tr>
-                                <th className="text-left text-custom-black-25 text-sm md:text-15 font-semibold">
-                                  Base Price
-                                </th>
-                                <th></th>
-                                <th className="text-left text-custom-black-25 text-sm md:text-15 font-semibold">
-                                  Add-Ons
-                                </th>
-                                <th></th>
-                                <th className="text-left text-custom-black-25 text-sm md:text-15 font-semibold">
-                                  Net Price
-                                </th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              <tr>
-                                <td className="text-custom-orange-100 align-middle font-semibold text-3xl md:text-32">
-                                  ${totalPrices.basePrice.toLocaleString()}{" "}
-                                  <span className="text-15 leading-9 font-semibold text-custom-black-25 float-right pr-4 md:pr-2 2xl:pr-4">
-                                    +
-                                  </span>
-                                </td>
-                                <td></td>
-                                <td className="text-custom-orange-100 align-middle font-semibold text-3xl md:text-32">
-                                  ${totalPrices.addOns.toLocaleString()}{" "}
-                                  <span className="text-15 leading-9 font-semibold text-custom-black-25 float-right pr-4 md:pr-2 2xl:pr-4">
-                                    =
-                                  </span>
-                                </td>
-                                <td></td>
-                                <td className="text-custom-orange-100 align-middle font-semibold text-3xl md:text-32">
-                                  ${totalPrices.netPrice.toLocaleString()}
-                                </td>
-                              </tr>
-                            </tbody>
-                          </table>
-                        </div>
-                        {/* Base unit quantity */}
-                        <div className="flex gap-6 justify-between pt-7 items-center">
-                          <h3 className="font-semibold text-lg md:text-xl leading-6">
-                            Equipter 4000 Base Unit
-                          </h3>
-                          <form className="flex gap-3 items-center">
-                            <p className="text-md font-bold text-gray-500">
-                              QTY
-                            </p>
-                            <InputField
-                              name="qty"
-                              placeholder="1"
-                              required
-                              id="1"
-                              // label="Qty"
-                              classes="!w-14"
-                              type="number"
-                              value={selections.baseUnitQty.toString()}
-                              key="qty"
-                              onChange={(e) => {
-                                setSelections((prevState) => ({
-                                  ...prevState,
-                                  baseUnitQty: parseInt(e.target.value) || 1,
-                                }));
-                              }}
-                            />
-                          </form>
-                        </div>
-                        {/* Accessories */}
-                        <div className="accessories-block mt-9">
-                          <h3 className="font-semibold text-lg md:text-xl text-center mb-7">
-                            Add-On Accessories
-                          </h3>
-                          <div className="accessories-info">
-                            {accessoriesList.map((accessory) => (
-                              <div
-                                key={accessory.id}
-                                className={`accessories-col mb-3 ${
-                                  selections.accessories[accessory.id].selected
-                                    ? "active"
-                                    : ""
-                                }`}
-                              >
-                                <div className="flex items-center justify-between mb-3 gap-x-2">
-                                  <form className="flex items-center justify-between gap-3">
-                                    <InputField
-                                      name="check"
-                                      required
-                                      type="checkbox"
-                                      id={accessory.id}
-                                      classes="  form-checkbox !text-black !flex-shrink-0"
-                                      value={selections.baseUnitQty.toString()}
-                                      key="qty"
-                                      onChange={(e) => {
-                                        const isChecked = e.target.checked;
-                                        setSelections((prevState) => ({
-                                          ...prevState,
-                                          accessories: {
-                                            ...prevState.accessories,
-                                            [accessory.id]: {
-                                              ...prevState.accessories[
-                                                accessory.id
-                                              ],
-                                              selected: isChecked,
-                                            },
-                                          },
-                                        }));
-                                      }}
-                                    />
-                                    <label
-                                      htmlFor={accessory.id}
-                                      className={`font-semibold text-black ${
-                                        selections.accessories[accessory.id]
-                                          .selected
-                                          ? ""
-                                          : "opacity-50"
-                                      } text-base md:text-17`}
-                                    >
-                                      {accessory.name}
-                                    </label>
-                                  </form>
-                                  <div className="price-col flex-shrink-0">
-                                    <div className="flex gap-3 items-center">
-                                      <h4
-                                        className={`text-black ${
-                                          selections.accessories[accessory.id]
-                                            .selected
-                                            ? ""
-                                            : "opacity-50"
-                                        } font-semibold text-base md:text-17`}
-                                      >
-                                        ${accessory.price}
-                                      </h4>
-                                      <div
-                                        onClick={() =>
-                                          setModalAccessory(accessory)
-                                        }
-                                        className="border px-2 rounded-full bg-gray-200/50 cursor-pointer"
-                                      >
-                                        <FontAwesomeIcon icon={faInfo} />
-                                      </div>
-                                    </div>
-                                  </div>
-                                </div>
-                                {selections.accessories[accessory.id]
-                                  .selected && (
-                                  <>
-                                    {accessory.slides && (
-                                      <TabSlider slides={accessory.slides} />
-                                    )}
-                                    <form className="flex gap-3 items-center justify-end mt-3">
-                                      <p className="text-md font-bold text-gray-500">
-                                        QTY
-                                      </p>
-                                      <InputField
-                                        name={`${accessory.id}-qty`}
-                                        placeholder="1"
-                                        required
-                                        id={`${accessory.id}-qty`}
-                                        classes="!w-14"
-                                        value={selections.accessories[accessory.id].qty}
-                                        type="number"
-                                        key={`${accessory.id}-qty`}
-                                        onChange={(e) => {
-                                          const qty =
-                                            parseInt(e.target.value) || 1;
-                                          setSelections((prevState) => ({
-                                            ...prevState,
-                                            accessories: {...prevState.accessories,[accessory.id]: {...prevState.accessories[accessory.id],qty: qty,},},
-                                          }));
-                                        }}
-                                      />
-                                    </form>
-                                  </>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                        {/* Shipping options */}
-                        <div className="shipping-block mt-9">
-                          <h3 className="font-semibold text-lg md:text-xl text-center mb-7">
-                            Shipping Options
-                          </h3>
-                          <div className="accessories-info">
-                            {shippingOptions.map((option) => (
-                              <div
-                                key={option.id}
-                                className="flex items-center justify-between mb-3 gap-x-2"
-                              >
-                                <form className="flex items-center justify-between gap-3">
-                                  <input
-                                    type="radio"
-                                    id={option.id}
-                                    name="shippingOption"
-                                    className="form-checkbox text-black flex-shrink-0"
-                                    checked={
-                                      selections.shippingOption === option.id
-                                    }
-                                    onChange={() => {
-                                      setSelections((prevState) => ({
-                                        ...prevState,
-                                        shippingOption: option.id,
-                                      }));
-                                    }}
-                                  />
-                                  <label
-                                    htmlFor={option.id}
-                                    className="font-semibold text-black opacity-50 text-base md:text-17"
-                                  >
-                                    {option.name}
-                                  </label>
-                                </form>
-                                <div className="price-col flex-shrink-0">
-                                  <h4 className="text-black opacity-50 font-semibold text-base md:text-17">
-                                    ${option.price}
-                                  </h4>
-                                </div>
-                              </div>
-                            ))}
-                            <p className="text-custom-black-25 text-13 md:text-sm">
-                              *Tax, title, and registration fees will be
-                              additional costs.
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    ) : (
-                      // Financing tab content
-                      <div className="tab-content">
-                        <p>Financing options will be displayed here.</p>
-                      </div>
-                    )}
+              {/* Image Slider */}
+              <div className="relative lg:pb-14 pb-6 lg:my-8">
+                {slides.length > 1 ? (
+                  <CustomSlider slides={slides} />
+                ) : (
+                  <img
+                    src={slides[0]}
+                    alt={productDetails.name}
+                    draggable="false"
+                    className="w-full transition-transform ease-in-out duration-300 max-h-[611px] object-contain"
+                  />
+                )}
+              </div>
+
+              {/* Build lists content */}
+              <div className="grid grid-cols-2 md:grid-cols-4 px-5 text-left w-full">
+                {buildList.map((item, index) => (
+                  <div key={index} className="w-full my-2 lg:m-0">
+                    <h4 className="font-roboto lg:text-lg">{item.title}</h4>
+                    <h3 className="font-robot lg:text-2xl text-xl text-gray-800 heading-bottom-border">
+                      {item.value}
+                    </h3>
                   </div>
-                </div>
-                {/* Order block */}
-                <div className="order-block border-t border-custom-gray-400 pt-9 mt-7">
-                  <h2 className="text-2xl md:text-25 font-semibold text-center">
-                    Order Your Equipter 4000
-                  </h2>
-                  <h3 className="font-semibold text-base md:text-17 text-black opacity-50 text-center">
-                    Est. Delivery: Jul – Aug 2024
-                  </h3>
-                  <div className="button-block flex items-center gap-14 mt-6 justify-center">
-                    <a
-                      href="#"
-                      className="inline-block bg-black bg-opacity-10 text-white hover:bg-custom-orange hover:text-white hover:bg-opacity-100 px-6 py-3 text-base md:text-15 leading-5 transition-all text-center"
-                    >
-                      Send Build
-                    </a>
-                    <a
-                      href="#"
-                      className="inline-block hover:bg-black hover:bg-opacity-10 text-white bg-custom-orange hover:text-white px-7 py-3 text-base md:text-15 leading-5 transition-all text-center"
-                    >
-                      Continue
-                    </a>
-                  </div>
-                  <p className="text-center text-black opacity-25 text-sm mt-7">
-                    To talk to a rep call: 
-                    <a
-                      href="tel:717-661-3591"
-                      className="underline hover:no-underline"
-                    >
-                      717-661-3591
-                    </a>
-                  </p>
-                </div>
+                ))}
               </div>
             </div>
+            {/* Sidebar content */}
+            <ProductSidebar
+              setShowAccessory={setShowAccessories}
+              productDetails={productDetails}
+              activeTab={activeTab}
+              handleTabClick={handleTabClick}
+              selections={selections}
+              setSelections={setSelections}
+              accessoryList={accessoryList}
+              handleAccessoryChange={handleAccessoryChange}
+              handleAccessoryQtyChange={handleAccessoryQtyChange}
+              shippingOptions={shippingOptions}
+              handleShippingChange={handleShippingChange}
+              totalPrices={totalPrices}
+              setModalAccessory={setModalAccessory}
+            />
           </div>
         </section>
-      </main>
-      {/* Modal for accessory info */}
-      {modalAccessory && (
-        <div className="modal fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="modal-content bg-white p-5 relative">
-            <span
-              className="close absolute top-2 right-2 text-2xl cursor-pointer"
-              onClick={() => setModalAccessory(null)}
-            >
-              &times;
-            </span>
-            <h2 className="text-xl font-bold mb-4">
-              {modalAccessory.title || modalAccessory.name}
-            </h2>
-            <p>{modalAccessory.description}</p>
-          </div>
-        </div>
-      )}
-    </div>
+      </div>
+      {showAccessories &&
+        ReactDOM.createPortal(
+          <AccessorySliderModal
+            accessories={reorderedAccessories}
+            onClose={() => setShowAccessories(false)}
+            selections={selections}
+            setSelections={setSelections}
+          />,
+          document.body
+        )}
+    </>
   );
 };
 
 export default ViewSingleProduct;
 
+const ProductSidebar = ({
+  setShowAccessory,
+  productDetails,
+  activeTab,
+  handleTabClick,
+  selections,
+  setSelections,
+  accessoryList,
+  handleAccessoryChange,
+  handleAccessoryQtyChange,
+  shippingOptions,
+  handleShippingChange,
+  totalPrices,
+  setModalAccessory,
+}) => {
+  return (
+    <div className="w-full  xl:w-[37%] md:p-3  ">
+      <div className="text-center font-robot my-3">
+        <h2 className="text-xl lg:text-5xl font-semibold text-custom-black-200">
+          {productDetails.name}
+        </h2>
+        <p className="my-1 text-xl text-custom-black-200">
+          {productDetails.product_title}
+        </p>
+      </div>
+      {/* Tabs Section */}
+      <div className="tabs-section font-robot my-5">
+        <ul className="flex gap-4 md:gap-12 border-b-4 border-orange-500">
+          {["cash", "financing"].map((tab) => (
+            <li
+              key={tab}
+              className={`flex-1 text-center cursor-pointer pb-2 transition-colors duration-300 ${
+                activeTab === tab
+                  ? "text-orange-500 border-b-8 border-orange-500 "
+                  : "text-gray-600"
+              }`}
+              onClick={() => handleTabClick(tab)}
+            >
+              <span className="font-semibold text-lg md:text-xl leading-6 capitalize">
+                {tab}
+              </span>
+            </li>
+          ))}
+        </ul>
+        {/* Tab Content */}
+        <div className="tabs-content pt-5 md:pt-8 transition-all duration-500 ease-in-out">
+          {activeTab === "cash" ? (
+            // Cash tab content
+            <div className="tab-content">
+              {/* Price content block */}
+              <table className="min-w-full overflow-hidden">
+                <thead>
+                  <tr>
+                    <th className="text-left text-custom-black-25 text-xs  md:text-sm lg:text-md font-semibold">
+                      Base Price
+                    </th>
+                    <th></th>
+                    <th className="text-left text-custom-black-25 text-xs md:text-sm lg:text-md font-semibold">
+                      Add-Ons
+                    </th>
+                    <th></th>
+                    <th className="text-left text-custom-black-25 text-xs md:text-sm lg:text-md font-semibold">
+                      Net Price
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="">
+                    <td className="text-custom-orange-100 align-middle font-semibold text-lg  md:text-xl lg:text-2xl xl:text-3xl">
+                      ${totalPrices.basePrice.toLocaleString()}{" "}
+                      <span className="text-15  font-semibold text-custom-black-25 float-right pr-4 md:pr-2 2xl:pr-4">
+                        +
+                      </span>
+                    </td>
+                    <td></td>
+                    <td className="text-custom-orange-100 align-middle  font-semibold text-lg  md:text-xl lg:text-2xl xl:text-3xl">
+                      ${totalPrices.addOns.toLocaleString()}{" "}
+                      <span className="text-15  font-semibold text-custom-black-25 float-right pr-4 md:pr-2 2xl:pr-4">
+                        =
+                      </span>
+                    </td>
+                    <td></td>
+                    <td className="text-custom-orange-100 align-middle font-semibold text-lg  md:text-xl lg:text-2xl xl:text-3xl">
+                      ${totalPrices.netPrice.toLocaleString()}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+              {/* Base unit quantity */}
+              <div className=" py-2 flex flex-col justify-center md:flex-row gap-3  items-center pt-5">
+                <h3 className="font-semibold w-[90%] md:w-[65%] text-center xl:text-left text-xl">{`Equipter ${productDetails.name} Base Unit`}</h3>
+                <form className="flex justify-end  md:flex-1 items-center gap-3">
+                  <label
+                    htmlFor="baseQty"
+                    className="text-md font-bold text-gray-500"
+                  >
+                    QTY
+                  </label>
+                  <InputField
+                    name="qty"
+                    placeholder="1"
+                    required
+                    id="baseQty"
+                    classes="flex-1 max-w-16 h-auto"
+                    type="number"
+                    value={selections.baseUnitQty}
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value, 10);
+                      setSelections((prevState) => ({
+                        ...prevState,
+                        baseUnitQty: isNaN(value) || value < 1 ? 1 : value,
+                      }));
+                    }}
+                  />
+                </form>
+              </div>
+              {/* Accessories */}
+              <div className="my-3 overflow-y-scroll max-h-[250px] scrollbar-hide">
+                <h3 className="font-semibold text-lg md:text-xl text-center ">
+                  Add-On Accessories
+                </h3>
+                <div className="space-y-3">
+                  {accessoryList.map((accessory) => (
+                    <div
+                      key={accessory.id}
+                      className={`p-2  transition-all duration-300 ${
+                        selections.accessories[accessory.id]?.selected
+                          ? "text-black"
+                          : " "
+                      }`}
+                    >
+                      <div className="flex flex-row items-center justify-between gap-2">
+                        <div className="flex items-center gap-3">
+                          <InputField
+                            name="accessory"
+                            type="checkbox"
+                            id={accessory.id}
+                            checked={
+                              selections.accessories[accessory.id]?.selected ||
+                              false
+                            }
+                            classes="form-checkbox   text-black"
+                            onChange={(e) =>
+                              handleAccessoryChange(
+                                accessory.id,
+                                e.target.checked
+                              )
+                            }
+                          />
+                          <label
+                            htmlFor={accessory.id}
+                            className={`font-semibold  capitalize text-sm xl:text-lg ${
+                              selections.accessories[accessory.id]?.selected
+                                ? "text-gray-800"
+                                : "text-gray-400"
+                            }`}
+                          >
+                            {accessory.name}
+                          </label>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className="text-lg font-semibold text-gray-800">
+                            ${accessory.price}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowAccessory(true);
+                              setModalAccessory(accessory);
+                            }}
+                            className="px-2 rotate-6 text-sm text-gray-500 border border-gray-500 bg-gray-100 rounded-full transition"
+                            aria-label={`Info about ${accessory.name}`}
+                          >
+                            <FontAwesomeIcon icon={faInfo} />
+                          </button>
+                        </div>
+                      </div>
+                      {selections.accessories[accessory.id]?.selected && (
+                        <div className="mt-4 flex justify-end">
+                          {accessory.slides && (
+                            <CustomSlider slides={accessory.slides} />
+                          )}
+                          <form className="flex fle justify-end items-center gap-3 w-fit">
+                            <label
+                              htmlFor={`${accessory.id}-qty`}
+                              className="text-md font-bold text-gray-500"
+                            >
+                              QTY
+                            </label>
+                            <InputField
+                              name={`${accessory.id}-qty`}
+                              placeholder="1"
+                              required
+                              id={`${accessory.id}-qty`}
+                              classes="max-w-16 h-fit"
+                              type="number"
+                              value={
+                                selections.accessories[accessory.id]?.qty || 1
+                              }
+                              onChange={(e) => {
+                                const qty = parseInt(e.target.value, 10);
+                                handleAccessoryQtyChange(
+                                  accessory.id,
+                                  isNaN(qty) || qty < 1 ? 1 : qty
+                                );
+                              }}
+                            />
+                          </form>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+              {/* Shipping options */}
+              <div className="my-3">
+                <h3 className="font-semibold text-lg md:text-xl text-center my-5">
+                  Shipping Options
+                </h3>
+                <div className="space-y-4">
+                  {shippingOptions.map((option) => (
+                    <div
+                      key={option.id}
+                      className="flex items-center justify-between"
+                    >
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="radio"
+                          id={option.id}
+                          name="shippingOption"
+                          className="form-radio text-black"
+                          checked={selections.shippingOption === option.id}
+                          onChange={() => handleShippingChange(option.id)}
+                        />
+                        <label
+                          htmlFor={option.id}
+                          className="font-semibold text-base md:text-lg text-gray-600"
+                        >
+                          {option.name}
+                        </label>
+                      </div>
+                      <span className="text-lg font-semibold text-gray-800">
+                        ${option.price}
+                      </span>
+                    </div>
+                  ))}
+                  <p className="text-sm md:text-base text-gray-500">
+                    *Tax, title, and registration fees will be additional costs.
+                  </p>
+                </div>
+              </div>
+            </div>
+          ) : (
+            // Financing tab content
+            <div className="tab-content">
+              <p className="text-gray-700">
+                Financing options will be displayed here.
+              </p>
+            </div>
+          )}
+        </div>
 
+        <div className="order-block border-t border-gray-400 pt-9 mt-7 max-w-7xl mx-auto px-4">
+          <h2 className="text-2xl md:text-3xl font-semibold text-center">
+            Order Your Equipter {productDetails.name}
+          </h2>
+          <h3 className="font-semibold text-base md:text-lg text-gray-600 text-center mt-2">
+            Est. Delivery: Jul – Aug 2024
+          </h3>
+          <div className="flex flex-col sm:flex-row items-center gap-6 mt-6 justify-center">
+            <a
+              href="#"
+              className="inline-block bg-black bg-opacity-10 text-white px-7 py-3 hover:bg-custom-orange transition"
+            >
+              Send Build
+            </a>
+            <a
+              href="#"
+              className="inline-block bg-custom-orange text-white px-7 py-3 hover:bg-black hover:bg-opacity-20 transition"
+            >
+              Continue
+            </a>
+          </div>
+          <p className="text-center text-gray-500 text-sm mt-7">
+            To talk to a rep call:{" "}
+            <a
+              href="tel:717-661-3591"
+              className="underline hover:no-underline text-gray-700"
+            >
+              717-661-3591
+            </a>
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
 
+const AccessorySliderModal = ({
+  accessories,
+  onClose,
+  selections,
+  setSelections,
+}) => {
+  const [flash, setFlash] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState(0);
 
+  if (accessories.length === 0) return null;
 
+  const placeholderImg = "https://via.placeholder.com/600x400?text=No+Image";
 
+  const handleAddAccessory = (currentAccessory) => {
+    // Update selections: if not selected, select it and qty=1; if selected, increment qty
+    setSelections((prev) => {
+      const prevAccessory = prev.accessories[currentAccessory.id] || {
+        selected: false,
+        qty: 1,
+      };
+      return {
+        ...prev,
+        accessories: {
+          ...prev.accessories,
+          [currentAccessory.id]: {
+            selected: true,
+            qty: prevAccessory.qty + 1,
+          },
+        },
+      };
+    });
 
+    // Trigger flash animation
+    setFlash(true);
+    setTimeout(() => setFlash(false), 500);
+  };
 
+  // Slider settings
+  const settings = {
+    className: "center",
+    centerMode: true,
+    infinite: true,
+    arrows: false, // Remove arrows
+    centerPadding: "50px",
+    slidesToShow: 3,
+    speed: 500,
+    beforeChange: (oldIndex, newIndex) => {
+      setCurrentIndex(newIndex);
+    },
+  };
 
+  return (
+    <div className="fixed z-50 inset-0 h-full p-5 bg-black bg-opacity-40 flex items-center justify-center">
+      <button
+        onClick={onClose}
+        className="absolute top-6 right-12 text-black text-2xl hover:text-gray-600 font-bold"
+      >
+        X
+      </button>
+      <div className="relative  w-full p ">
+        <Slider {...settings}>
+          {accessories.map((acc) => {
+            const selectedAcc = selections.accessories[acc.id];
+            const featureImg = acc?.images.filter((e) => e.is_featured == true);
+            const isSelected = selectedAcc?.selected;
+            const qty = selectedAcc?.qty || 0;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// import React, { useState } from "react";
-// import React, { useState } from "react";
-// import Slider from "react-slick";
-// import "slick-carousel/slick/slick.css";
-// import "slick-carousel/slick/slick-theme.css";
-
-// const ImageSlider = ({ images }) => {
-//   const [lightboxOpen, setLightboxOpen] = useState(false);
-//   const [currentSlide, setCurrentSlide] = useState(0);
-
-//   const openLightbox = (index) => {
-//     setCurrentSlide(index);
-//     setLightboxOpen(true);
-//   };
-
-//   const closeLightbox = () => {
-//     setLightboxOpen(false);
-//   };
-
-//   // Main Slider Settings
-//   const sliderSettings = {
-//     centerMode: true,
-//     centerPadding: "150px",
-//     slidesToShow: 1,
-//     arrows: false,
-//     autoplay: true,
-//     dots: true,
-//     responsive: [
-//       {
-//         breakpoint: 768,
-//         settings: {
-//           centerMode: true,
-//           centerPadding: "40px",
-//           slidesToShow: 1,
-//         },
-//       },
-//       {
-//         breakpoint: 480,
-//         settings: {
-//           centerMode: true,
-//           centerPadding: "20px",
-//           slidesToShow: 1,
-//         },
-//       },
-//     ],
-//   };
-
-//   // Lightbox Slider Settings
-//   const lightboxSettings = {
-//     centerMode: true,
-//     centerPadding: "250px",
-//     slidesToShow: 1,
-//     slidesToScroll: 1,
-//     initialSlide: currentSlide,
-//     dots: false,
-//     arrows: false,
-//   };
-
-//   return (
-//     <div>
-//       {/* Main Slider */}
-//       <div className="image-slider">
-//         <Slider {...sliderSettings}>
-//           {images.map((image, index) => (
-//             <div
-//               key={index}
-//               className="image-item p-2"
-//               onClick={() => openLightbox(index)}
-//             >
-//               <img
-//                 src={image.src}
-//                 alt={`Slide ${index}`}
-//                 className="w-full h-auto object-contain rounded-md transition-transform duration-500 transform hover:scale-105"
-//               />
-//             </div>
-//           ))}
-//         </Slider>
-//       </div>
-
-//       {/* Lightbox Modal */}
-//       {lightboxOpen && (
-//         <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50">
-//           <div className="relative bg-white rounded-lg shadow-lg max-w-4xl w-full">
-//             {/* Close Button */}
-//             <button
-//               onClick={closeLightbox}
-//               className="absolute top-4 right-4 text-gray-500 hover:text-gray-900 text-2xl"
-//             >
-//               &times;
-//             </button>
-//             {/* Lightbox Slider */}
-//             <div className="p-6">
-//               <Slider {...lightboxSettings}>
-//                 {images.map((image, index) => (
-//                   <div key={index} className="modal-slider">
-//                     <div className="flex flex-col md:flex-row bg-white p-6 gap-6 items-center">
-//                       <img
-//                         src={image.src}
-//                         alt={`Slide ${index}`}
-//                         className="w-full md:w-1/2 h-auto object-contain"
-//                       />
-//                       <div className="slide-details md:w-1/2 text-center md:text-left">
-//                         <p className="text-lg font-medium">
-//                           Details about image {index + 1}
-//                         </p>
-//                       </div>
-//                     </div>
-//                   </div>
-//                 ))}
-//               </Slider>
-//             </div>
-//           </div>
-//         </div>
-//       )}
-//     </div>
-//   );
-// };
-
-// export default ImageSlider;
+            return (
+              <div key={acc.id} className="m- flex p-9   h-[600px]  ">
+                <div className="flex w-full p-9 h-full gap-5 justify-center items-center bg-white ">
+                  <div className="h-[100%] w-[50%]">
+                    <img
+                      src={featureImg[0]?.image_url || placeholderImg}
+                      alt={acc.name}
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
+                  <div className="w-[50%] flex flex-col items-start justify-start">
+                    <h3 className="font-semibold capitalize ">{acc.name}</h3>
+                    <p className="text-sm text-gray-600 mb-4">
+                      {acc.description}
+                    </p>
+                    {isSelected && (
+                      <p
+                        className={`text-sm font-semibold mb-2 ${
+                          flash ? "animate-pulse text-green-600" : "text-black"
+                        }`}
+                      >
+                        Qty: {qty}
+                      </p>
+                    )}
+                    <button
+                      className="btn-yellow text-xs px-3 self-end"
+                      onClick={() => handleAddAccessory(acc)}
+                    >
+                      Add
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </Slider>
+      </div>
+    </div>
+  );
+};

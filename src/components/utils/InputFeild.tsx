@@ -7,6 +7,7 @@ interface InputFieldProps {
   placeholder?: string;
   required?: boolean;
   value?: string;
+  checked?: boolean;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   error?: string;
   classes?: string;
@@ -21,6 +22,7 @@ const InputField = ({
   value,
   onChange,
   placeholder,
+  checked,
   readonly=false,
   error,
   classes,
@@ -38,6 +40,9 @@ const InputField = ({
           name={name}
           min={1}
           required={required}
+          {...(type === "checkbox"
+            ? { checked: checked || false }
+            : { value: value })}
           value={value}
           onChange={onChange}
           placeholder={placeholder}

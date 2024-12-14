@@ -777,7 +777,7 @@ const AddNewProduct = () => {
                     : "opacity-0 pointer-events-none"
                 }`}
               >
-                <div className="h-[90%]">
+                <div className="h-[90%] max-w-[90%] bg-gray-300 p-3 rounded">
                   <div className="max-w-[90%] min-h-[90%] object-cover mx-auto max-h-[90%] h-[90%]">
                     <img
                       src={previewImage.url}

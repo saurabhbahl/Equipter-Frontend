@@ -35,9 +35,6 @@ html.modal-open footer {
   background-color: hsla(0, 0%, 94%, 0.88);
 }
 
-
-
-
 @layer utilities {
   .scrollbar-custom {
     scrollbar-width: thin;
@@ -45,6 +42,17 @@ html.modal-open footer {
   }
 
   /* Webkit browsers (Chrome, Safari) */
+  .scrollbar-hide {
+    /* Hide scrollbar for IE, Edge, and Firefox */
+    -ms-overflow-style: none; 
+    scrollbar-width: none; 
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none; /* Hide scrollbar for Chrome, Safari and Opera */
+  }
+
+
+
   .scrollbar-custom::-webkit-scrollbar {
     width: 10px;
     background-color: #f5f5f5;
@@ -83,16 +91,40 @@ html.modal-open footer {
   .slick-dots {
     @apply flex justify-center gap-6 mt-4;
   }
-  
+
   .slick-dots li {
-    @apply w-[90px] h-[14px] mt-16 bg-gray-300 opacity-50 transition-opacity duration-300;
+    @apply lg:w-[90px] w-[30px] lg:h-[14px] h-[10px]  mt-3 lg:mt-7 bg-gray-300 opacity-50 transition-opacity duration-300;
   }
-  
+
   .slick-dots li.slick-active {
     @apply bg-orange-500 opacity-100;
   }
-  
-  
+  /* .main-heading h1{
+    @apply text-[#1e1e1e] 
+    opacity-10 
+    text-4xl 
+    text-center
+    md:text-[55px] md:leading-[40px] 
+    lg:text-[80px] lg:leading-[50px] 
+    xl:text-[112px] xl:leading-[110px] 
+    2xl:text-[132px] 2xl:leading-[130px];
+  } */
+
+  .main-heading h1 {
+    @apply text-[#1e1e1e] opacity-10 text-4xl text-center;
+    
+    /* Medium devices (md) */
+    @apply md:text-[35px] md:leading-[40px];
+    
+    /* Large devices (lg) */
+    @apply lg:text-[40px] lg:leading-[50px];
+    
+    /* Extra Large devices (xl) */
+    @apply xl:text-[72px] xl:leading-[110px];
+    
+    /* 2XL devices */
+    @apply 2xl:text-[82px] 2xl:leading-[130px];
+  }
   
 }
 
@@ -140,10 +172,7 @@ html.modal-open footer {
   margin-top: 5px;
   width: 73px;
 }
-.main-heading h1 {
-  color: #1e1e1e;
-  opacity: 3%;
-}
+
 .tabs-section .tab-title.active:after {
   content: "";
   background-color: #f6841f;
@@ -350,33 +379,5 @@ html.modal-open footer {
   .form-checkbox:checked::before {
     width: 6px;
     height: 12px;
-  }
-}
-@media only screen and (min-width: 768px) {
-  .sidebar-tabs-block .tabs-content .tabs-scroll-content {
-    height: 735px;
-    scrollbar-width: none;
-  }
-  .main-heading h1 {
-    font-size: 75px;
-    line-height: 100px;
-  }
-}
-@media only screen and (min-width: 992px) {
-  .main-heading h1 {
-    font-size: 110px;
-    line-height: 130px;
-  }
-}
-@media only screen and (min-width: 1200px) {
-  .main-heading h1 {
-    font-size: 132px;
-    line-height: 150px;
-  }
-}
-@media only screen and (min-width: 1440px) {
-  .main-heading h1 {
-    font-size: 154px;
-    line-height: 180px;
   }
 }

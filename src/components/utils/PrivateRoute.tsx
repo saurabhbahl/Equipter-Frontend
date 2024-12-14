@@ -43,3 +43,39 @@ export const PrivateRoute = ({ role }: PrivateRouteProps) => {
 
   return <Outlet />;
 };
+
+
+
+
+// import { Outlet, useNavigate } from "react-router-dom";
+// import { useAuth } from "../../hooks/useAuth";
+// import { useEffect } from "react";
+// import Loader from "./Loader";
+
+// interface PrivateRouteProps {
+//   role?: string;
+// }
+
+// export const PrivateRoute = ({ role }: PrivateRouteProps) => {
+//   // const { token, user, loading } = useAuth();
+//   // const navigate = useNavigate();
+
+//   // useEffect(() => {
+//   //   if (!loading) {
+//   //     if (!token) {
+//   //       // If no token, redirect to login
+//   //       navigate("/login", { replace: true });
+//   //     } else if (role && user?.role !== role) {
+//   //       // If role is specified and user role doesn't match, redirect to home
+//   //       navigate("/", { replace: true });
+//   //     }
+//   //   }
+//   // }, [loading, token, role, user, navigate]);
+
+//   // if (loading) {
+//   //   return <Loader />;
+//   // }
+
+//   // If token exists and role matches (if required), render the child routes
+//   return <Outlet />;
+// };

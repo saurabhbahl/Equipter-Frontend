@@ -31,9 +31,13 @@ export const isTokenExpired = (token: string | null = localStorage.getItem("toke
   }
 };
 
+
+
+
 apiClient.interceptors.request.use((config) => {
     const token: string | null = localStorage.getItem("token");
     const isExp = isTokenExpired(token);
+    console.log(config.url)
     if (token && !(isExp as isExp)?.isExp) {
       config.headers.Authorization = `Bearer ${token}`;
     } else {
@@ -47,3 +51,9 @@ apiClient.interceptors.request.use((config) => {
     return Promise.reject(error);
   }
 );
+
+
+export const publicApiClient=axios.create({
+  baseURL: BackendUrl,
+  timeout: 10000,
+});

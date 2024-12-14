@@ -9,7 +9,7 @@ import { PrivateRoute } from "./PrivateRoute";
 import { PublicRoute } from "./PublicRoute";
 import Loader from "./Loader";
 
-const Home = lazy(() => import("../../pages/client/Home"));
+const Home = lazy(() => import("../../pages/client/FirstPageForm"));
 const LoginPage = lazy(() => import("../../pages/auth/LoginPage"));
 const ForgetPassword = lazy(() => import("../../pages/auth/ForgetPassword"));
 const ResetPassword = lazy(() => import("../../pages/auth/ResetPassword"));

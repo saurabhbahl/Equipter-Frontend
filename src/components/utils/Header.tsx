@@ -73,55 +73,39 @@ const Header = () => {
   }
 
   return (
-    <header className="bg-white shadow-md">
+    <header className="bg-white shadow-md ">
       <div className="container mx-auto flex justify-between items-center p-4 py-1.5">
-        <Link to={"/"}>
-          <img src={logo} alt="Logo" width="64px" />
-        </Link>
-        <nav className="flex items-center space-x-5 font-work-sans text-md">
-          {!token ? (
+        {/* Left Placeholder */}
+        <div className="w-1/3"></div>
+
+        {/* Center Logo */}
+        <div className="w-1/3 flex justify-center">
+          <Link to="/">
+            <img src={logo} alt="Logo" width="64px" />
+          </Link>
+        </div>
+
+        {/* Right Buttons */}
+        <div className="w-1/3 flex justify-end items-center space-x-5 font-work-sans text-md">
+          {token && (
             <>
-              <Link
-                to={"/"}
-                className="text-custom-orange hover:text-custom-orange/70 transition"
-              >
-                Home
-              </Link>
-              <Link
-                to={"/login"}
-                className="text-custom-orange hover:text-custom-orange/70 transition"
-              >
-                Login
-              </Link>
-            </>
-          ) : (
-            <>
-              <Link
-                to={"/"}
-                className="text-custom-orange hover:text-custom-orange/70 transition">
-                Home
-              </Link>
-          
-              <Link
-                to={"/products"}
-                className="text-custom-orange hover:text-custom-orange/70 transition">
-                Products
-              </Link>
               {isAdmin && (
                 <Link
-                  to={"/admin"}
-                  className="text-custom-orange hover:text-custom-orange/70 transition">
+                  to="/admin"
+                  className="text-custom-orange hover:text-custom-orange/70 transition"
+                >
                   Admin
                 </Link>
               )}
               <button
-                onClick={() => logOut()}
-                className="btn-yellow text-sm p-2  transition">
+                onClick={logOut}
+                className="btn-yellow text-sm p-2 transition"
+              >
                 Logout
               </button>
             </>
           )}
-        </nav>
+        </div>
       </div>
     </header>
   );

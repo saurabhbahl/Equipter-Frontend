@@ -1,20 +1,19 @@
 import { useEffect } from "react";
 import SingleProductComponent from "../components/SingleProductComponent";
-import { ClientProductService } from "./ClientProductService";
 import MetaComponent from "../../../utils/MetaComponent";
 import { useClientContext } from "../../../hooks/useClientContext";
 import LoaderSpinner from "../../../components/utils/LoaderSpinner";
-import { apiClient } from "../../../utils/axios";
+import {  publicApiClient } from "../../../utils/axios";
+import FirstPageForm from "../FirstPageForm";
 
 const Products = () => {
-  const { products, setProducts, loading, setLoading } = useClientContext();
-  const ProductService = new ClientProductService();
+  const { products, setProducts, loading, setLoading ,firstPageForm} = useClientContext();
 
   // Fetch Products Data
   const fetchData = async () => {
     try {
-      // const allProducts = await ProductService.getAllProductsWithImages();
-      const data = await apiClient.get("/product");
+      
+      const data = await publicApiClient.get("/product");
       setProducts(data?.data.data || []);
       setLoading((prev) => ({ ...prev, products: false }));
     } catch (error) {
@@ -31,6 +30,12 @@ const Products = () => {
     }
   }, []);
 
+
+  if(!firstPageForm.isFormFilled){
+    return <FirstPageForm/>
+  }
+
+
   if (loading.products) {
     return (
       <div className="w-full h-screen flex justify-center items-center">
@@ -46,7 +51,7 @@ const Products = () => {
       {products.length > 0 ? (
         <div>
           <MetaComponent title="Products" />
-          {products.map((prod: any, index: number) => (
+          {products.map((prod, index: number) => (
             <SingleProductComponent productDetail={prod} key={index} />
           ))}
         </div>

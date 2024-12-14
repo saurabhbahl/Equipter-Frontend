@@ -1,25 +1,16 @@
-import { useState } from "react";
 import InputField from "../../components/utils/InputFeild";
 import SelectField from "../../components/utils/SelectFeild";
+import { useClientContext } from "../../hooks/useClientContext";
 
-const Home = () => {
-  const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    company: "",
-    phoneNumber: "",
-    email: "",
-    jobTitle: "",
-    state: "",
-    industry: "",
-  });
+const FirstPageForm = () => {
+  const { firstPageForm, setFirstPageForm } = useClientContext();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setFirstPageForm({ ...firstPageForm, [e.target.name]: e.target.value });
   };
 
   const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setFirstPageForm({ ...firstPageForm, [e.target.name]: e.target.value });
   };
 
   const IndustryFeilds = [
@@ -54,6 +45,12 @@ const Home = () => {
     { value: "solar", label: "Solar" },
     { value: "other", label: "Other" },
   ];
+  async function handleSubmit(e) {
+    e.preventDefault();
+console.log(firstPageForm)
+setFirstPageForm((prev)=>({...prev,isFormFilled:true}))
+
+  }
 
   return (
     <>
@@ -66,8 +63,7 @@ const Home = () => {
             Fill out the form below to start building your perfect Equipter.
           </p>
           <form
-            action="#"
-            method="POST"
+            onSubmit={handleSubmit}
             className="grid grid-cols-1 md:grid-cols-2 gap-3"
           >
             {/* First Name Input */}
@@ -75,9 +71,9 @@ const Home = () => {
               label="First Name"
               type="text"
               id="firstName"
-              name="firstName"
+              name="fName"
               required
-              value={formData.firstName}
+              value={firstPageForm.fName}
               onChange={handleInputChange}
             />
 
@@ -86,9 +82,9 @@ const Home = () => {
               label="Last Name"
               type="text"
               id="lastName"
-              name="lastName"
+              name="lName"
               required
-              value={formData.lastName}
+              value={firstPageForm.lName}
               onChange={handleInputChange}
             />
 
@@ -99,7 +95,7 @@ const Home = () => {
               id="company"
               name="company"
               required
-              value={formData.company}
+              value={firstPageForm.company}
               onChange={handleInputChange}
             />
 
@@ -108,9 +104,9 @@ const Home = () => {
               label="Phone Number"
               type="number"
               id="phoneNumber"
-              name="phoneNumber"
+              name="phNo"
               required
-              value={formData.phoneNumber}
+              value={firstPageForm.phNo}
               onChange={handleInputChange}
             />
 
@@ -121,7 +117,7 @@ const Home = () => {
               id="email"
               name="email"
               required
-              value={formData.email}
+              value={firstPageForm.email}
               onChange={handleInputChange}
             />
 
@@ -131,7 +127,7 @@ const Home = () => {
               id="jobTitle"
               name="jobTitle"
               required
-              value={formData.jobTitle}
+              value={firstPageForm.jobTitle}
               onChange={handleSelectChange}
               options={[
                 { value: "Co-Owner/Partner", label: "Co-Owner/Partner" },
@@ -153,12 +149,12 @@ const Home = () => {
               id="state"
               name="state"
               required
-              value={formData.state}
+              value={firstPageForm.state}
               onChange={handleSelectChange}
               options={[
-                { value: "california", label: "California" },
-                { value: "texas", label: "Texas" },
-                { value: "new-york", label: "New York" },
+                { value: "California", label: "California" },
+                { value: "Texas", label: "Texas" },
+                { value: "New York", label: "New York" },
               ]}
             />
 
@@ -168,7 +164,7 @@ const Home = () => {
               id="industry"
               name="industry"
               required
-              value={formData.industry}
+              value={firstPageForm.industry}
               onChange={handleSelectChange}
               options={IndustryFeilds}
             />
@@ -199,4 +195,4 @@ const Home = () => {
   );
 };
 
-export default Home;
+export default FirstPageForm;
