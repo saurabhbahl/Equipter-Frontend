@@ -128,42 +128,6 @@ html.modal-open footer {
   
 }
 
-/**/
-.image-slider,
-.image-slider .slick-list,
-.image-slider .slick-track {
-  /* height: 712px; */
-}
-.image-slider .slick-slide.slick-current {
-  transform: scale(1.15);
-}
-.image-slider .slick-slide {
-  transition: 0.5s all;
-}
-.image-slider .slick-slide:not(.slick-current) {
-  opacity: 0.1;
-}
-.modal-slider > div {
-  box-shadow: 4px 4px 15px rgb(0 0 0 / 15%);
-}
-.slider-custom-nav .slick-dots button {
-  background: #1e1e1e;
-  border: none;
-  color: transparent;
-  height: 14px;
-  opacity: 0.15;
-  width: 90px;
-}
-.slider-custom-nav ul.slick-dots {
-  display: flex;
-  justify-content: center;
-  gap: 30px;
-  list-style: none;
-}
-.slider-custom-nav .slick-dots .slick-active button {
-  background: #f6841f;
-  opacity: 1;
-}
 .heading-bottom-border:after {
   background-color: #f6841f;
   content: "";
@@ -173,7 +137,7 @@ html.modal-open footer {
   width: 73px;
 }
 
-.tabs-section .tab-title.active:after {
+/* .tabs-section .tab-title.active:after {
   content: "";
   background-color: #f6841f;
   width: 100%;
@@ -183,21 +147,27 @@ html.modal-open footer {
 }
 .tabs-section .tab-title.active .tab-title-link {
   color: #f6841f;
+} */
+
+.animate-scale {
+  display: inline-block;
+  animation: scale-up 0.3s ease-in-out;
 }
-.tab-slider.slider-custom-nav .slick-dots {
-  gap: 15px;
+
+@keyframes scale-up {
+  0% {
+    transform: scale(1.0);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1.0);
+  }
 }
-.tab-slider.slider-custom-nav .slick-dots button {
-  width: 25px;
-  height: 5px;
-}
-.tab-slider .slick-dots {
-  margin-top: 20px;
-}
-.accessories-col.active label.opacity-50,
-.accessories-col.active .price-col .opacity-50 {
-  opacity: 1;
-}
+
+
+
 .form-checkbox {
   appearance: none;
   width: 1.75rem;
@@ -224,160 +194,4 @@ html.modal-open footer {
   border: solid black;
   border-width: 0 2px 2px 0;
   transform: rotate(45deg);
-}
-
-/* slider lightbox  */
-.modal {
-  display: none;
-  position: fixed;
-  z-index: 1000;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  overflow: auto;
-  background-color: rgb(255 255 255 / 25%);
-}
-.modal-content {
-  margin: 10% auto;
-  display: flex;
-  justify-content: space-between;
-}
-.lightbox-image img {
-  max-width: 45%;
-  height: auto;
-  border-radius: 8px;
-}
-.close {
-  position: absolute;
-  top: 10px;
-  right: 25px;
-  color: #000000;
-  font-size: 35px;
-  font-weight: bold;
-  cursor: pointer;
-}
-#modal-details {
-  max-width: 50%;
-  color: #333;
-}
-.modal-content {
-  flex-direction: column;
-  align-items: center;
-}
-.lightbox-slider {
-  width: 100%;
-}
-.modal-slider > div,
-.modal-slider > div img {
-  transition: 0.5s all;
-}
-.modal-slider:not(.slick-current) > div {
-  background-color: #d9d9d9;
-}
-.modal-slider:not(.slick-current) > div img {
-  opacity: 0.15;
-}
-
-.toggle-icon {
-  width: 19px;
-  height: 19px;
-  background-color: hsl(0deg 0% 0% / 25%);
-  color: #fff;
-  border-radius: 100px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-.form-block .form-field {
-  border: 0.86px solid #cccccc;
-  border-radius: 6.86px;
-  height: 48px;
-  padding: 13px 42px 13px 13px;
-  outline: 0;
-}
-.form-block .form-field,
-.form-block .form-field::placeholder {
-  color: #666;
-  font-size: 13px;
-  line-height: 20px;
-  font-family: "Noto Sans", "sans-serif";
-}
-.form-block .form-field:focus {
-  border-width: 1.72px;
-  border-color: #666;
-}
-.error-display .form-field {
-  border-color: #eb5757;
-  background-image: url(images/error-icon.png);
-  background-position: 96% center;
-  background-size: 18px;
-  background-repeat: no-repeat;
-}
-.form-block select.form-field {
-  appearance: none;
-  background-image: url(images/select-arrow.png);
-  background-position: 95% center;
-  background-size: 10px;
-  background-repeat: no-repeat;
-}
-#DepositForm.modal {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(255, 255, 255, 0.25);
-  justify-content: center;
-  align-items: center;
-  opacity: 0;
-  transition: opacity 0.5s ease, visibility 0.5s ease;
-  visibility: hidden;
-}
-#DepositForm.modal.show {
-  display: flex;
-  opacity: 1;
-  visibility: visible;
-}
-#DepositForm .modal-body {
-  box-shadow: 4px 4px 8px 15px #0000000d;
-  padding: 32px 35px 55px;
-}
-.form-content-detail {
-  transition: max-height 0.3s ease-in-out;
-}
-
-@media only screen and (max-width: 767px) {
-  .slider-custom-nav .slick-dots button {
-    width: 38px;
-    height: 6px;
-  }
-  .heading-bottom-border:after {
-    height: 3px;
-    margin-top: 2px;
-    width: 33px;
-  }
-  .image-slider,
-  .image-slider .slick-list,
-  .image-slider .slick-track {
-    /* height: 285px; */
-  }
-  .slider-custom-nav ul.slick-dots {
-    padding-top: 10px;
-  }
-  .form-checkbox,
-  #qty {
-    width: 24px;
-    height: 24px;
-  }
-  #qty {
-    font-size: 15px;
-    line-height: 15px;
-  }
-  .form-checkbox:checked::before {
-    width: 6px;
-    height: 12px;
-  }
 }

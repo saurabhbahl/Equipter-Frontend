@@ -45,11 +45,9 @@ const FirstPageForm = () => {
     { value: "solar", label: "Solar" },
     { value: "other", label: "Other" },
   ];
-  async function handleSubmit(e) {
+  async function handleSubmit(e: React.ChangeEvent<HTMLFormElement>) {
     e.preventDefault();
-console.log(firstPageForm)
-setFirstPageForm((prev)=>({...prev,isFormFilled:true}))
-
+    setFirstPageForm((prev) => ({ ...prev, isFormFilled: true }));
   }
 
   return (
@@ -177,8 +175,7 @@ setFirstPageForm((prev)=>({...prev,isFormFilled:true}))
                 <a
                   href="#"
                   target="_blank"
-                  //   rel="nofollow noopener"
-                  className="text-custom-orange"
+                className="text-custom-orange"
                 >
                   Privacy Policy
                 </a>

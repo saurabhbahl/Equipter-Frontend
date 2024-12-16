@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import axios, { AxiosError } from "axios";
 import { BackendUrl } from "../../utils/useEnv";
 import { isTokenExpired } from "../../utils/axios";
+import LoaderSpinner from "./LoaderSpinner";
 interface IExp {
   isExp: boolean;
 }
@@ -17,6 +18,8 @@ const Header = () => {
   const { token, logOut } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+
+ 
 
   useEffect(() => {
     const Exp = isTokenExpired(token) as IExp;
@@ -69,9 +72,13 @@ const Header = () => {
   }, [token]);
 
   if (isLoading) {
-    return null;
+    return <LoaderSpinner/>;
   }
 
+  
+  
+  
+  
   return (
     <header className="bg-white shadow-md ">
       <div className="container mx-auto flex justify-between items-center p-4 py-1.5">

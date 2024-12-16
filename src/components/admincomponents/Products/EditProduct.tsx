@@ -39,6 +39,11 @@ interface IProductInputValues {
   container: string;
   Down_Payment_Cost__c: string;
 }
+interface ExtendedFile extends File {
+  markedForDeletion?: boolean;
+  id?: string;
+  image_url?: string;
+}
 
 interface ExistingImage {
   id: string;
@@ -90,26 +95,12 @@ const EditProduct = () => {
   });
 
   // State for form errors
-  const [errors, setErrors] = useState<
-    { [key in keyof IProductInputValues]: string }
-  >({
-    productName: "",
-    price: "",
-    gvwr: "",
-    qty: "",
-    liftCapacity: "",
-    Product_Description__c: "",
-    Product_Title__c: "",
-    Meta_Title__c: "",
-    Product_URL__c: "",
-    liftHeight: "",
-    container: "",
-    Down_Payment_Cost__c: "",
-  });
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+
 
   // State for handling images
   const [existingImages, setExistingImages] = useState<ExistingImage[]>([]);
-  const [newImages, setNewImages] = useState<File[]>([]);
+  const [newImages, setNewImages] = useState<ExtendedFile[]>([]);
   const [featuredImage, setFeaturedImage] = useState<string | null>(null);
   const [previewImage, setPreviewImage] = useState<PreviewImage | null>(null);
   const [showPreview, setShowPreview] = useState(false);
@@ -156,6 +147,7 @@ const EditProduct = () => {
     }
     // Cleanup object URLs on unmount
     return () => {
+      // newImages.forEach((image) => URL.revokeObjectURL(URL.createObjectURL(image.name)));
       newImages.forEach((image) => URL.revokeObjectURL(image.name));
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -293,6 +285,7 @@ const EditProduct = () => {
     if (files.length > 0) {
       setIsUploading(true);
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      
       timeoutRef.current = setTimeout(() => {
         setNewImages((prevImages) => {
           const updatedImages = [...prevImages, ...files];
@@ -328,7 +321,7 @@ const EditProduct = () => {
    */
   const removeNewImage = (index: number) => {
     setNewImages((prevImages) => {
-      const removedImage = prevImages[index];
+      // const removedImage = prevImages[index];
       const updatedImages = prevImages.filter((_, i) => i !== index);
       // If the removed image was featured, set a new featured image
       if (featuredImage === `new-${index}`) {
@@ -434,6 +427,7 @@ const EditProduct = () => {
     if (totalImages < 1) {
       setImageUploadError(true);
       addNotification("error", "At least one product image is required.");
+      return
     } else {
       setImageUploadError(false);
     }
@@ -586,7 +580,7 @@ const EditProduct = () => {
 
     // Step 2: Unset `is_featured` for all existing images
     try {
-      let imgRes = await Promise.all(
+      const imgRes = await Promise.all(
         existingImages
           .filter((img) => !img.markedForDeletion && img.is_featured)
           .map((img) =>
@@ -1098,7 +1092,7 @@ const EditProduct = () => {
                         closeImagePreview();
                         if (previewImage.type === "new") {
                           const index = newImages.findIndex(
-                            (img, idx) => `new-${idx}` === previewImage.id
+                            (_, idx) => `new-${idx}` === previewImage.id
                           );
                           if (index !== -1) {
                             removeNewImage(index);

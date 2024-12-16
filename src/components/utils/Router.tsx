@@ -18,9 +18,7 @@ const ResetPassword = lazy(() => import("../../pages/auth/ResetPassword"));
 
 const NotFound = lazy(() => import("../../pages/NotFound"));
 const AdminPage = lazy(() => import("../../pages/admin/AdminPage"));
-const ViewProduct = lazy(() =>
-  import("../admincomponents/Products/ViewProduct")
-);
+
 const Customers = lazy(() => import("../admincomponents/Customers/Customers"));
 const AddNewProduct = lazy(() =>
   import("../admincomponents/Products/AddNewProduct")
@@ -58,7 +56,6 @@ export default function Router() {
               {/* products */}
               <Route path="products" element={<AllProducts />} />
               <Route path="products/new" element={<AddNewProduct />} />
-              <Route path="products/view/:id" element={<ViewProduct />} />
               <Route path="products/edit/:id" element={<EditProduct />} />
 
               {/* accessories */}

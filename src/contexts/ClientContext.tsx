@@ -1,33 +1,22 @@
 import React, { createContext, useState } from "react";
-import { Accessory } from "../components/admincomponents/Accessories/AccessoriesSchema";
-import { Product } from "../components/admincomponents/Products/ProductSchema";
+import { IAccessory, IFirstPageForm, IProduct } from "../pages/client/types/ClientSchemas";
 export interface GlobalLoadingState {
   products: boolean;
   accessories: boolean;
 }
 
-// export interface IClientContext {
-//   accessories: Accessory[];
-//   products: Product[];
-//   setProducts: React.Dispatch<React.SetStateAction<Product[]>>;
-//   setAccessories: React.Dispatch<React.SetStateAction<Accessory[]>>;
 
-//   loading: GlobalLoadingState;
-//   setLoading: React.Dispatch<React.SetStateAction<GlobalLoadingState>>;
-//   error: { [key: string]: string };
-//   setError: React.Dispatch<React.SetStateAction<{ [key: string]: string }>>;
-// }
 export interface IClientContext {
-  accessories: any;
-  products: any[];
-  setProducts: any;
-  setAccessories: any;
-  firstPageForm;
-  setFirstPageForm;
-  loading: any;
-  setLoading: any;
-  error: any;
-  setError: any;
+  accessories: IAccessory[];
+  products: IProduct[];
+  setProducts: React.Dispatch<React.SetStateAction<IProduct[]>>;
+  setAccessories: React.Dispatch<React.SetStateAction<IAccessory[]>>;
+  firstPageForm:IFirstPageForm;
+  setFirstPageForm:React.Dispatch<React.SetStateAction<IFirstPageForm>>;
+  loading: GlobalLoadingState;
+  setLoading: React.Dispatch<React.SetStateAction<GlobalLoadingState>>;
+  error: { [key: string]: string };
+  setError: React.Dispatch<React.SetStateAction<{ [key: string]: string }>>;
 }
 
 export const ClientContext = createContext<IClientContext | null>(null);
@@ -37,8 +26,8 @@ export const ClientContextProvider = ({
 }: {
   children: React.ReactNode;
 }) => {
-  const [accessories, setAccessories] = useState<Accessory[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
+  const [accessories, setAccessories] = useState<IAccessory[]>([]);
+  const [products, setProducts] = useState<IProduct[]>([]);
 
   const [loading, setLoading] = useState<GlobalLoadingState>({
     accessories: false,

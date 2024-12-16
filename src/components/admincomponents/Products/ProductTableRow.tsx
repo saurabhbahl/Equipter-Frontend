@@ -6,7 +6,7 @@ import { useNotification } from "../../../contexts/NotificationContext";
 import { DeleteObjectsCommand, S3Client } from "@aws-sdk/client-s3";
 import { useState } from "react";
 import Loader from "../../utils/Loader";
-import { Product } from "./ProductSchema"; 
+import { IProduct,  TImage } from "./ProductSchema"; 
 import { useAdminContext } from "../../../hooks/useAdminContext";
 import { apiClient } from "../../../utils/axios";
 import axios from "axios"; 
@@ -19,7 +19,7 @@ const s3 = new S3Client({
   },
 });
 
-const ProductTableRow = ({ product, no }: { product: Product; no: number }) => {
+const ProductTableRow = ({ product, no }: { product: IProduct; no: number }) => {
   const navigate = useNavigate();
   const { addNotification } = useNotification();
   const [isResSaving, setIsResSaving] = useState(false);
@@ -109,10 +109,10 @@ const ProductTableRow = ({ product, no }: { product: Product; no: number }) => {
     }
   };
 
-  const { images, id, name, downpayment_cost, price, gvwr,stock_quantity } = product;
+  const { images, id, name, downpayment_cost, price, gvwr,stock_quantity,product_url } = product;
 
   // Find the featured image
-  const featuredImageUrl = images?.find((img) => img.is_featured)?.image_url;
+  const featuredImageUrl = images?.find((img:TImage) => img.is_featured)?.image_url;
 
   const columns = [
     no,
@@ -137,7 +137,7 @@ const ProductTableRow = ({ product, no }: { product: Product; no: number }) => {
     {
       icon: <FontAwesomeIcon icon={faEye} />,
       title: "View Product",
-      onClick: () => navigate(`/admin/products/view/${id}`),
+      onClick: () => navigate(`/products/${product_url}`),
       className: "text-sky-500 hover:text-blue-700",
     },
     {

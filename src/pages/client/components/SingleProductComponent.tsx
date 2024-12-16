@@ -1,7 +1,10 @@
 import { useNavigate } from "react-router-dom";
 import CustomLogo from "../../../components/utils/CustomLogo";
-
-const SingleProductComponent = ({ productDetail }) => {
+import { IProduct } from "../types/ClientSchemas";
+interface SingleProductProps{
+  productDetail:IProduct
+}
+const SingleProductComponent: React.FC<SingleProductProps> = ({ productDetail }) => {
   const featuredImageUrl = productDetail?.images?.filter((data) => data.is_featured === true);
   const nav = useNavigate();
 

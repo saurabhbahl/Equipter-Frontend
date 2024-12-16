@@ -1,6 +1,6 @@
 import React, { createContext, useState } from "react";
-import { Accessory } from "../components/admincomponents/Accessories/AccessoriesSchema";
-import { Product } from "../components/admincomponents/Products/ProductSchema";
+import {  IAccessory, IProduct } from "../components/admincomponents/Accessories/AccessoriesSchema";
+
 export interface GlobalLoadingState {
   products: boolean;
   accessories: boolean;
@@ -9,11 +9,10 @@ export interface GlobalLoadingState {
 export interface IAdminContext {
   toggleSidebar: () => void;
   isSidebarCollapsed: boolean;
-  accessories: Accessory[] ;
-  products: Product[];
-  setProducts:  React.Dispatch<React.SetStateAction<Product[]>>;
-  setAccessories: React.Dispatch<React.SetStateAction<Accessory[]>>;
-  // fetchAccessoriesData: () => Promise<void>;
+  accessories: IAccessory[] ;
+  products: IProduct[];
+  setProducts:  React.Dispatch<React.SetStateAction<IProduct[]>>;
+  setAccessories: React.Dispatch<React.SetStateAction<IAccessory[]>>;
   loading: GlobalLoadingState;
   setLoading:React.Dispatch<React.SetStateAction<GlobalLoadingState>>;
   error: { [key: string]: string };
@@ -27,8 +26,8 @@ export const AdminContextProvider = ({
 }: {
   children: React.ReactNode;
 }) => {
-  const [accessories, setAccessories] = useState<Accessory[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
+  const [accessories, setAccessories] = useState<IAccessory[]>([]);
+  const [products, setProducts] = useState<IProduct[]>([]);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [loading, setLoading] = useState<GlobalLoadingState>({
     accessories: false,

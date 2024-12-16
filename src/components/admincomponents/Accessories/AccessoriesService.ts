@@ -1,5 +1,5 @@
 import { SfAccessToken } from "../../../utils/useEnv";
-import { Accessory, IAccessoriesRes } from "./AccessoriesSchema";
+import {  IAccessoriesRes } from "./AccessoriesSchema";
 
 class AccessoriesService {
   // accesories without images
@@ -28,7 +28,7 @@ class AccessoriesService {
     }
   }
   // fetch all accessories with images
-  static async fetchAccessoriesWithImages():Promise<Accessory[]> {
+  static async fetchAccessoriesWithImages() {
     try {
       const response = await fetch(
         "/api/services/data/v52.0/query/?q=SELECT+Id,+Name,+Description__c,+Price__c,+Quantity__c,+%28SELECT+Id,+Name,+Image_URL__c,+Is_Featured__c,+Accessory_Id__c+FROM+Accesory_Images__r%29+FROM+Accessory__c",
@@ -78,7 +78,7 @@ class AccessoriesService {
     }
   }
 
-  static async fetchSingleAccessoryWithImages(accessoryID: string):Promise<Accessory> {
+  static async fetchSingleAccessoryWithImages(accessoryID: string) {
     try {
       const q = `/api/services/data/v52.0/query/?q=SELECT+Id,Name,Accessory_URL__c,Meta_Title__c,Description__c,Price__c,Quantity__c,(SELECT+Id,Image_URL__c,Is_Featured__c+FROM+Accesory_Images__r)+FROM+Accessory__c+WHERE+Id='${accessoryID}'`;
 

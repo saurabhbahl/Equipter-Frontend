@@ -2,7 +2,7 @@ import AccessoriesTableRow from "./AccessoriesTableRow";
 import LoaderSpinner from "../../utils/LoaderSpinner";
 import { useAdminContext } from "../../../hooks/useAdminContext";
 import TableHeading from "../../Table/TableHeading";
-import { Accessory } from "./AccessoriesSchema";
+import { IAccessory } from "./AccessoriesSchema";
 
 const AccessoriesTable = () => {
   const headers = ["Sr.No.", "ID", "Name", "Price", "Stock", "Actions"];
@@ -29,7 +29,7 @@ const AccessoriesTable = () => {
               {accessories?.map((accessory:unknown, index:number) => (
                 <AccessoriesTableRow
                   key={index}
-                  accessory={accessory as Accessory}
+                  accessory={accessory as IAccessory}
                   no={index + 1}
                 />
               ))}

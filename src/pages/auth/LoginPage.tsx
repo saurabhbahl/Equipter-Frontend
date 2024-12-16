@@ -72,6 +72,7 @@ const LoginPage = () => {
         message: "Login successful! Redirecting...",
       });
       nav("/");
+ 
     } else {
       setServerResponse({
         type: "error",

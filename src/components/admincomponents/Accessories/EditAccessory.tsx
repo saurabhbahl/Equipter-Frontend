@@ -1,4 +1,3 @@
-
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import ReactDOM from "react-dom";
 import {
@@ -12,15 +11,19 @@ import { useState, useEffect, ChangeEvent, useRef, FormEvent } from "react";
 import InputField from "../../utils/InputFeild";
 import {
   AccessoriesSchema,
-  AccessoryImage,
+  IAccessoryImage,
   IAccessoriesInput,
 } from "./AccessoriesSchema";
 import { useNotification } from "../../../contexts/NotificationContext";
 import HeadingBar from "../rootComponents/HeadingBar";
-import { S3Client, PutObjectCommand, DeleteObjectsCommand } from "@aws-sdk/client-s3";
+import {
+  S3Client,
+  PutObjectCommand,
+  DeleteObjectsCommand,
+} from "@aws-sdk/client-s3";
 import LoaderSpinner from "../../utils/LoaderSpinner";
 import Loader from "../../utils/Loader";
-import { apiClient } from "../../../utils/axios"; 
+import { apiClient } from "../../../utils/axios";
 import { useAdminContext } from "../../../hooks/useAdminContext";
 
 // Initialize S3 client
@@ -32,8 +35,9 @@ const s3 = new S3Client({
   },
 });
 
-// Type definitions
-export type ExistingImage = AccessoryImage & { markedForDeletion?: boolean };
+interface ExistingImage extends IAccessoryImage, File {
+  markedForDeletion?: boolean;
+}
 
 export interface PreviewImage {
   url: string;
@@ -47,37 +51,37 @@ const EditAccessory = () => {
   const { addNotification } = useNotification();
   const { setAccessories, setLoading: globalLoading } = useAdminContext();
 
+    // State for form inputs
   const [formValues, setFormValues] = useState<IAccessoriesInput>({
     Name: "",
     Accessory_URL__c: "",
-    accessory_title:"",
+    accessory_title: "",
     Meta_Title__c: "",
     Description__c: "",
     Price__c: "",
     Quantity__c: "",
   });
 
-  const [errors, setErrors] = useState<IAccessoriesInput>({
-    Name: "",
-    Description__c: "",
-    Accessory_URL__c: "",
-    accessory_title:"",
-    Meta_Title__c: "",
-    Price__c: "",
-    Quantity__c: "",
-  });
-
+    // State for form errors
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  
+  
+  // State for handling submission
   const [isResSaving, setIsResSaving] = useState(false);
   const [currentStatus, setCurrentStatus] = useState("");
-  const [images, setImages] = useState<File[]>([]);
+  
+  const [images, setImages] = useState<ExistingImage[]>([]);
   const [existingImages, setExistingImages] = useState<ExistingImage[]>([]);
-  const [featuredImage, setFeaturedImage] = useState<ExistingImage | File | null>(null);
-  const [previewImage, setPreviewImage] = useState<PreviewImage | null>(null);
+  const [featuredImage, setFeaturedImage] = useState<any>(null);
+ const [previewImage, setPreviewImage] = useState<PreviewImage | null>(null);
   const [showPreview, setShowPreview] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
   const [imageUploadError, setImageUploadError] = useState(false);
+  
+  // loading state
   const [loading, setLoading] = useState(true);
+  const [isUploading, setIsUploading] = useState(false);
 
+    // Refs for form and images container
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const formRef = useRef<HTMLFormElement | null>(null);
   const imagesRef = useRef<HTMLDivElement | null>(null);
@@ -111,7 +115,7 @@ const EditAccessory = () => {
         // Set form values
         setFormValues({
           Name: accessory.name || "",
-          accessory_title:accessory.accessory_title,
+          accessory_title: accessory.accessory_title,
           Description__c: accessory.description || "",
           Price__c: accessory.price || "",
           Quantity__c: accessory.stock_quantity || "",
@@ -195,7 +199,8 @@ const EditAccessory = () => {
 
       timeoutRef.current = setTimeout(() => {
         setImages((prevImages) => {
-          const updatedImages = [...prevImages, ...files];
+          const updatedImages = [...prevImages, ...files] as any;
+                // If no featured image is set, set the first new image as featured
           if (!featuredImage && updatedImages.length > 0) {
             setFeaturedImage(updatedImages[0]);
           }
@@ -209,50 +214,26 @@ const EditAccessory = () => {
   /**
    * Set a new featured image
    */
-
-
+  
+  
   const setAsFeaturedImage = (index: number, type: "new" | "existing") => {
     if (type === "new") {
       if (images[index]) {
-        setFeaturedImage(images[index]);
+        setFeaturedImage(images[index] );
       }
     } else {
       if (existingImages[index]) {
-        setFeaturedImage(existingImages[index]);
+        setFeaturedImage(existingImages[index] );
       }
     }
-  
-    // Unset is_featured for all images in state
-    if (type === "existing") {
-      setExistingImages((prevImages) =>
-        prevImages.map((img, idx) =>
-          idx === index ? { ...img, is_featured: true } : { ...img, is_featured: false }
-        )
-      );
-      setImages((prevImages) =>
-        prevImages.map((img) => ({ ...img, is_featured: false }))
-      );
-    } else {
-      setImages((prevImages) =>
-        prevImages.map((img, idx) =>
-          idx === index ? { ...img, is_featured: true } : { ...img, is_featured: false }
-        )
-      );
-      setExistingImages((prevImages) =>
-        prevImages.map((img) => ({ ...img, is_featured: false }))
-      );
-    }
-  
-    closeImagePreview();
-  };
-  
+  }
   /**
    * Remove a new image from the list
    */
   const removeImage = (index: number) => {
     setImages((prevImages) => {
       const removedImage = prevImages[index];
-      const updatedImages = prevImages.filter((_, i) => i !== index);
+      const updatedImages = prevImages.filter((_, i) => i !== index) as any;
       if (featuredImage === removedImage) {
         if (updatedImages.length > 0) {
           setFeaturedImage(updatedImages[0]);
@@ -260,7 +241,7 @@ const EditAccessory = () => {
           const nextExistingImage = existingImages.find(
             (img) => !img.markedForDeletion
           );
-          setFeaturedImage(nextExistingImage || null);
+          setFeaturedImage(nextExistingImage || null as any);
         }
       }
       return updatedImages;
@@ -269,10 +250,12 @@ const EditAccessory = () => {
 
     // Check if there are no images left
     const totalImages =
-      images.length - 1 + existingImages.filter((img) => !img.markedForDeletion).length;
+      images.length -
+      1 +
+      existingImages.filter((img) => !img.markedForDeletion).length;
     if (totalImages === 0) {
       setImageUploadError(true);
-     }
+    }
   };
 
   /**
@@ -284,12 +267,18 @@ const EditAccessory = () => {
         img.id === imageId ? { ...img, markedForDeletion: true } : img
       )
     );
-    if (featuredImage && "id" in featuredImage && featuredImage.id === imageId) {
+    if (
+      featuredImage &&
+      "id" in featuredImage &&
+      featuredImage.id === imageId
+    ) {
       const nextFeatured =
         images[0] ||
-        existingImages.find((img) => img.id !== imageId && !img.markedForDeletion) ||
+        existingImages.find(
+          (img) => img.id !== imageId && !img.markedForDeletion
+        ) ||
         null;
-      setFeaturedImage(nextFeatured);
+      setFeaturedImage(nextFeatured as any);
     }
     setPreviewImage(null);
   };
@@ -326,7 +315,9 @@ const EditAccessory = () => {
     };
     const command = new PutObjectCommand(uploadParams);
     await s3.send(command);
-    return `https://${import.meta.env.VITE_AWS_BUCKET_NAME}.s3.${import.meta.env.VITE_AWS_REGION}.amazonaws.com/${uploadParams.Key}`;
+    return `https://${import.meta.env.VITE_AWS_BUCKET_NAME}.s3.${
+      import.meta.env.VITE_AWS_REGION
+    }.amazonaws.com/${uploadParams.Key}`;
   };
 
   /**
@@ -368,12 +359,12 @@ const EditAccessory = () => {
 
     // Validate form inputs
     if (!validation.success) {
-      const newErrors: IAccessoriesInput = {
+      const newErrors = {
         Name: "",
         Description__c: "",
         Price__c: "",
         Quantity__c: "",
-        accessory_title:"",
+        accessory_title: "",
         Meta_Title__c: "",
         Accessory_URL__c: "",
       };
@@ -382,9 +373,12 @@ const EditAccessory = () => {
         newErrors[fieldName] = issue.message;
       });
       setErrors(newErrors);
-      if (images.length === 0 && existingImages.filter(img => !img.markedForDeletion).length === 0) {
+      if (
+        images.length === 0 &&
+        existingImages.filter((img) => !img.markedForDeletion).length === 0
+      ) {
         setImageUploadError(true);
-        }
+      }
       return;
     }
 
@@ -392,7 +386,7 @@ const EditAccessory = () => {
     const totalImages =
       images.length +
       existingImages.filter((img) => !img.markedForDeletion).length;
-
+console.log("Total",totalImages)
     if (totalImages === 0) {
       setImageUploadError(true);
       addNotification("error", "At least one accessory image is required.");
@@ -410,7 +404,8 @@ const EditAccessory = () => {
       if (!isUnique) {
         setErrors((prevErrors) => ({
           ...prevErrors,
-          Accessory_URL__c: "This URL is already in use. Please modify the Meta Title.",
+          Accessory_URL__c:
+            "This URL is already in use. Please modify the Meta Title.",
         }));
 
         return;
@@ -428,7 +423,7 @@ const EditAccessory = () => {
       // Step 1: Update the accessory via custom REST API
       const accessoryPayload = {
         name: formValues.Name,
-        accessory_title:formValues.accessory_title,
+        accessory_title: formValues.accessory_title,
         description: formValues.Description__c,
         price: parseFloat(formValues.Price__c),
         stock_quantity: parseInt(formValues.Quantity__c),
@@ -456,52 +451,80 @@ const EditAccessory = () => {
       }
 
       // Step 3: Upload new images to S3 and save via custom REST API
+      const uploadedImageIds: string[] = [];
       if (images.length > 0) {
         setCurrentStatus("Uploading new images...");
-        const orderedImages = featuredImage
-          ? [featuredImage, ...images.filter((img) => img !== featuredImage)]
-          : images;
-
+        // const orderedImages = featuredImage
+        //   ? [featuredImage, ...images.filter((img) => img !== featuredImage)]
+        //   : images;
+   // Arrange images so that the featured image (if new) is first for convenience
+   const orderedImages = featuredImage && !("id" in featuredImage)
+   ? [featuredImage, ...images.filter((img) => img !== featuredImage)]
+   : images;
         for (const image of orderedImages) {
           const imageUrl = await uploadImageToS3(image);
           const isFeatured =
             featuredImage === image &&
             (featuredImage as File).name === image.name;
-          await apiClient.post(`/accessory/accessory-images`, {
+            const uploadResponse=  await apiClient.post(`/accessory/accessory-images`, {
             accessory_id: id,
             image_url: imageUrl,
             is_featured: isFeatured,
           });
+          uploadedImageIds.push(uploadResponse.data.data.id);
         }
       }
 
       // Step 4: Ensure at least one image is featured
-      // setCurrentStatus("Ensuring featured image...");
-      // await apiClient.post(`/accessory/${id}/images/ensure-featured`);
       setCurrentStatus("Setting featured image...");
+      // if (featuredImage) {
+      //   if ("id" in featuredImage) {
+      //     // Existing image
+      //     await apiClient.post(`/accessory/${id}/images/ensure-featured`, {
+      //       featuredImageId: featuredImage.id,
+      //     });
+      //   } else {
+      //     // New image: Find the corresponding uploaded image URL
+      //     const uploadedImage = await apiClient.post(
+      //       `/accessory/accessory-images`,
+      //       {
+      //         accessory_id: id,
+      //         image_url: `https://${import.meta.env.VITE_AWS_BUCKET_NAME}.s3.${
+      //           import.meta.env.VITE_AWS_REGION
+      //         }.amazonaws.com/${Date.now()}-${featuredImage.name}`,
+      //         is_featured: true,
+      //       }
+      //     );
+
+      //     // Ensure only this image is featured
+      //     await apiClient.post(`/accessory/${id}/images/ensure-featured`, {
+      //       featuredImageId: uploadedImage.data.data.id,
+      //     });
+      //   }
+      // }
+      
       if (featuredImage) {
-        if ("id" in featuredImage) {
-          // Existing image
-          await apiClient.post(`/accessory/${id}/images/ensure-featured`, {
-            featuredImageId: featuredImage.id,
-          });
-        } else {
-          // New image: Find the corresponding uploaded image URL
-          const uploadedImage = await apiClient.post(`/accessory/accessory-images`, {
-            accessory_id: id,
-            image_url: `https://${import.meta.env.VITE_AWS_BUCKET_NAME}.s3.${import.meta.env.VITE_AWS_REGION}.amazonaws.com/${Date.now()}-${featuredImage.name}`,
-            is_featured: true,
-          });
+        let featuredImageId: string | null = null;
   
-          // Ensure only this image is featured
+        if ("id" in featuredImage) {
+          // Featured image is existing
+          featuredImageId = featuredImage.id;
+        } else {
+          // Featured image is a new file
+          // It's the first in uploadedImageIds if we placed it first in orderedImages above,
+          // or we can find it by matching file names or indexes if needed.
+          // Assuming it was placed first if it's new:
+          featuredImageId = uploadedImageIds[0] || null;
+        }
+  
+        if (featuredImageId) {
           await apiClient.post(`/accessory/${id}/images/ensure-featured`, {
-            featuredImageId: uploadedImage.data.data.id,
+            featuredImageId: featuredImageId,
           });
         }
       }
-  
-
-
+      
+      
 
       setCurrentStatus("Finalizing...");
       addNotification("success", "Accessory updated successfully!");
@@ -570,7 +593,7 @@ const EditAccessory = () => {
               label="Name"
               error={errors.Name}
             />
-                <InputField
+            <InputField
               id="accessory_title"
               type="text"
               placeholder="Accessory Title"
@@ -696,10 +719,10 @@ const EditAccessory = () => {
                 onClick={() => setShowPreview(true)}
               >
                 <img
-                  src={
+                   src={
                     "image_url" in featuredImage
-                      ? featuredImage.image_url
-                      : URL.createObjectURL(featuredImage)
+                      ? featuredImage.image_url as any
+                      : URL.createObjectURL(featuredImage) as any
                   }
                   className="w-full h-full object-cover rounded shadow-md"
                   alt="Featured"
@@ -732,7 +755,8 @@ const EditAccessory = () => {
           )}
 
           {/* Existing Images */}
-          {existingImages.filter((img) => !img.markedForDeletion).length > 0 && (
+          {existingImages.filter((img) => !img.markedForDeletion).length >
+            0 && (
             <>
               <h3 className="font-semibold text-lg mt-6">Existing Images:</h3>
               <div className="flex flex-wrap gap-4 mt-4">
@@ -775,7 +799,7 @@ const EditAccessory = () => {
                         "id" in featuredImage &&
                         featuredImage.id === image.id && (
                           <span className="absolute bottom-2 left-2 bg-custom-orange text-white text-xs px-2 py-1 rounded">
-                            <FontAwesomeIcon icon={faStar} /> 
+                            <FontAwesomeIcon icon={faStar} />
                           </span>
                         )}
                     </div>
@@ -799,7 +823,11 @@ const EditAccessory = () => {
                       alt="Product"
                       className="w-full h-full object-cover"
                       onClick={() =>
-                        openImagePreview(URL.createObjectURL(image), index, "new")
+                        openImagePreview(
+                          URL.createObjectURL(image),
+                          index,
+                          "new"
+                        )
                       }
                     />
                     <button
@@ -817,7 +845,11 @@ const EditAccessory = () => {
                       title="Preview"
                       onClick={(e) => {
                         e.stopPropagation();
-                        openImagePreview(URL.createObjectURL(image), index, "new");
+                        openImagePreview(
+                          URL.createObjectURL(image),
+                          index,
+                          "new"
+                        );
                       }}
                     >
                       <FontAwesomeIcon icon={faExpand} />
@@ -826,7 +858,7 @@ const EditAccessory = () => {
                       !("id" in featuredImage) &&
                       featuredImage === image && (
                         <span className="absolute bottom-2 left-2 bg-custom-orange text-white text-xs px-2 py-1 rounded">
-                          <FontAwesomeIcon icon={faStar} /> 
+                          <FontAwesomeIcon icon={faStar} />
                         </span>
                       )}
                   </div>
@@ -860,8 +892,12 @@ const EditAccessory = () => {
                     </button>
                     <button
                       className="btn-yellow text-white px-4 py-2 rounded"
-                      onClick={() =>
-                        setAsFeaturedImage(previewImage.index, previewImage.type)
+                      onClick={() =>{
+                        setAsFeaturedImage(
+                          previewImage.index,
+                          previewImage.type
+                        )
+                        closeImagePreview()}
                       }
                     >
                       <FontAwesomeIcon icon={faStar} /> Make Featured Image
@@ -872,7 +908,8 @@ const EditAccessory = () => {
                         if (previewImage.type === "new") {
                           removeImage(previewImage.index);
                         } else {
-                          const imageToRemove = existingImages[previewImage.index];
+                          const imageToRemove =
+                            existingImages[previewImage.index];
                           if (imageToRemove) {
                             removeExistingImage(imageToRemove.id);
                           }
@@ -894,6 +931,3 @@ const EditAccessory = () => {
 };
 
 export default EditAccessory;
-
-
-

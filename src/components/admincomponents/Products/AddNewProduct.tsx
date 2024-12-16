@@ -16,14 +16,18 @@ import {
 } from "@aws-sdk/client-s3";
 import HeadingBar from "../rootComponents/HeadingBar";
 import { useAdminContext } from "../../../hooks/useAdminContext";
-import { ProductSchema } from "./ProductSchema";
+import { ProductSchema, TImage } from "./ProductSchema";
 import { useNotification } from "../../../contexts/NotificationContext";
 import LoaderSpinner from "../../utils/LoaderSpinner";
 import Loader from "../../utils/Loader";
 
 import { apiClient } from "../../../utils/axios"; 
 
-
+interface ExtendedFile extends File {
+  markedForDeletion?: boolean;
+  id?: string;
+  image_url?: string;
+}
 // Initialize S3 client
 const s3 = new S3Client({
   region: import.meta.env.VITE_AWS_REGION,
@@ -39,7 +43,7 @@ const AddNewProduct = () => {
   const { accessories, setAccessories, setProducts, setLoading } = useAdminContext();
 
   // State for form inputs
-  const [formValues, setFormValues] = useState<IProductInputValues>({
+  const [formValues, setFormValues] = useState({
     productName: "",
     price: "",
     qty: "",
@@ -55,24 +59,26 @@ const AddNewProduct = () => {
   });
 
   // State for form errors
-  const [errors, setErrors] = useState<{ [key in keyof IProductInputValues]: string }>({
-    productName: "",
-    price: "",
-    gvwr: "",
-    qty: "",
-    liftCapacity: "",
-    Product_Description__c: "",
-    Product_Title__c: "",
-    Meta_Title__c: "",
-    Product_URL__c: "",
-    liftHeight: "",
-    container: "",
-    Down_Payment_Cost__c: "",
-  });
+  // const [errors, setErrors] = useState({
+  //   productName: "",
+  //   price: "",
+  //   gvwr: "",
+  //   qty: "",
+  //   liftCapacity: "",
+  //   Product_Description__c: "",
+  //   Product_Title__c: "",
+  //   Meta_Title__c: "",
+  //   Product_URL__c: "",
+  //   liftHeight: "",
+  //   container: "",
+  //   Down_Payment_Cost__c: "",
+  // });
+
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   // State for handling images
-  const [images, setImages] = useState<File[]>([]);
-  const [featuredImage, setFeaturedImage] = useState<File | null>(null);
+  const [images, setImages] = useState<ExtendedFile[]>([]);
+  const [featuredImage, setFeaturedImage] = useState<TImage | null|File>(null);
   const [previewImage, setPreviewImage] = useState<{ url: string; id: string; type: "new" | "existing" } | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -180,7 +186,7 @@ const AddNewProduct = () => {
    */
   const setAsFeaturedImage = (id: string, type: "new" | "existing") => {
     if (type === "new") {
-      const image = images.find((img, index) => index.toString() === id);
+      const image = images.find((_, index) => index.toString() === id);
       if (image) {
         setFeaturedImage(image);
       }
@@ -261,7 +267,7 @@ const AddNewProduct = () => {
 
     // Validate form inputs
     if (!validation.success) {
-      const newErrors: { [key in keyof IProductInputValues]: string } = {
+      const newErrors:any={
         productName: "",
         price: "",
         gvwr: "",
@@ -276,10 +282,10 @@ const AddNewProduct = () => {
         Down_Payment_Cost__c: "",
       };
       validation.error.issues.forEach((issue) => {
-        const fieldName = issue.path[0] as keyof IProductInputValues;
+        const fieldName = issue.path[0] 
         newErrors[fieldName] = issue.message;
       });
-      setErrors(newErrors);
+      setErrors(newErrors as any);
       return;
     }
 
@@ -390,14 +396,14 @@ const AddNewProduct = () => {
 
     try {
       const uploadedImages = await Promise.all(
-        images.map(async (image, index) => {
+        images.map(async (image) => {
           const imageUrl = await uploadImageToS3(image);
           const isFeatured = featuredImage === image;
           const response = await apiClient.post(`/product/product-images`, {
             product_id: productId,
             image_url: imageUrl,
             is_featured: isFeatured,
-            image_descripton:formValues.name
+            image_descripton:formValues.productName
           });
           return response.data.data; 
         })
@@ -807,7 +813,7 @@ const AddNewProduct = () => {
                       className="bg-gray-600 text-white px-4 py-2 rounded-md"
                       onClick={() => {
                         if (previewImage.type === "new") {
-                          const index = images.findIndex((img, idx) => idx.toString() === previewImage.id);
+                          const index = images.findIndex((_, idx) => idx.toString() === previewImage.id);
                           if (index !== -1) {
                             removeImage(index);
                           }

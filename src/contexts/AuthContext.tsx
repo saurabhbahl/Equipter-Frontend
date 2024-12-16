@@ -128,7 +128,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const loginAction = async (data: IUserLogin) => {
     try {
-      console.log(data);
+   
       const response = await axios.post(`${BackendUrl}/auth/login`, data);
       const res = response.data;
 
@@ -136,6 +136,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser({ id: res.userData.id, role: res.userData.role });
         setToken(res.token);
         localStorage.setItem("token", res.token);
+        window.location.reload()
         return res.success;
       } else {
         return res.message || "Login failed";

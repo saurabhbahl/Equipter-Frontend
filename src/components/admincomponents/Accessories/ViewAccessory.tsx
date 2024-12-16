@@ -14,7 +14,7 @@ import {
 import MetaComponent from "../../../utils/MetaComponent";
 import AccessoriesService from "./AccessoriesService";
 import { ErrorWithMessage } from "../../../types/componentsTypes";
-import { AccessoryImage } from "./AccessoriesSchema";
+import { IAccessoryImage } from "./AccessoriesSchema";
 
 export interface IAccessory {
   Id: string;
@@ -24,7 +24,7 @@ export interface IAccessory {
   Description__c: string;
   Price__c: string;
   Quantity__c: string;
-  images: AccessoryImage[];
+  images: IAccessoryImage[];
 }
 const ViewAccessory = () => {
   const [accessory, setAccessory] = useState<IAccessory | null>(null);
@@ -147,11 +147,11 @@ const ViewAccessory = () => {
                     key={currentImageIndex}
                   >
                     <img
-                      src={accessory.images[currentImageIndex].Image_URL__c}
+                      src={accessory.images[currentImageIndex].image_url}
                       alt={`Accessory image ${currentImageIndex + 1}`}
                       className="rounded w-full h-[650px] object-cover"
                     />
-                    {accessory.images[currentImageIndex].Is_Featured__c && (
+                    {accessory.images[currentImageIndex].is_featured && (
                       <span className="absolute top-4 left-4 bg-custom-orange text-white text-sm font-bold px-3 py-1 rounded shadow-md">
                         Featured
                       </span>
