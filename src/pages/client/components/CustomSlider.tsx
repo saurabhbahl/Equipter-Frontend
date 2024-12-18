@@ -8,7 +8,7 @@ function CustomSlider({ slides }:{slides:string[]}) {
 
   const settings = {
     centerMode: true,
-    centerPadding: "150px",
+    centerPadding: "0px",
     slidesToShow: 1,
     arrows: false,
     autoplay: true,
@@ -22,33 +22,45 @@ function CustomSlider({ slides }:{slides:string[]}) {
         {i === currentSlide && <div className="bg-orange-500 h-full"></div>}
       </div>
     ),
-    dotsClass: "slick-dots ",
-    responsive: [
-      {
-        breakpoint: 1200,
-        settings: {
-          centerPadding: "120px",
-        },
-      },
-      {
-        breakpoint: 1024,
-        settings: {
-          centerPadding: "100px",
-        },
-      },
-      {
-        breakpoint: 768,
-        settings: {
-          centerPadding: "60px",
-        },
-      },
-      {
-        breakpoint: 480,
-        settings: {
-          centerPadding: "20px",
-        },
-      },
-    ],
+    dotsClass: "slick-dots  ",
+    // responsive: [
+    //   {
+    //     breakpoint: 1536, // 2xl
+    //     settings: {
+    //       centerPadding: "50px",
+    //     },
+    //   },
+    //   {
+    //     breakpoint: 1280, // xl
+    //     settings: {
+    //       centerPadding: "60px",
+    //     },
+    //   },
+    //   {
+    //     breakpoint: 1024, // lg
+    //     settings: {
+    //       centerPadding: "40px",
+    //     },
+    //   },
+    //   {
+    //     breakpoint: 768, // md
+    //     settings: {
+    //       centerPadding: "30px",
+    //     },
+    //   },
+    //   {
+    //     breakpoint: 640, // sm
+    //     settings: {
+    //       centerPadding: "20px",
+    //     },
+    //   },
+    //   {
+    //     breakpoint: 480, // xs
+    //     settings: {
+    //       centerPadding: "10px",
+    //     },
+    //   },
+    // ],
   };
 
   return (
@@ -78,15 +90,17 @@ function CustomSlider({ slides }:{slides:string[]}) {
                 pointerEvents: "none",
                 border: "none",
               }}
-              // className={`w-full transition-all ease-in duration-300  max-h-[251px] min-h-[251px]   md:max-h-[351px] md:min-h-[351px] my-5 lg:m-0 xl:max-h-[611px] xl:min-h-[611px] lg:max-h-[511px] lg:min-h-[511px] object-contain ${
-              //   index === currentSlide ? "scale-105" : "scale-100"
-              // }`}
-              className={`
+        className={`
                 w-full transition-all ease-in duration-300 
-                max-h-[250px] min-h-[250px]        
-                md:max-h-[350px] md:min-h-[350px]  
-                lg:max-h-[550px] lg:min-h-[550px]  
-                xl:max-h-[650px] xl:min-h-[650px]
+                mx-auto
+                 max-h-[300px] min-h-[300px]        
+                
+               min-w-[300px]  max-w-[300px] 
+           
+                md:min-w-[450px] md:min-h-[350px] md:max-w-[450px] md:max-h-[350px]
+                lg:min-w-[526px] lg:min-h-[380px] lg:max-w-[526px] lg:max-h-[380px]
+                xl:min-w-[692px] xl:min-h-[526px] xl:max-w-[692px] xl:max-h-[526px]
+                2xl:min-w-[790px] 2xl:min-h-[626px] 2xl:max-w-[892px] 2xl:max-h-[626px]
                 object-contain 
                 ${index === currentSlide ? "scale-105" : "scale-100"}
               `}

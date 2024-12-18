@@ -99,7 +99,7 @@ html.modal-open footer {
   .slick-dots li.slick-active {
     @apply bg-orange-500 opacity-100;
   }
-  /* .main-heading h1{
+  .main-heading h1{
     @apply text-[#1e1e1e] 
     opacity-10 
     text-4xl 
@@ -108,7 +108,7 @@ html.modal-open footer {
     lg:text-[80px] lg:leading-[50px] 
     xl:text-[112px] xl:leading-[110px] 
     2xl:text-[132px] 2xl:leading-[130px];
-  } */
+  }
 
   .main-heading h1 {
     @apply text-[#1e1e1e] opacity-10 text-4xl text-center;
@@ -134,46 +134,30 @@ html.modal-open footer {
   display: block;
   height: 7px;
   margin-top: 5px;
-  width: 73px;
+  width: 30%;
 }
 
-/* .tabs-section .tab-title.active:after {
-  content: "";
-  background-color: #f6841f;
-  width: 100%;
-  height: 6px;
-  display: block;
-  margin-bottom: -1px;
+.custom-dots {
+  bottom: -30px;
 }
-.tabs-section .tab-title.active .tab-title-link {
-  color: #f6841f;
-} */
-
-.animate-scale {
-  display: inline-block;
-  animation: scale-up 0.3s ease-in-out;
+.custom-dots li.slick-active div {
+  background-color: #f97316; /* Tailwind's orange-500 */
 }
-
-@keyframes scale-up {
-  0% {
-    transform: scale(1.0);
-  }
-  50% {
-    transform: scale(1.1);
-  }
-  100% {
-    transform: scale(1.0);
-  }
+.custom-dots li div {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: #d1d5db; /* Tailwind's gray-300 */
+  transition: background-color 0.3s ease;
 }
-
 
 
 .form-checkbox {
   appearance: none;
-  width: 1.75rem;
-  height: 1.75rem;
-  border: 2px solid #ccc;
-  border-radius: 0.25rem;
+  width: 26px;
+  height: 26px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
   outline: none;
   cursor: pointer;
 }
