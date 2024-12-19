@@ -143,7 +143,7 @@ const ResetPassword = () => {
   }
   if (isTokenExp) {
     return (
-      <div className="max-w-xl my-36 mx-auto px-6 py-8 bg-white shadow-lg rounded-lg text-center">
+      <div className="max-w-xl my-16 mx-auto px-6 py-8 bg-white shadow-lg rounded-lg text-center">
         <FontAwesomeIcon
           icon={faHourglassEnd}
           className="text-red-500 text-4xl mb-4"
@@ -163,7 +163,7 @@ const ResetPassword = () => {
   }
   if (invalidToken) {
     return (
-      <div className="max-w-xl my-36 mx-auto px-6 py-8 bg-white shadow-lg rounded-lg text-center">
+      <div className="max-w-xl my-16 mx-auto px-6 py-8 bg-white shadow-lg rounded-lg text-center">
         <FontAwesomeIcon
           icon={faExclamationTriangle}
           className="text-red-500 text-4xl mb-4"
@@ -182,7 +182,7 @@ const ResetPassword = () => {
     );
   }
   return (
-    <div className="p-9 my-36 md:p-8 font-work-sans w-full">
+    <div className="p-9 my-16 md:p-8 font-work-sans w-full">
       {isPasswordReset ? (
         <div className="max-w-xl mx-auto px-6 py-8 bg-white shadow-lg rounded-lg text-center">
           <FontAwesomeIcon

@@ -51,7 +51,7 @@ const EditAccessory = () => {
   const { addNotification } = useNotification();
   const { setAccessories, setLoading: globalLoading } = useAdminContext();
 
-    // State for form inputs
+  // State for form inputs
   const [formValues, setFormValues] = useState<IAccessoriesInput>({
     Name: "",
     Accessory_URL__c: "",
@@ -62,26 +62,25 @@ const EditAccessory = () => {
     Quantity__c: "",
   });
 
-    // State for form errors
+  // State for form errors
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
-  
-  
+
   // State for handling submission
   const [isResSaving, setIsResSaving] = useState(false);
   const [currentStatus, setCurrentStatus] = useState("");
-  
+
   const [images, setImages] = useState<ExistingImage[]>([]);
   const [existingImages, setExistingImages] = useState<ExistingImage[]>([]);
   const [featuredImage, setFeaturedImage] = useState<any>(null);
- const [previewImage, setPreviewImage] = useState<PreviewImage | null>(null);
+  const [previewImage, setPreviewImage] = useState<PreviewImage | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [imageUploadError, setImageUploadError] = useState(false);
-  
+
   // loading state
   const [loading, setLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
 
-    // Refs for form and images container
+  // Refs for form and images container
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const formRef = useRef<HTMLFormElement | null>(null);
   const imagesRef = useRef<HTMLDivElement | null>(null);
@@ -200,7 +199,7 @@ const EditAccessory = () => {
       timeoutRef.current = setTimeout(() => {
         setImages((prevImages) => {
           const updatedImages = [...prevImages, ...files] as any;
-                // If no featured image is set, set the first new image as featured
+          // If no featured image is set, set the first new image as featured
           if (!featuredImage && updatedImages.length > 0) {
             setFeaturedImage(updatedImages[0]);
           }
@@ -214,19 +213,18 @@ const EditAccessory = () => {
   /**
    * Set a new featured image
    */
-  
-  
+
   const setAsFeaturedImage = (index: number, type: "new" | "existing") => {
     if (type === "new") {
       if (images[index]) {
-        setFeaturedImage(images[index] );
+        setFeaturedImage(images[index]);
       }
     } else {
       if (existingImages[index]) {
-        setFeaturedImage(existingImages[index] );
+        setFeaturedImage(existingImages[index]);
       }
     }
-  }
+  };
   /**
    * Remove a new image from the list
    */
@@ -241,7 +239,7 @@ const EditAccessory = () => {
           const nextExistingImage = existingImages.find(
             (img) => !img.markedForDeletion
           );
-          setFeaturedImage(nextExistingImage || null as any);
+          setFeaturedImage(nextExistingImage || (null as any));
         }
       }
       return updatedImages;
@@ -386,7 +384,7 @@ const EditAccessory = () => {
     const totalImages =
       images.length +
       existingImages.filter((img) => !img.markedForDeletion).length;
-console.log("Total",totalImages)
+    console.log("Total", totalImages);
     if (totalImages === 0) {
       setImageUploadError(true);
       addNotification("error", "At least one accessory image is required.");
@@ -457,20 +455,24 @@ console.log("Total",totalImages)
         // const orderedImages = featuredImage
         //   ? [featuredImage, ...images.filter((img) => img !== featuredImage)]
         //   : images;
-   // Arrange images so that the featured image (if new) is first for convenience
-   const orderedImages = featuredImage && !("id" in featuredImage)
-   ? [featuredImage, ...images.filter((img) => img !== featuredImage)]
-   : images;
+        // Arrange images so that the featured image (if new) is first for convenience
+        const orderedImages =
+          featuredImage && !("id" in featuredImage)
+            ? [featuredImage, ...images.filter((img) => img !== featuredImage)]
+            : images;
         for (const image of orderedImages) {
           const imageUrl = await uploadImageToS3(image);
           const isFeatured =
             featuredImage === image &&
             (featuredImage as File).name === image.name;
-            const uploadResponse=  await apiClient.post(`/accessory/accessory-images`, {
-            accessory_id: id,
-            image_url: imageUrl,
-            is_featured: isFeatured,
-          });
+          const uploadResponse = await apiClient.post(
+            `/accessory/accessory-images`,
+            {
+              accessory_id: id,
+              image_url: imageUrl,
+              is_featured: isFeatured,
+            }
+          );
           uploadedImageIds.push(uploadResponse.data.data.id);
         }
       }
@@ -502,10 +504,10 @@ console.log("Total",totalImages)
       //     });
       //   }
       // }
-      
+
       if (featuredImage) {
         let featuredImageId: string | null = null;
-  
+
         if ("id" in featuredImage) {
           // Featured image is existing
           featuredImageId = featuredImage.id;
@@ -516,15 +518,13 @@ console.log("Total",totalImages)
           // Assuming it was placed first if it's new:
           featuredImageId = uploadedImageIds[0] || null;
         }
-  
+
         if (featuredImageId) {
           await apiClient.post(`/accessory/${id}/images/ensure-featured`, {
             featuredImageId: featuredImageId,
           });
         }
       }
-      
-      
 
       setCurrentStatus("Finalizing...");
       addNotification("success", "Accessory updated successfully!");
@@ -570,7 +570,7 @@ console.log("Total",totalImages)
   return (
     <div className="bg-gray-100 min-h-screen">
       <HeadingBar buttonLink="/admin/accessories" heading="Edit Accessory" />
-      <div className="flex flex-col lg:flex-row w-[90%] gap-6 mx-auto my-10">
+      <div className="flex flex-col-reverse lg:flex-row w-[90%] gap-6 mx-auto my-10">
         {isResSaving && <Loader message={currentStatus} />}
         {/* Details section */}
         <form
@@ -585,8 +585,9 @@ console.log("Total",totalImages)
             <InputField
               id="name"
               type="text"
-              placeholder="Name"
+              placeholder="e.g. Side Extension Kit"
               name="Name"
+              maxlength={20} 
               value={formValues.Name}
               onChange={handleInputChange}
               classes="!w-full"
@@ -596,7 +597,8 @@ console.log("Total",totalImages)
             <InputField
               id="accessory_title"
               type="text"
-              placeholder="Accessory Title"
+              maxlength={20}
+              placeholder="e.g. Side Extension Kit"
               name="accessory_title"
               value={formValues.accessory_title}
               onChange={handleInputChange}
@@ -614,13 +616,14 @@ console.log("Total",totalImages)
               <textarea
                 value={formValues.Description__c}
                 name="Description__c"
+                maxLength={400}
                 onChange={handleInputChange}
                 className={`mt-1 font-arial block w-full text-xs p-2 border border-inset h-[111px] border-custom-gray-200 outline-none py-2 px-3 ${
                   errors.Description__c
                     ? "border-red-500"
                     : "border-custom-gray-200"
                 } `}
-                placeholder="Description"
+                placeholder="e.g. Control your debris even easier with the new Side Extension Kit. The kit increases the catch span of the Equipter 2000 and Equipter 2500, letting you keep your portable dump container in one spot longer."
               />
               <span className="text-red-500 h-6 text-[10px] font-bold">
                 {errors.Description__c}
@@ -629,7 +632,7 @@ console.log("Total",totalImages)
             <InputField
               id="price"
               type="number"
-              placeholder="Price"
+              placeholder="e.g. 485"
               name="Price__c"
               value={formValues.Price__c}
               onChange={handleInputChange}
@@ -640,7 +643,7 @@ console.log("Total",totalImages)
             <InputField
               id="quantity"
               type="number"
-              placeholder="Quantity"
+              placeholder="e.g. 100"
               name="Quantity__c"
               value={formValues.Quantity__c}
               onChange={handleInputChange}
@@ -659,7 +662,7 @@ console.log("Total",totalImages)
                 id="metatitle"
                 type="text"
                 label="Meta Title"
-                placeholder="Meta Title"
+                placeholder="e.g. Side Extension Kit"
                 name="Meta_Title__c"
                 value={formValues.Meta_Title__c}
                 onChange={handleInputChange}
@@ -670,7 +673,7 @@ console.log("Total",totalImages)
                 type="text"
                 readonly={true}
                 label="Accessory URL"
-                placeholder="Generated URL"
+                placeholder="e.g. side-extension-kit"
                 name="Accessory_URL__c"
                 value={formValues.Accessory_URL__c.toLowerCase()}
                 onChange={handleInputChange}
@@ -719,10 +722,10 @@ console.log("Total",totalImages)
                 onClick={() => setShowPreview(true)}
               >
                 <img
-                   src={
+                  src={
                     "image_url" in featuredImage
-                      ? featuredImage.image_url as any
-                      : URL.createObjectURL(featuredImage) as any
+                      ? (featuredImage.image_url as any)
+                      : (URL.createObjectURL(featuredImage) as any)
                   }
                   className="w-full h-full object-cover rounded shadow-md"
                   alt="Featured"
@@ -892,13 +895,13 @@ console.log("Total",totalImages)
                     </button>
                     <button
                       className="btn-yellow text-white px-4 py-2 rounded"
-                      onClick={() =>{
+                      onClick={() => {
                         setAsFeaturedImage(
                           previewImage.index,
                           previewImage.type
-                        )
-                        closeImagePreview()}
-                      }
+                        );
+                        closeImagePreview();
+                      }}
                     >
                       <FontAwesomeIcon icon={faStar} /> Make Featured Image
                     </button>
@@ -931,3 +934,4 @@ console.log("Total",totalImages)
 };
 
 export default EditAccessory;
+        

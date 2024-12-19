@@ -90,7 +90,7 @@ const LoginPage = () => {
   }
 
   return (
-    <div className="p-9 my-36 md:p-8 font-work-sans w-full">
+    <div className="p-9  md:p-8 font-work-sans w-full">
       <div className="max-w-xl mx-auto px-6 py-8 bg-white shadow-lg rounded-lg">
         <h2 className="lg:text-3xl text-2xl font-semibold text-custom-gray text-center uppercase mb-4">
           Login Here

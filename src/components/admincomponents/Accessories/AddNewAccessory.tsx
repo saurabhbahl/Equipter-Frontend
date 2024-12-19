@@ -427,7 +427,7 @@ const AddNewAccessory = () => {
   return (
     <div className="bg-[#F6F8FF] min-h-screen">
       <HeadingBar buttonLink="/admin/accessories" heading="Add New Accessory" />
-      <div className="flex flex-col lg:flex-row w-[90%] gap-6 mx-auto my-10">
+      <div className="flex flex-col-reverse lg:flex-row w-[90%] gap-6 mx-auto my-10">
         {isResSaving && <Loader message={currentStatus} />}
         {/* Details Section */}
         <form
@@ -440,8 +440,9 @@ const AddNewAccessory = () => {
           <div className="grid my-1 grid-cols-1 gap-5">
             <InputField
               id="name"
+              maxlength={20}
               type="text"
-              placeholder="Name"
+              placeholder="e.g. Side Extension Kit"
               name="Name"
               value={formValues.Name}
               onChange={handleInputChange}
@@ -452,7 +453,8 @@ const AddNewAccessory = () => {
             <InputField
               id="accessory_title"
               type="text"
-              placeholder="Accessory Title"
+              maxlength={20}
+              placeholder="e.g. Side Extension Kit"
               name="accessory_title"
               value={formValues.accessory_title}
               onChange={handleInputChange}
@@ -470,13 +472,14 @@ const AddNewAccessory = () => {
               <textarea
                 value={formValues.Description__c}
                 name="Description__c"
+                maxLength={400}
                 onChange={handleInputChange}
                 className={`mt-1 font-arial block w-full text-xs p-2 border border-inset h-[111px] border-custom-gray-200 outline-none py-2 px-3 ${
                   errors.Description__c
                     ? "border-red-500"
                     : "border-custom-gray-200"
                 } `}
-                placeholder="Description"
+                placeholder="e.g. Control your debris even easier with the new Side Extension Kit. The kit increases the catch span of the Equipter 2000 and Equipter 2500, letting you keep your portable dump container in one spot longer."
               />
               <span className="text-red-500 h-6 text-[10px] font-bold">
                 {errors.Description__c}
@@ -485,18 +488,18 @@ const AddNewAccessory = () => {
             <InputField
               id="price"
               type="string"
-              placeholder="Price"
+              placeholder="e.g. 485"
               name="Price__c"
               value={formValues.Price__c}
               onChange={handleInputChange}
               error={errors.Price__c as string}
               classes="!w-full"
-              label="Price"
+              label="Price "
             />
             <InputField
               id="quantity"
               type="string"
-              placeholder="Quantity"
+              placeholder="e.g. 100"
               name="Quantity__c"
               value={formValues.Quantity__c}
               onChange={handleInputChange}
@@ -514,7 +517,7 @@ const AddNewAccessory = () => {
                 id="metatitle"
                 type="text"
                 label="Meta Title"
-                placeholder="Enter Meta Title"
+                placeholder="e.g. Side Extension Kit"
                 name="Meta_Title__c"
                 value={formValues.Meta_Title__c}
                 onChange={handleInputChange}
@@ -525,7 +528,7 @@ const AddNewAccessory = () => {
                 type="text"
                 readonly
                 label="Accessory URL"
-                placeholder="Generated URL"
+                placeholder="e.g. side-extension-kit"
                 name="Accessory_URL__c"
                 value={formValues.Accessory_URL__c.toLowerCase()}
                 onChange={handleInputChange}

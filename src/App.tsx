@@ -5,13 +5,13 @@ import Router from "./components/utils/Router";
 
 export default function App() {
   return (
-    <>
+    <div className="max-w-[2500px] mx-auto ">
       <HelmetProvider>
         {/* <ErrorBoundary> */}
         <Header />
         <Router />
         {/* </ErrorBoundary> */}
       </HelmetProvider>
-    </>
+    </div>
   );
 }

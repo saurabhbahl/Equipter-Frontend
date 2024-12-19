@@ -1,6 +1,7 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import ReactDOM from "react-dom";
 import {
+  faEdit,
   faExpand,
   faStar,
   faTimes,
@@ -96,7 +97,6 @@ const EditProduct = () => {
 
   // State for form errors
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
-
 
   // State for handling images
   const [existingImages, setExistingImages] = useState<ExistingImage[]>([]);
@@ -246,8 +246,7 @@ const EditProduct = () => {
       }
       setErrors((prevErrors) => ({
         ...prevErrors,
-        Product_URL__c:
-          "",
+        Product_URL__c: "",
       }));
       return updatedValues;
     });
@@ -285,7 +284,7 @@ const EditProduct = () => {
     if (files.length > 0) {
       setIsUploading(true);
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
-      
+
       timeoutRef.current = setTimeout(() => {
         setNewImages((prevImages) => {
           const updatedImages = [...prevImages, ...files];
@@ -427,7 +426,7 @@ const EditProduct = () => {
     if (totalImages < 1) {
       setImageUploadError(true);
       addNotification("error", "At least one product image is required.");
-      return
+      return;
     } else {
       setImageUploadError(false);
     }
@@ -448,7 +447,9 @@ const EditProduct = () => {
 
     // Validate slug uniqueness
     try {
-      const slugCheckResponse = await apiClient.get(`/product/slug?slug=${slug}&id=${id}`);
+      const slugCheckResponse = await apiClient.get(
+        `/product/slug?slug=${slug}&id=${id}`
+      );
       if (!slugCheckResponse.data.success) {
         setErrors((prevErrors) => ({
           ...prevErrors,
@@ -464,7 +465,6 @@ const EditProduct = () => {
       return;
     }
 
-
     try {
       setIsResSaving(true);
       setCurrentStatus("Saving product details...");
@@ -477,7 +477,7 @@ const EditProduct = () => {
         gvwr: parseFloat(formValues.gvwr),
         stock_quantity: formValues.qty,
         lift_capacity: parseFloat(formValues.liftCapacity),
-        lift_height: parseFloat(formValues.liftHeight),
+        lift_height: formValues.liftHeight,
         meta_title: formValues.Meta_Title__c,
         product_url: formValues.Product_URL__c,
         description: formValues.Product_Description__c,
@@ -661,7 +661,7 @@ const EditProduct = () => {
   return (
     <div className="bg-gray-100 min-h-screen">
       <HeadingBar buttonLink="/admin/products" heading="Edit Product" />
-      <div className="flex flex-col lg:flex-row w-[90%] gap-6 mx-auto my-10">
+      <div className="flex flex-col-reverse lg:flex-row w-[90%] gap-6 mx-auto my-10">
         {isResSaving && <Loader message={currentStatus} />}
         {/* Details Section */}
         <form
@@ -678,7 +678,7 @@ const EditProduct = () => {
               id="productName"
               type="text"
               label="Product Name"
-              placeholder="Enter Product Name"
+              placeholder="e.g. 3300"
               name="productName"
               value={formValues.productName}
               onChange={handleInputChange}
@@ -688,7 +688,7 @@ const EditProduct = () => {
               id="productTitle"
               type="text"
               label="Product Title"
-              placeholder="Drivable Dumpster For Debris Removal"
+              placeholder="e.g. Drivable Dumpster For Debris Removal"
               name="Product_Title__c"
               value={formValues.Product_Title__c}
               onChange={handleInputChange}
@@ -705,13 +705,14 @@ const EditProduct = () => {
               <textarea
                 value={formValues.Product_Description__c}
                 name="Product_Description__c"
+                maxLength={600}
                 onChange={handleInputChange}
                 className={`mt-1 font-arial block w-full text-xs p-2 border border-inset h-[111px] border-custom-gray-200 outline-none py-2 px-3 ${
                   errors.Product_Description__c
                     ? "border-red-500"
                     : "border-custom-gray-200"
                 } `}
-                placeholder="Enter product description..."
+                placeholder={`e.g. Do you want the functionality of a boom lift with the transportability of a trailer? Equipter is excited to announce the release of the Equipter 7000! This unit can be towed to a job site and, using its telescoping boom, can lift a debris container 25'-5" or optional forks 23'-5". This one-hitch multi-tool is remote controlled and has multiple steering modes to position the 7000 right where it is needed....`}
               />
               {errors.Product_Description__c && (
                 <span className="text-red-500 h-6 text-[10px] font-bold">
@@ -724,7 +725,7 @@ const EditProduct = () => {
               id="price"
               label="Price"
               type="number"
-              placeholder="Enter Price"
+              placeholder="e.g. 15000"
               name="price"
               value={formValues.price}
               error={errors.price}
@@ -734,7 +735,7 @@ const EditProduct = () => {
               id="Down_Payment_Cost__c"
               type="number"
               label="Down Payment Cost"
-              placeholder="Enter Down Payment Cost"
+              placeholder="e.g. 2500"
               name="Down_Payment_Cost__c"
               value={formValues.Down_Payment_Cost__c}
               error={errors.Down_Payment_Cost__c}
@@ -744,7 +745,7 @@ const EditProduct = () => {
               id="qty"
               type="number"
               label="Stock"
-              placeholder="Enter Stock"
+              placeholder="e.g. 90"
               name="qty"
               value={formValues.qty}
               error={errors.qty}
@@ -756,9 +757,9 @@ const EditProduct = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
             <InputField
               id="gvwr"
-              label="GVWR"
               type="number"
-              placeholder="7,500 Lbs"
+              label="GVWR (lbs)"
+              placeholder="e.g. 7500"
               name="gvwr"
               value={formValues.gvwr}
               onChange={handleInputChange}
@@ -766,10 +767,10 @@ const EditProduct = () => {
             />
 
             <InputField
-              label="Lift Capacity"
+              label="Lift Capacity (lbs)"
+              placeholder="e.g. 7500"
               id="liftCapacity"
               type="number"
-              placeholder="4,000 Lbs"
               name="liftCapacity"
               error={errors.liftCapacity}
               value={formValues.liftCapacity}
@@ -781,9 +782,9 @@ const EditProduct = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
             <InputField
               id="liftHeight"
-              label="Lift Height"
-              type="number"
-              placeholder="12' 0\"
+              label="Lift Height (ft.in.)"
+              placeholder="e.g. 12.9 (12ft 9inches)"
+              type="text"
               name="liftHeight"
               error={errors.liftHeight}
               value={formValues.liftHeight}
@@ -791,10 +792,10 @@ const EditProduct = () => {
             />
 
             <InputField
-              label="Container"
+              label="Container (cu. yds.)"
+              placeholder="e.g. 4.1"
               id="container"
               type="text"
-              placeholder="4.1 Cu Yds"
               name="container"
               error={errors.container}
               value={formValues.container}
@@ -813,7 +814,7 @@ const EditProduct = () => {
               id="metatitle"
               type="text"
               label="Meta Title"
-              placeholder="Enter Meta Title"
+              placeholder="e.g. Equipter 3300"
               name="Meta_Title__c"
               value={formValues.Meta_Title__c}
               onChange={handleInputChange}
@@ -824,7 +825,7 @@ const EditProduct = () => {
               type="text"
               readonly
               label="Product URL"
-              placeholder="Generated URL"
+              placeholder="e.g. equipter-3300"
               name="Product_URL__c"
               value={formValues.Product_URL__c.toLowerCase()}
               onChange={handleInputChange}
@@ -844,16 +845,25 @@ const EditProduct = () => {
               >
                 <input
                   type="checkbox"
-                  className="h-5 w-5 text-blue-600"
+                  className="form-checkbox text-black w-fit h-fit !p-0"
                   checked={selectedAccessoryIds.includes(accessory.id)}
                   onChange={() => handleAccessoryChange(accessory.id)}
                 />
-                <span className="capitalize text-gray-700">
+                <div className="capitalize flex w-full justify-between text-gray-700">
+                  <div>
                   {accessory.name} -{" "}
+                    
                   <span className="text-gray-600 font-bold">
                     ${Number(accessory.price).toFixed(2)}
                   </span>
-                </span>
+                  </div>
+                  <span className="cursor-pointer hover:scale-105" onClick={()=>{
+          
+                    navigate(`/admin/accessories/edit/${accessory.id}`)
+                  }}>
+                    <FontAwesomeIcon icon={faEdit}/>
+                  </span>
+                </div>
               </label>
             ))}
           </div>

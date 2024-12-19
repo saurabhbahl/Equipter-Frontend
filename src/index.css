@@ -154,8 +154,8 @@ html.modal-open footer {
 
 .form-checkbox {
   appearance: none;
-  width: 26px;
-  height: 26px;
+  width: 20px;
+  height: 20px;
   border: 1px solid #ccc;
   border-radius: 4px;
   outline: none;
@@ -169,12 +169,12 @@ html.modal-open footer {
 .form-checkbox:checked::before {
   content: "";
   position: absolute;
-  top: 2px;
+  top: 0px;
   left: 0;
   right: 0;
   margin: auto;
-  width: 0.5rem;
-  height: 1rem;
+  width: 0.35rem;
+  height: 0.9rem;
   border: solid black;
   border-width: 0 2px 2px 0;
   transform: rotate(45deg);

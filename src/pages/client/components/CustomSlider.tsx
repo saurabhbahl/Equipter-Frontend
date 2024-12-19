@@ -8,7 +8,7 @@ function CustomSlider({ slides }:{slides:string[]}) {
 
   const settings = {
     centerMode: true,
-    centerPadding: "0px",
+    centerPadding: "90px",
     slidesToShow: 1,
     arrows: false,
     autoplay: true,
@@ -23,44 +23,50 @@ function CustomSlider({ slides }:{slides:string[]}) {
       </div>
     ),
     dotsClass: "slick-dots  ",
-    // responsive: [
-    //   {
-    //     breakpoint: 1536, // 2xl
-    //     settings: {
-    //       centerPadding: "50px",
-    //     },
-    //   },
-    //   {
-    //     breakpoint: 1280, // xl
-    //     settings: {
-    //       centerPadding: "60px",
-    //     },
-    //   },
-    //   {
-    //     breakpoint: 1024, // lg
-    //     settings: {
-    //       centerPadding: "40px",
-    //     },
-    //   },
-    //   {
-    //     breakpoint: 768, // md
-    //     settings: {
-    //       centerPadding: "30px",
-    //     },
-    //   },
-    //   {
-    //     breakpoint: 640, // sm
-    //     settings: {
-    //       centerPadding: "20px",
-    //     },
-    //   },
-    //   {
-    //     breakpoint: 480, // xs
-    //     settings: {
-    //       centerPadding: "10px",
-    //     },
-    //   },
-    // ],
+    responsive: [
+      {
+        breakpoint: 1536, // 2xl
+        settings: {
+          centerPadding: "0px",
+          slidesToShow: 1,
+        },
+      },
+      {
+        breakpoint: 1280, // xl
+        settings: {
+          centerPadding: "60px",
+          slidesToShow: 1,
+        },
+      },
+      {
+        breakpoint: 1024, // lg
+        settings: {
+          centerPadding: "40px",
+          slidesToShow: 1,
+        },
+      },
+      {
+        breakpoint: 768, // md
+        settings: {
+          centerPadding: "30px",
+          slidesToShow: 1,
+        },
+      },
+      {
+        breakpoint: 640, // sm
+        settings: {
+          centerPadding: "0px",
+          slidesToShow: 1,
+        },
+      },
+      {
+        breakpoint: 480, // xs
+        settings: {
+          centerPadding: "5px",
+          slidesToShow: 1,
+        },
+      },
+    ],
   };
 
   return (
@@ -75,6 +81,7 @@ function CustomSlider({ slides }:{slides:string[]}) {
           <div
             key={index}
             className={` ${
+              
               index === currentSlide
                 ? "opacity-100 scale-105 z-10"
                 : "scale-60 z-0 opacity-30"
@@ -99,8 +106,8 @@ function CustomSlider({ slides }:{slides:string[]}) {
            
                 md:min-w-[450px] md:min-h-[350px] md:max-w-[450px] md:max-h-[350px]
                 lg:min-w-[526px] lg:min-h-[380px] lg:max-w-[526px] lg:max-h-[380px]
-                xl:min-w-[692px] xl:min-h-[526px] xl:max-w-[692px] xl:max-h-[526px]
-                2xl:min-w-[790px] 2xl:min-h-[626px] 2xl:max-w-[892px] 2xl:max-h-[626px]
+                xl:min-w-[602px] xl:min-h-[526px] xl:max-w-[602px] xl:max-h-[526px]
+             lg:p-5
                 object-contain 
                 ${index === currentSlide ? "scale-105" : "scale-100"}
               `}

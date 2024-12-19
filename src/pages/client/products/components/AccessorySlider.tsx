@@ -3,6 +3,7 @@ import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import { IAccessory } from "../../types/ClientSchemas";
+import { truncateText } from "../../../../utils/helpers";
 
 interface IAccessorySliderProps {
   accessories: IAccessory[];
@@ -30,16 +31,14 @@ function AccessorySlider({
 }: IAccessorySliderProps) {
   const [flash, setFlash] = useState(false);
 
-
   const handleAddAccessory = (currentAccessory: IAccessory) => {
     setSelections((prev: SelectionsType) => {
       const prevAccessory = prev.accessories[currentAccessory.id] || {
         selected: false,
         qty: 0,
       };
-   
+
       if (prevAccessory.qty >= 5) {
-       
         return prev;
       }
       if (prevAccessory.selected == false) {
@@ -70,7 +69,6 @@ function AccessorySlider({
     setTimeout(() => setFlash(false), 500);
   };
 
-
   const settings = {
     className: "center",
     arrows: false,
@@ -96,13 +94,6 @@ function AccessorySlider({
       },
     ],
   };
-  function truncateText(text: string, wordLimit: number): string {
-    const words = text.split(" ");
-    if (words.length > wordLimit) {
-      return words.slice(0, wordLimit).join(" ") + "...";
-    }
-    return text;
-  }
 
   return (
     <div className="fixed z-30 inset-0 backdrop-blur-sm bg-black bg-opacity-10 flex items-center justify-center p-4">
@@ -136,16 +127,16 @@ function AccessorySlider({
                     </div>
 
                     {/* Text and Button Section */}
-                    <div className="w-full md:w-2/5  flex flex-col items-start justify-center p-3 lg:space-x-6 space-y-2">
-                      <h3 className="font-semibold capitalize text-md lg:text-xl 2xl:text-2xl">
-                        {acc.name}
+                    <div className="font-roboto w-full md:w-2/5  flex flex-col items-start justify-center p-3 lg:space-y-3 space-y-2">
+                      <h3 className="font-semibold capitalize text-md lg:text-lg 2xl:text-xl">
+                        {truncateText(acc.name, 20)}
                       </h3>
-                      <p className="text-sm sm:text-base text-gray-600">
-                      {truncateText(acc.description, 50)}.....
+                      <p className="text-sm lg:text-md 2xl:text-lg text-gray-600">
+                        {truncateText(acc.description, 50)}.....
                       </p>
                       {isSelected && (
                         <p
-                          className={`text-sm font-semibold mb-2 ${
+                          className={`text-xs font-semibold mb-1 ${
                             flash
                               ? "animate-pulse text-green-600"
                               : "text-black"
@@ -173,4 +164,3 @@ function AccessorySlider({
 }
 
 export default AccessorySlider;
-

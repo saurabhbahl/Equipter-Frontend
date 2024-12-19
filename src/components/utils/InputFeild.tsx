@@ -6,11 +6,12 @@ interface InputFieldProps {
   readonly?:boolean;
   placeholder?: string;
   required?: boolean;
-  value?: string;
+  value?: string|number;
   checked?: boolean;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   error?: string;
   classes?: string;
+  maxlength?:number;
 }
 
 const InputField = ({
@@ -18,6 +19,7 @@ const InputField = ({
   type,
   id,
   name,
+  maxlength,
   required = false,
   value,
   onChange,
@@ -35,6 +37,7 @@ const InputField = ({
         </label>
         <input
           type={type}
+          {...(maxlength && { maxLength: maxlength })}
           id={id}
           readOnly={readonly}
           name={name}

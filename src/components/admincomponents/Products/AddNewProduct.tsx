@@ -10,10 +10,7 @@ import { useNavigate } from "react-router-dom";
 import { useState, ChangeEvent, useRef, useEffect } from "react";
 import InputField from "../../utils/InputFeild";
 
-import {
-  S3Client,
-  PutObjectCommand,
-} from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import HeadingBar from "../rootComponents/HeadingBar";
 import { useAdminContext } from "../../../hooks/useAdminContext";
 import { ProductSchema, TImage } from "./ProductSchema";
@@ -21,7 +18,7 @@ import { useNotification } from "../../../contexts/NotificationContext";
 import LoaderSpinner from "../../utils/LoaderSpinner";
 import Loader from "../../utils/Loader";
 
-import { apiClient } from "../../../utils/axios"; 
+import { apiClient } from "../../../utils/axios";
 
 interface ExtendedFile extends File {
   markedForDeletion?: boolean;
@@ -40,7 +37,12 @@ const s3 = new S3Client({
 const AddNewProduct = () => {
   const navigate = useNavigate();
   const { addNotification } = useNotification();
-  const { accessories, setAccessories, setProducts, setLoading } = useAdminContext();
+  const {
+    accessories,
+    setAccessories,
+    setProducts,
+    setLoading,
+  } = useAdminContext();
 
   // State for form inputs
   const [formValues, setFormValues] = useState({
@@ -78,8 +80,14 @@ const AddNewProduct = () => {
 
   // State for handling images
   const [images, setImages] = useState<ExtendedFile[]>([]);
-  const [featuredImage, setFeaturedImage] = useState<TImage | null|File>(null);
-  const [previewImage, setPreviewImage] = useState<{ url: string; id: string; type: "new" | "existing" } | null>(null);
+  const [featuredImage, setFeaturedImage] = useState<TImage | null | File>(
+    null
+  );
+  const [previewImage, setPreviewImage] = useState<{
+    url: string;
+    id: string;
+    type: "new" | "existing";
+  } | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [imageUploadError, setImageUploadError] = useState(false);
@@ -89,7 +97,9 @@ const AddNewProduct = () => {
   const [currentStatus, setCurrentStatus] = useState("");
 
   // State for selected accessories
-  const [selectedAccessoryIds, setSelectedAccessoryIds] = useState<string[]>([]);
+  const [selectedAccessoryIds, setSelectedAccessoryIds] = useState<string[]>(
+    []
+  );
 
   // Refs for form and images container
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -130,11 +140,10 @@ const AddNewProduct = () => {
           .replace(/[^a-z0-9\s-]/g, "")
           .replace(/\s+/g, "-");
 
-          setErrors((prevErrors) => ({
-            ...prevErrors,
-            Product_URL__c:
-              "",
-          }));
+        setErrors((prevErrors) => ({
+          ...prevErrors,
+          Product_URL__c: "",
+        }));
       }
 
       return updatedValues;
@@ -247,7 +256,9 @@ const AddNewProduct = () => {
     };
     const command = new PutObjectCommand(uploadParams);
     await s3.send(command);
-    return `https://${import.meta.env.VITE_AWS_BUCKET_NAME}.s3.${import.meta.env.VITE_AWS_REGION}.amazonaws.com/${uploadParams.Key}`;
+    return `https://${import.meta.env.VITE_AWS_BUCKET_NAME}.s3.${
+      import.meta.env.VITE_AWS_REGION
+    }.amazonaws.com/${uploadParams.Key}`;
   };
 
   /**
@@ -257,21 +268,18 @@ const AddNewProduct = () => {
     e.preventDefault();
     const validation = ProductSchema.safeParse(formValues);
 
-    
     // Check if at least one image is uploaded
     if (images.length === 0) {
       setImageUploadError(true);
-  
-
     }
 
     // Validate form inputs
     if (!validation.success) {
-      const newErrors:any={
+      const newErrors: any = {
         productName: "",
         price: "",
         gvwr: "",
-        qty:"",
+        qty: "",
         liftCapacity: "",
         Product_Description__c: "",
         Product_Title__c: "",
@@ -282,7 +290,7 @@ const AddNewProduct = () => {
         Down_Payment_Cost__c: "",
       };
       validation.error.issues.forEach((issue) => {
-        const fieldName = issue.path[0] 
+        const fieldName = issue.path[0];
         newErrors[fieldName] = issue.message;
       });
       setErrors(newErrors as any);
@@ -300,7 +308,9 @@ const AddNewProduct = () => {
 
     // Validate slug uniqueness
     try {
-      const slugCheckResponse = await apiClient.get(`/product/slug?slug=${slug}`);
+      const slugCheckResponse = await apiClient.get(
+        `/product/slug?slug=${slug}`
+      );
       if (!slugCheckResponse.data.success) {
         setErrors((prevErrors) => ({
           ...prevErrors,
@@ -326,7 +336,7 @@ const AddNewProduct = () => {
         price: parseFloat(formValues.price),
         downpayment_cost: parseFloat(formValues.Down_Payment_Cost__c),
         gvwr: parseFloat(formValues.gvwr),
-        stock_quantity:formValues.qty,
+        stock_quantity: formValues.qty,
         lift_capacity: parseFloat(formValues.liftCapacity),
         lift_height: parseFloat(formValues.liftHeight),
         meta_title: formValues.Meta_Title__c,
@@ -336,9 +346,12 @@ const AddNewProduct = () => {
         container_capacity: formValues.container,
       };
 
-      const createProductResponse = await apiClient.post(`/product`, productData);
-      const newProduct = createProductResponse.data.data; 
-      console.log(newProduct)
+      const createProductResponse = await apiClient.post(
+        `/product`,
+        productData
+      );
+      const newProduct = createProductResponse.data.data;
+      console.log(newProduct);
 
       // Step 2: Attach accessories
       setCurrentStatus("Attaching accessories...");
@@ -403,14 +416,16 @@ const AddNewProduct = () => {
             product_id: productId,
             image_url: imageUrl,
             is_featured: isFeatured,
-            image_descripton:formValues.productName
+            image_descripton: formValues.productName,
           });
-          return response.data.data; 
+          return response.data.data;
         })
       );
 
       // Ensure at least one image is featured
-      const hasFeaturedImage = uploadedImages.some((img: any) => img.is_featured);
+      const hasFeaturedImage = uploadedImages.some(
+        (img: any) => img.is_featured
+      );
       if (!hasFeaturedImage && uploadedImages.length > 0) {
         // Set the first uploaded image as featured
         await apiClient.put(`/product/product-images/${uploadedImages[0].id}`, {
@@ -444,13 +459,12 @@ const AddNewProduct = () => {
     if (accessories.length === 0) {
       fetchAccessoriesData();
     }
-   
   }, []);
 
   return (
     <div className="bg-gray-100 min-h-screen">
       <HeadingBar buttonLink="/admin/products" heading="Add New Product" />
-      <div className="flex flex-col lg:flex-row w-[90%] gap-6 mx-auto my-10">
+      <div className="flex flex-col-reverse lg:flex-row w-[90%] gap-6 mx-auto my-10">
         {isResSaving && <Loader message={currentStatus} />}
         {/* Details Section */}
         <form
@@ -467,7 +481,7 @@ const AddNewProduct = () => {
               id="productName"
               type="text"
               label="Product Name"
-              placeholder="Enter Product Name"
+              placeholder="e.g. 3300"
               name="productName"
               value={formValues.productName}
               onChange={handleInputChange}
@@ -477,7 +491,7 @@ const AddNewProduct = () => {
               id="productTitle"
               type="text"
               label="Product Title"
-              placeholder="Drivable Dumpster For Debris Removal"
+              placeholder="e.g. Drivable Dumpster For Debris Removal"
               name="Product_Title__c"
               value={formValues.Product_Title__c}
               onChange={handleInputChange}
@@ -495,12 +509,13 @@ const AddNewProduct = () => {
                 value={formValues.Product_Description__c}
                 name="Product_Description__c"
                 onChange={handleInputChange}
+                maxLength={600}
                 className={`mt-1 font-arial block w-full text-xs p-2 border h-[111px] border-custom-gray-200 outline-none ${
                   errors.Product_Description__c
                     ? "border-red-500"
                     : "border-custom-gray-200"
                 }`}
-                placeholder="Enter product description..."
+                placeholder={`e.g. Do you want the functionality of a boom lift with the transportability of a trailer? Equipter is excited to announce the release of the Equipter 7000! This unit can be towed to a job site and, using its telescoping boom, can lift a debris container 25'-5" or optional forks 23'-5". This one-hitch multi-tool is remote controlled and has multiple steering modes to position the 7000 right where it is needed....`}
               />
               {errors.Product_Description__c && (
                 <span className="text-red-500 h-6 text-[10px] font-bold">
@@ -513,7 +528,7 @@ const AddNewProduct = () => {
               id="price"
               label="Price"
               type="number"
-              placeholder="Enter Price"
+              placeholder="e.g. 15000"
               name="price"
               value={formValues.price}
               error={errors.price}
@@ -523,7 +538,7 @@ const AddNewProduct = () => {
               id="Down_Payment_Cost__c"
               type="number"
               label="Down Payment Cost"
-              placeholder="Enter Down Payment Cost"
+              placeholder="e.g. 2500"
               name="Down_Payment_Cost__c"
               value={formValues.Down_Payment_Cost__c}
               error={errors.Down_Payment_Cost__c}
@@ -533,7 +548,7 @@ const AddNewProduct = () => {
               id="qty"
               type="number"
               label="Stock"
-              placeholder="Enter Stock"
+              placeholder="e.g. 90"
               name="qty"
               value={formValues.qty}
               error={errors.qty}
@@ -545,9 +560,9 @@ const AddNewProduct = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
             <InputField
               id="gvwr"
-              label="GVWR"
+              label="GVWR (lbs)"
+              placeholder="e.g. 7500"
               type="number"
-              placeholder="7,500 Lbs"
               name="gvwr"
               value={formValues.gvwr}
               onChange={handleInputChange}
@@ -555,10 +570,10 @@ const AddNewProduct = () => {
             />
 
             <InputField
-              label="Lift Capacity"
+              label="Lift Capacity (lbs)"
+              placeholder="e.g. 7500"
               id="liftCapacity"
               type="number"
-              placeholder="4,000 Lbs"
               name="liftCapacity"
               error={errors.liftCapacity}
               value={formValues.liftCapacity}
@@ -570,9 +585,9 @@ const AddNewProduct = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
             <InputField
               id="liftHeight"
-              label="Lift Height"
-              type="number"
-              placeholder="12' 0\"
+              label="Lift Height (ft.in.)"
+              placeholder="e.g. 12.9 (12ft 9inches)"
+              type="text"
               name="liftHeight"
               error={errors.liftHeight}
               value={formValues.liftHeight}
@@ -580,10 +595,10 @@ const AddNewProduct = () => {
             />
 
             <InputField
-              label="Container"
+              label="Container (cu. yds.)"
+              placeholder="e.g. 4.1"
               id="container"
               type="text"
-              placeholder="4.1 Cu Yds"
               name="container"
               error={errors.container}
               value={formValues.container}
@@ -602,7 +617,7 @@ const AddNewProduct = () => {
               id="metatitle"
               type="text"
               label="Meta Title"
-              placeholder="Enter Meta Title"
+              placeholder="e.g. Equipter 3300"
               name="Meta_Title__c"
               value={formValues.Meta_Title__c}
               onChange={handleInputChange}
@@ -613,7 +628,7 @@ const AddNewProduct = () => {
               type="text"
               readonly
               label="Product URL"
-              placeholder="Generated URL"
+              placeholder="e.g. equipter-3300"
               name="Product_URL__c"
               value={formValues.Product_URL__c.toLowerCase()}
               onChange={handleInputChange}
@@ -735,7 +750,11 @@ const AddNewProduct = () => {
                       alt="Product"
                       className="w-full h-full object-cover"
                       onClick={() =>
-                        openImagePreview(URL.createObjectURL(image), index.toString(), "new")
+                        openImagePreview(
+                          URL.createObjectURL(image),
+                          index.toString(),
+                          "new"
+                        )
                       }
                     />
                     <button
@@ -764,7 +783,7 @@ const AddNewProduct = () => {
                     </button>
                     {featuredImage === image && (
                       <span className="absolute bottom-2 left-2 bg-custom-orange text-white text-xs px-2 py-1 rounded">
-                        <FontAwesomeIcon icon={faStar} /> 
+                        <FontAwesomeIcon icon={faStar} />
                       </span>
                     )}
                   </div>
@@ -778,9 +797,7 @@ const AddNewProduct = () => {
             ReactDOM.createPortal(
               <div
                 className={`fixed inset-0 h-full p-5 bg-black bg-opacity-40 flex items-center justify-center transition-all duration-500 ${
-                  showPreview
-                    ? "opacity-100"
-                    : "opacity-0 pointer-events-none"
+                  showPreview ? "opacity-100" : "opacity-0 pointer-events-none"
                 }`}
               >
                 <div className="h-[90%] max-w-[90%] bg-gray-300 p-3 rounded">
@@ -801,10 +818,7 @@ const AddNewProduct = () => {
                     <button
                       className="btn-yellow text-white px-4 py-2 rounded"
                       onClick={() =>
-                        setAsFeaturedImage(
-                          previewImage.id,
-                          previewImage.type
-                        )
+                        setAsFeaturedImage(previewImage.id, previewImage.type)
                       }
                     >
                       <FontAwesomeIcon icon={faStar} /> Make Featured Image
@@ -813,7 +827,9 @@ const AddNewProduct = () => {
                       className="bg-gray-600 text-white px-4 py-2 rounded-md"
                       onClick={() => {
                         if (previewImage.type === "new") {
-                          const index = images.findIndex((_, idx) => idx.toString() === previewImage.id);
+                          const index = images.findIndex(
+                            (_, idx) => idx.toString() === previewImage.id
+                          );
                           if (index !== -1) {
                             removeImage(index);
                           }

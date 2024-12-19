@@ -24,6 +24,7 @@ export interface IAccessory {
   description: string;
   meta_title: string;
   accessory_title: string;
+  slides?: string[];
   accessory_url: string;
   price: string;
   stock_quantity: string;

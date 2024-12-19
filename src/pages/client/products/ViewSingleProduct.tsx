@@ -75,11 +75,12 @@ const ViewSingleProduct = () => {
       const data = resData.data.data;
       setProductDetails(data);
       setLoading(false);
-
+      const hieghtFt = data.lift_height.split(".")[0];
+      const hieghtInch = data.lift_height.split(".")[1];
       setBuildList([
         { title: "GVWR", value: `${data.gvwr} lbs` },
         { title: "Lift Capacity", value: `${data.lift_capacity} lbs` },
-        { title: "Lift Height", value: `${data.lift_height}` },
+        { title: "Lift Height", value: `${hieghtFt}'-${hieghtInch}"` },
         { title: "Container", value: `${data.container_capacity} cu yds` },
       ]);
 
@@ -254,7 +255,7 @@ const ViewSingleProduct = () => {
               </div>
 
               {/* Build lists content */}
-              <div className="grid grid-cols-4   lg:mt-10 text-left w-full">
+              <div className="grid grid-cols-4 text-left w-full">
                 {buildList.map((item, index) => (
                   <div key={index} className="w-full my-2 lg:m-0">
                     <h4 className="font-roboto text-[10px] lg:text-lg">
@@ -295,45 +296,7 @@ const ViewSingleProduct = () => {
             onClose={() => setShowAccessories(false)}
             selections={selections}
             setSelections={setSelections}
-          />
-        //   <div className="fixed z-30 inset-0 backdrop-blur-sm bg-black bg-opacity-10 flex items-center justify-center p-4 hidden ">
-        //   {/* Close Button */}
-        //   <button className="absolute z-50 top-4 right-4 sm:top-6 sm:right-6 text-black text-2xl hover:text-gray-600 font-bold">
-        //     X
-        //   </button>
-        
-        //   {/* Modal Container */}
-        //   <div className="relative w-full max-w-4xl h-auto sm:h-4/5 md:h-auto m-auto">
-        //     <div className="flex flex-col md:flex-row h-full bg-white  shadow-lg overflow-hidden">
-              
-        //       {/* Image Section */}
-        //       <div className="w-full md:w-3/5 h-auto flex items-center justify-center ">
-        //         <img
-        //           src="https://equipter.s3.us-east-1.amazonaws.com/images/products/1734332529133-EQ5400-220818_Equipter_039-600x400-9801ebf.webp"
-        //           alt="Product Image"
-        //           className="w-full h-full object-contain"
-        //         />
-        //       </div>
-        
-        //       {/* Text and Button Section */}
-        //       <div className="w-full md:w-2/5 flex flex-col items-start justify-center p-6 space-y-4">
-        //         <h3 className="font-semibold capitalize text-lg sm:text-xl md:text-2xl">
-        //           Lorem ipsum dolor sit amet.
-        //         </h3>
-        //         <p className="text-sm sm:text-base text-gray-600">
-        //           Lorem ipsum dolor sit, amet consectetur adipisicing elit. Nisi fugit quae quaerat non facere debitis. Obcaecati temporibus aliquid quia corrupti asperiores natus, autem soluta id! Lorem ipsum dolor sit amet consectetur adipisicing elit. Natus repellendus optio blanditiis obcaecati in laborum.
-        //         </p>
-        //         <button className="btn-yellow text-xs sm:text-sm px-4 py-2 self-end">
-        //           Add
-        //         </button>
-        //       </div>
-        
-        //     </div>
-        //   </div>
-        // </div>
-        
-          
-          ,
+          />,
           document.body
         )}
     </>

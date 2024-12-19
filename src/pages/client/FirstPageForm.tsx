@@ -1,18 +1,38 @@
+import { useEffect } from "react";
 import InputField from "../../components/utils/InputFeild";
 import SelectField from "../../components/utils/SelectFeild";
 import { useClientContext } from "../../hooks/useClientContext";
 
 const FirstPageForm = () => {
-  const { firstPageForm, setFirstPageForm } = useClientContext();
+  const {
+    firstPageForm,
+    setFirstPageForm,
+    saveToLocalStorage,
+    loadFromLocalStorage,
+  } = useClientContext();
+  
+  const STORAGE_KEY = "firstPageForm";
 
+  const EXPIRATION_TIME = 7 * 24 * 60 * 60 * 1000;
+  
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFirstPageForm({ ...firstPageForm, [e.target.name]: e.target.value });
+    const updatedForm = { ...firstPageForm, [e.target.name]: e.target.value };
+    setFirstPageForm(updatedForm);
+    saveToLocalStorage(updatedForm, STORAGE_KEY,EXPIRATION_TIME);
   };
 
   const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setFirstPageForm({ ...firstPageForm, [e.target.name]: e.target.value });
+    const updatedForm = { ...firstPageForm, [e.target.name]: e.target.value };
+    setFirstPageForm(updatedForm);
+    saveToLocalStorage(updatedForm, STORAGE_KEY,EXPIRATION_TIME);
   };
-
+  
+  useEffect(() => {
+    const savedData = loadFromLocalStorage(STORAGE_KEY);
+    if (savedData) {
+      setFirstPageForm({ ...savedData, isFormFilled: false });
+    }
+  }, []);
   const IndustryFeilds = [
     { value: "residential_roofing", label: "Residential Roofing" },
     { value: "commercial_roofing", label: "Commercial Roofing" },
@@ -172,11 +192,7 @@ const FirstPageForm = () => {
                 Equipter uses your contact information to discuss our products
                 and services and may contact you via email, phone, or SMS.
                 Unsubscribe options and privacy details are in our{" "}
-                <a
-                  href="#"
-                  target="_blank"
-                className="text-custom-orange"
-                >
+                <a href="#" target="_blank" className="text-custom-orange">
                   Privacy Policy
                 </a>
                 .

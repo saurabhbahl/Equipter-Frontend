@@ -44,7 +44,7 @@ const CashTab = ({
 }: ICashTabProps) => {
   const productName = productDetails.name;
   
-console.log(selections)
+
   return (
     <div className="">
       {/* Price Table */}
@@ -106,7 +106,7 @@ console.log(selections)
             id="baseQty"
             classes="flex-1 max-w-14 h-auto"
             type="number"
-            value={(selections.baseUnitQty as number) || 1}
+            value={(selections.baseUnitQty) || 1}
             onChange={(e) => {
               
               const value = parseInt(e.target.value, 10);
@@ -143,12 +143,12 @@ console.log(selections)
                   <div className="flex flex-row items-center justify-between gap-2">
                     {/* Accessory Checkbox & Label */}
                     <div className="flex items-center gap-2">
-                      <InputField
+                      <input
                         name="accessory"
                         type="checkbox"
                         id={accessory.id}
                         checked={isSelected || false}
-                        classes="form-checkbox text-black "
+                        className="form-checkbox   "
                         onChange={(e) =>
                           handleAccessoryChange(accessory.id, e.target.checked)}/>
                       <label
@@ -163,7 +163,7 @@ console.log(selections)
 
                     {/* Accessory Price & Info Button */}
                     <div className="flex items-center gap-2">
-                      <span className="text-lg font-semibold text-gray-800">
+                      <span className="text-md font-semibold text-gray-800">
                         ${accessory.price}
                       </span>
                       <button
@@ -233,7 +233,7 @@ console.log(selections)
                   type="checkbox"
                   id={option.id}
                   name="shippingOption"
-                  className="form-checkbox text-black"
+                  className="form-checkbox "
                   checked={selections.shippingOption === option.id}
                   onChange={() => handleShippingChange(option.id)}
                 />

@@ -13,7 +13,7 @@ const Home = lazy(() => import("../../pages/client/FirstPageForm"));
 const LoginPage = lazy(() => import("../../pages/auth/LoginPage"));
 const ForgetPassword = lazy(() => import("../../pages/auth/ForgetPassword"));
 const ResetPassword = lazy(() => import("../../pages/auth/ResetPassword"));
-const SamplePage = lazy(() => import("../../pages/SamplePage"));
+
 const NotFound = lazy(() => import("../../pages/NotFound"));
 const AdminPage = lazy(() => import("../../pages/admin/AdminPage"));
 const Dashboard = lazy(() => import("../admincomponents/Dashboard/Dashboard"));
@@ -60,10 +60,7 @@ const router = createBrowserRouter([
       },
     ],
   },
-  {
-    element: <PrivateRoute />,
-    children: [{ path: "sample", element: <SamplePage /> }],
-  },
+ 
   {
     path: "*",
     element: <NotFound />,
