@@ -8,7 +8,7 @@ const Topbar = () => {
   const handleTimeFrameChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     setTimeFrame(event.target.value);
 
-    console.log("Selected Time Frame:", event.target.value);
+
   };
 
   const handleRefresh = () => {

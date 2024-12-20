@@ -351,7 +351,7 @@ const AddNewProduct = () => {
         productData
       );
       const newProduct = createProductResponse.data.data;
-      console.log(newProduct);
+
 
       // Step 2: Attach accessories
       setCurrentStatus("Attaching accessories...");

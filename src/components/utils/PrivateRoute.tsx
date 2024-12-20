@@ -27,8 +27,7 @@ export const PrivateRoute = ({ role }: PrivateRouteProps) => {
   }
 
   if (role && user?.role !== role) {
-    console.log("first");
-    console.log(role, user);
+
     if (!user) {
       navigate("/", { replace: true });
       return;

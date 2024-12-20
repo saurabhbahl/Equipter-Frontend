@@ -82,7 +82,7 @@ const ResetPassword = () => {
         }
       );
       res = res.data;
-      console.log(res);
+
 
       if (!res.success) {
         setServerResponse({

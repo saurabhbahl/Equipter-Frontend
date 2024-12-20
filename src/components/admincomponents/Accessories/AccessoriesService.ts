@@ -20,7 +20,7 @@ class AccessoriesService {
         throw new Error(`Error fetching products: ${response.statusText}`);
       }
       const data = await response.json();
-      console.log(data);
+
       return data.records || [];
     } catch (error) {
       console.error("Error fetching accessories:", error);
@@ -45,7 +45,7 @@ class AccessoriesService {
         throw new Error(`Error fetching products: ${response.statusText}`);
       }
       const data = await response.json();
-      console.log(data);
+
       return data.records || [];
     } catch (error) {
       console.error("Error fetching accessories:", error);
@@ -70,7 +70,7 @@ class AccessoriesService {
         throw new Error(`Error fetching products: ${response.statusText}`);
       }
       const data = await response.json();
-      console.log(data);
+    
       return data.records || [];
     } catch (error) {
       console.error("Error fetching accessories:", error);
@@ -94,7 +94,7 @@ class AccessoriesService {
         throw new Error(`Error fetching products: ${response.statusText}`);
       }
       const data = await response.json();
-      console.log(data);
+
       return data.records[0] || [];
     } catch (error) {
       console.error("Error fetching accessories:", error);
@@ -113,7 +113,7 @@ class AccessoriesService {
         ? `/api/services/data/v52.0/query/?q=SELECT+Id+FROM+Accessory__c+WHERE+Accessory_URL__c='${encodedSlug}'+AND+Id!='${encodedAccessoryId}'`
         : `/api/services/data/v52.0/query/?q=SELECT+Id+FROM+Accessory__c+WHERE+Accessory_URL__c='${encodedSlug}'`;
 
-      console.log("Generated Query:", query);
+
 
       const response = await fetch(query, {
         headers: {

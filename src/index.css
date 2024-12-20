@@ -83,7 +83,7 @@ html.modal-open footer {
 @layer components {
   /* Tailwind CSS custom components */
   .btn-yellow {
-    @apply font-arial rounded-none bg-custom-orange/80 transition-all ease-out duration-200  text-white hover:bg-custom-orange focus:outline-none cursor-pointer px-8 py-2.5 uppercase hover:shadow-2xl shadow-md;
+    @apply font-arial rounded-none xl:text-lg  bg-custom-orange transition-all ease-out duration-200  text-white hover:bg-custom-orange focus:outline-none cursor-pointer px-6 py-2 xl:px-8 xl:py-2.5 uppercase hover:shadow-2xl shadow-md;
   }
   .slick-dots li.slick-active div div {
     @apply bg-orange-500;

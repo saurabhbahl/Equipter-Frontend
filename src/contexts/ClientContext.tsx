@@ -11,11 +11,7 @@ export interface GlobalLoadingState {
 
 export interface IClientContext {
   accessories: IAccessory[];
-  saveToLocalStorage: (
-    data: any,
-    STORAGE_KEY: string,
-    EXPIRATION_TIME: number
-  ) => void;
+  saveToLocalStorage: (data: any,STORAGE_KEY: string,EXPIRATION_TIME: number) => void;
   loadFromLocalStorage: (STORAGE_KEY: string) => any;
   products: IProduct[];
   setProducts: React.Dispatch<React.SetStateAction<IProduct[]>>;

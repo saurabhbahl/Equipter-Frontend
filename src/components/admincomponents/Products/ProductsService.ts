@@ -19,7 +19,7 @@ export class ProductsService {
         throw new Error(`Error fetching products: ${response.statusText}`);
       }
       const data = await response.json();
-      console.log(data);
+
       return data.records || [];
     } catch (error) {
       console.error("Error fetching accessories:", error);
@@ -42,7 +42,7 @@ export class ProductsService {
         throw new Error(`Error fetching products: ${response.statusText}`);
       }
       const data = await response.json();
-      console.log(data);
+ 
       return data.records[0] || [];
     } catch (error) {
       console.error("Error fetching accessories:", error);
@@ -66,7 +66,7 @@ export class ProductsService {
         throw new Error(`Error fetching products: ${response.statusText}`);
       }
       const data = await response.json();
-      console.log(data);
+
       return data.records || [];
     } catch (error) {
       console.error("Error fetching accessories:", error);

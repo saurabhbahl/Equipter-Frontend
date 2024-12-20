@@ -13,25 +13,22 @@ export default {
     },
     extend: {
       colors: {
-        "custom-orange": "#ea7600",
-        "custom-orange-100": "#F6841F",
+
+        "custom-orange": "#F6841F",
         "custom-gray": "#444",
         "custom-gray-200": "#767676",
-        "custom-gray-300": "#f5f5f5",
-        "custom-gray-400": "#d9d9d9",
-        "custom-gray-500": "#666",
+        "custom-med-gray": "#00000040",
+        "custom-light-gray": "#1E1E1E08",
         "custom-black-200": "#1e1e1e",
         "custom-black-25": "rgba(0, 0, 0, 0.25)",
-        "custom-red": "#EB5757",
         "custom-sky": "#E2E8F0",
         "custom-cream": "#FFEAD7",
-        
+
       },
       fontFamily: {
         "work-sans": ["Work Sans", "sans-serif"],
         arial: ["Arial", "sans-serif"],
-        robot: ["Roboto", "sans-serif"],
-        vesper: ['Vesper', 'sans-serif'],
+        vesper: ["Vesper", "sans-serif"],
         roboto: ["Roboto", "sans-serif"],
         inter: ["Inter", "sans-serif"],
         "noto-sans": ["Noto Sans", "sans-serif"],

@@ -27,7 +27,7 @@ const Accessories = () => {
       setLoading((prev) => ({ ...prev, accessories: true }));
       setError((prev) => ({ ...prev, accessories: "" }));
       const data = await apiClient.get("/accessory")
-      console.log(data);
+    
       setAccessories(data.data.data);
     } catch (error) {
       console.log(error);

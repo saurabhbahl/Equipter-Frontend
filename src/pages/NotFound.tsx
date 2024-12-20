@@ -14,7 +14,7 @@ const NotFound = () => {
         <p className="text-lg text-custom-gray mb-4">
           The page you're looking for doesn't exist.
         </p>
-        <p className="text-sm text-gray-500 mb-8">
+        <p className="text-sm text-gray-500 mb-8 hidden">
           You may have mistyped the address or the page may have moved.
         </p>
         <a href="/" className="btn-yellow">

@@ -11,6 +11,8 @@ import MetaComponent from "../../../utils/MetaComponent";
 import { IAccessory, IProduct, TImage } from "../types/ClientSchemas";
 import AccessorySlider from "./components/AccessorySlider";
 import ProductSidebar from "./components/ProductSidebar";
+import FirstPageForm from "../FirstPageForm";
+import NotFound from "../../NotFound";
 
 interface IBuildList {
   title: string;
@@ -53,6 +55,7 @@ const ViewSingleProduct = () => {
     accessories: {},
     shippingOption: null,
   });
+
   const [totalPrices, setTotalPrices] = useState({
     basePrice: 0,
     addOns: 0,
@@ -97,10 +100,13 @@ const ViewSingleProduct = () => {
       (data.accessories || []).forEach((acc: IAccessory) => {
         initialAccessoriesState[acc.id] = { selected: false, qty: 1 };
       });
-
+      const shippingOptionState = firstPageForm.state;
       setSelections((prevState) => ({
         ...prevState,
         accessories: initialAccessoriesState,
+        shippingOption: shippingOptionState
+          ? shippingOptions[1].id
+          : shippingOptions[0].id,
       }));
 
       // Set total prices based on base price
@@ -156,6 +162,7 @@ const ViewSingleProduct = () => {
     });
   }, [selections, productDetails?.price, accessoryList]);
 
+
   const handleTabClick = useCallback(
     (tab: string) => {
       setActiveTab(tab);
@@ -164,12 +171,16 @@ const ViewSingleProduct = () => {
   );
 
   const handleAccessoryChange = (accId: string, isChecked: boolean) => {
+    console.log(isChecked);
     setSelections((prevState) => ({
       ...prevState,
       accessories: {
         ...prevState.accessories,
+
         [accId]: {
           ...prevState.accessories[accId],
+          // qty:isChecked==false?1:...prevState.accessories.qty,
+          qty: isChecked ? prevState.accessories[accId]?.qty || 1 : 1,
           selected: isChecked,
         },
       },
@@ -210,6 +221,12 @@ const ViewSingleProduct = () => {
     return allAccessories;
   }, [modalAccessory, productDetails?.accessories]);
 
+  if (error) {
+    return <NotFound />;
+  }
+  if (!firstPageForm.isFormFilled) {
+    return <FirstPageForm />;
+  }
   if (loading) {
     return (
       <div className="w-full h-full flex justify-center items-center my-20">
@@ -219,9 +236,7 @@ const ViewSingleProduct = () => {
   }
 
   return error ? (
-    <div className="w-full h-full flex justify-center items-center my-20">
-      <p className="text-red-600">Product Not Found!</p>
-    </div>
+    <NotFound />
   ) : (
     <>
       <MetaComponent
@@ -236,7 +251,7 @@ const ViewSingleProduct = () => {
             <div className="w-full xl:w-[63%]">
               {/* Build + Buy heading */}
               <div className="main-heading relative top-0 lg:block ">
-                <h1 className="uppercase text-sm lg:text-[10px] font-robot text-gray-700">
+                <h1 className="uppercase text-sm lg:text-[10px] font-roboto text-gray-700">
                   Build + Buy
                 </h1>
               </div>

@@ -304,7 +304,7 @@ const EditProduct = () => {
    * Set a new featured image
    */
   const setAsFeaturedImage = (id: string, type: "new" | "existing") => {
-    console.log(id, type);
+
     if (type === "new") {
       // For new images, the id is in the format `new-{index}`
       setFeaturedImage(id);

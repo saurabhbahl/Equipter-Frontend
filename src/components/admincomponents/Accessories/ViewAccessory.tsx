@@ -189,7 +189,7 @@ const ViewAccessory = () => {
                     className={`w-3 h-3 rounded ${
                       currentImageIndex === index
                         ? "bg-custom-orange"
-                        : "bg-gray-400 hover:bg-custom-orange-100"
+                        : "bg-gray-400 hover:bg-custom-orange"
                     } focus:outline-none`}
                   ></button>
                 ))}

@@ -105,7 +105,7 @@ function AccessorySlider({
       >
         &times;
       </button>
-      <div className="w-full   ">
+      <div className="w-full  font-work-sans ">
         <Slider {...settings}>
           {accessories.map((acc) => {
             const selectedAcc = selections.accessories[acc.id];

@@ -62,7 +62,7 @@ export class ApiService {
   }
 
   async get(endpoint: string) {
-    console.log(endpoint)
+    // console.log(endpoint)
     const response = await fetch(`${endpoint}`, {
       method: "GET",
       headers: {

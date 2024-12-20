@@ -37,7 +37,7 @@ export const isTokenExpired = (token: string | null = localStorage.getItem("toke
 apiClient.interceptors.request.use((config) => {
     const token: string | null = localStorage.getItem("token");
     const isExp = isTokenExpired(token);
-    console.log(config.url)
+    // console.log(config.url)
     if (token && !(isExp as isExp)?.isExp) {
       config.headers.Authorization = `Bearer ${token}`;
     } else {
