@@ -138,7 +138,7 @@ function AccessorySlider({
                         <p
                           className={`text-xs font-semibold mb-1 ${
                             flash
-                              ? "animate-pulse text-green-600"
+                              ? "animate-pulse text-custom-orange "
                               : "text-black"
                           }`}
                         >

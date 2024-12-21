@@ -99,31 +99,22 @@ html.modal-open footer {
   .slick-dots li.slick-active {
     @apply bg-orange-500 opacity-100;
   }
-  .main-heading h1{
-    @apply text-[#1e1e1e] 
-    opacity-10 
-    text-4xl 
-    text-center
-    md:text-[55px] md:leading-[40px] 
-    lg:text-[80px] lg:leading-[50px] 
-    xl:text-[112px] xl:leading-[110px] 
-    2xl:text-[132px] 2xl:leading-[130px];
-  }
+
 
   .main-heading h1 {
-    @apply text-[#1e1e1e] opacity-10 text-4xl text-center;
+    @apply text-[#1e1e1e] opacity-10 relative text-4xl text-center;
     
     /* Medium devices (md) */
-    @apply md:text-[35px] md:leading-[40px];
+    @apply md:text-[55px]  ;
     
     /* Large devices (lg) */
-    @apply lg:text-[40px] lg:leading-[50px];
+    @apply lg:text-[90px] ;
     
     /* Extra Large devices (xl) */
-    @apply xl:text-[72px] xl:leading-[110px];
+    @apply xl:text-[102px] ;
     
     /* 2XL devices */
-    @apply 2xl:text-[82px] 2xl:leading-[130px];
+    @apply 2xl:text-[112px] 2xl:leading-[130px]  top-16;
   }
   
 }

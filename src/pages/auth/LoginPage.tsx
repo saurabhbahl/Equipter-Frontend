@@ -95,9 +95,7 @@ const LoginPage = () => {
         <h2 className="lg:text-3xl text-2xl font-semibold text-custom-gray text-center uppercase mb-4">
           Login Here
         </h2>
-        <p className="mb-5 text-center text-custom-gray">
-          Fill out the form below to login into Equipter.
-        </p>
+     
         <hr className="my-5 border-1" />
 
         {/* Server Response (Success or Error) */}
