@@ -71,11 +71,12 @@ const ProductSidebar = ({
   const tabs = ["cash", "financing"];
   const [cashTabStep, setCashTabStep] = useState(1);
   const [financingTabStep, setFinancingTabStep] = useState(1);
-  
+  const [showCheckOutForm, setShowCheckOutForm] = useState(false);
+
   const currentDate = new Date();
   // Next two months
   const twoMonthsFromNow = new Date(currentDate);
-  twoMonthsFromNow.setMonth(currentDate.getMonth()+2);
+  twoMonthsFromNow.setMonth(currentDate.getMonth() + 2);
   const twoMonths = twoMonthsFromNow.toLocaleString("default", {
     month: "short",
   });
@@ -95,9 +96,21 @@ const ProductSidebar = ({
       {(cashTabStep == 2 || financingTabStep == 2) && (
         <p
           className="text-custom-med-gray text-[15px] font-semibold cursor-pointer "
-          onClick={() =>
-            activeTab == "cash" ? setCashTabStep(1) : setFinancingTabStep(1)
-          }
+          onClick={() => {
+            if (cashTabStep === 3 || financingTabStep === 3) {
+              if (activeTab === "cash") {
+                setCashTabStep(2);
+              } else {
+                setFinancingTabStep(2);
+              }
+            } else {
+              if (activeTab === "cash") {
+                setCashTabStep(1);
+              } else {
+                setFinancingTabStep(1);
+              }
+            }
+          }}
         >
           {`< Edit Build`}
         </p>
@@ -139,6 +152,8 @@ const ProductSidebar = ({
           {activeTab === "cash" ? (
             <CashTab
               productDetails={productDetails}
+              showCheckOutForm={showCheckOutForm} 
+              setShowCheckOutForm={setShowCheckOutForm}
               selections={selections}
               setSelections={setSelections}
               accessoryList={accessoryList}
@@ -163,9 +178,8 @@ const ProductSidebar = ({
           </h2>
           <h3 className="font-semibold text-base md:text-lg text-custom-med-gray text-center mt-2">
             {yearForTwoMonths === yearForThreeMonths
-              ? `Est. Delivery: ${twoMonths} – ${threeMonths} ${yearForTwoMonths}`
+              ? `Est. Delivery:  ${threeMonths} ${yearForTwoMonths}`
               : `Est. Delivery: ${twoMonths} ${yearForTwoMonths} – ${threeMonths} ${yearForThreeMonths}`}
-         
           </h3>
           <div className="flex flex-col xs:flex-row items-center gap-6 mt-6 justify-center">
             <button className="inline-block text-sm xl:text-md bg-custom-med-gray text-white px-4 py-2 lg:px-6 lg:py-3 hover:bg-custom-orange transition">
@@ -173,11 +187,21 @@ const ProductSidebar = ({
             </button>
             <button
               className="inline-block text-sm xl:text-md px-4 py-2 bg-custom-orange text-white lg:px-6 lg:py-3 hover:bg-black hover:bg-opacity-50 transition"
-              onClick={() =>
-                activeTab === "cash"
-                  ? setCashTabStep(2)
-                  : setFinancingTabStep(2)
-              }
+              onClick={() => {
+                if (cashTabStep === 2 || financingTabStep === 2) {
+                  if (activeTab === "cash") {
+                    setShowCheckOutForm(true);
+                  } else {
+                    setShowCheckOutForm(true);
+                  }
+                } else {
+                  if (activeTab === "cash") {
+                    setCashTabStep(2);
+                  } else {
+                    setFinancingTabStep(2);
+                  }
+                }
+              }}
             >
               {cashTabStep == 2 || financingTabStep == 2
                 ? "Confirm Deposit"

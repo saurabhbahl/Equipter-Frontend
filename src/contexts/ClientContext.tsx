@@ -2,6 +2,7 @@ import React, { createContext, useState } from "react";
 import {
   IAccessory,
   IFirstPageForm,
+  ICheckoutForm,
   IProduct,
 } from "../pages/client/types/ClientSchemas";
 export interface GlobalLoadingState {
@@ -11,7 +12,11 @@ export interface GlobalLoadingState {
 
 export interface IClientContext {
   accessories: IAccessory[];
-  saveToLocalStorage: (data: any,STORAGE_KEY: string,EXPIRATION_TIME: number) => void;
+  saveToLocalStorage: (
+    data: any,
+    STORAGE_KEY: string,
+    EXPIRATION_TIME: number
+  ) => void;
   loadFromLocalStorage: (STORAGE_KEY: string) => any;
   products: IProduct[];
   setProducts: React.Dispatch<React.SetStateAction<IProduct[]>>;
@@ -20,6 +25,8 @@ export interface IClientContext {
   setFirstPageForm: React.Dispatch<React.SetStateAction<IFirstPageForm>>;
   loading: GlobalLoadingState;
   setLoading: React.Dispatch<React.SetStateAction<GlobalLoadingState>>;
+  checkoutForm: ICheckoutForm;
+  setCheckoutForm: React.Dispatch<React.SetStateAction<ICheckoutForm>>;
   error: { [key: string]: string };
   setError: React.Dispatch<React.SetStateAction<{ [key: string]: string }>>;
 }
@@ -52,6 +59,42 @@ export const ClientContextProvider = ({
     state: "",
     industry: "",
     isFormFilled: false,
+  });
+  const [checkoutForm, setCheckoutForm] = useState<ICheckoutForm>({
+    financing: "",
+    product_id: "",
+    product_name: "",
+    product_price: "",
+    product_qty: "",
+    shipping_method_id: "",
+    zone_id: "",
+    contact_first_name: "",
+    contact_last_name: "",
+    contact_company_name: "",
+    contact_phone_number: "",
+    contact_email: "",
+    contact_industry: "",
+    contact_job_title: "",
+    billing_same_as_delivery: "",
+    billing_address_street: "",
+    billing_address_city: "",
+    billing_address_state: "",
+    billing_address_zip_code: "",
+    billing_address_country: "",
+    delivery_cost: "",
+    delivery_address_street: "",
+    delivery_address_city: "",
+    delivery_address_state_id: "",
+    delivery_address_zip_code: "",
+    delivery_address_country: "",
+    estimated_delivery_date: "",
+    pickup_location_name: "",
+    pickup_location_address: "",
+    pickup_scheduled_date: "",
+    payment_type: "",
+    product_total_cost: "",
+    non_refundable_deposit: "",
+    i_understand_deposit_is_non_refundable: "",
   });
 
   // Save data to localStorage
@@ -92,6 +135,8 @@ export const ClientContextProvider = ({
     <ClientContext.Provider
       value={{
         products,
+        checkoutForm,
+        setCheckoutForm,
         setProducts,
         loadFromLocalStorage,
         firstPageForm,

@@ -1,4 +1,5 @@
 @import url("https://fonts.googleapis.com/css2?family=Work+Sans:ital,wght@0,100..900;1,100..900&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -6,6 +7,12 @@
 @font-face {
   font-family: "Vesper";
   src: url("./assets/fonts/Vesper-BoldLargeOblique.woff2") format("woff2");
+  font-weight: bold;
+  font-style: oblique;
+}
+
+.font-vesper {
+  font-family: "Vesper"; 
   font-weight: bold;
   font-style: oblique;
 }
@@ -169,4 +176,17 @@ html.modal-open footer {
   border: solid black;
   border-width: 0 2px 2px 0;
   transform: rotate(45deg);
+}
+
+
+.okok:before
+{
+  display: block;
+    content: '';
+    width: calc(90% + 5px);
+    height: 30px;
+    background: red;
+    transform: skewX(-40deg);
+    z-index: -1;
+    position: absolute;
 }

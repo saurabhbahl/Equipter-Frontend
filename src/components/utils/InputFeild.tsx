@@ -12,6 +12,7 @@ interface InputFieldProps {
   error?: string;
   classes?: string;
   maxlength?:number;
+  maxUnit?:number;
 }
 
 const InputField = ({
@@ -22,6 +23,7 @@ const InputField = ({
   maxlength,
   required = false,
   value,
+  maxUnit,
   onChange,
   placeholder,
   checked,
@@ -36,8 +38,10 @@ const InputField = ({
           {label}
         </label>
         <input
+        autoFocus={false}
           type={type}
           {...(maxlength && { maxLength: maxlength })}
+          {...(maxUnit && { max: maxUnit })}
           id={id}
           readOnly={readonly}
           name={name}

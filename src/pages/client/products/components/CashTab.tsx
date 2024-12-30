@@ -3,12 +3,13 @@ import { IAccessory, IProduct } from "../../types/ClientSchemas";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faInfo } from "@fortawesome/free-solid-svg-icons";
 import CustomSlider from "../../components/CustomSlider";
-
+import CheckoutForm from "./CheckoutForm";
+import { useEffect, useState } from "react";
+import ReactDOM from "react-dom";
 interface AccessorySelection {
   selected: boolean;
   qty: number;
 }
-
 interface SelectionsType {
   baseUnitQty: number;
   accessories: {
@@ -18,6 +19,8 @@ interface SelectionsType {
 }
 interface ICashTabProps {
   productDetails: IProduct;
+  showCheckOutForm: boolean;
+  setShowCheckOutForm: React.Dispatch<React.SetStateAction<boolean>>;
   cashTabStep: number;
   selections: SelectionsType;
   setSelections: React.Dispatch<React.SetStateAction<SelectionsType>>;
@@ -30,11 +33,14 @@ interface ICashTabProps {
   setModalAccessory: React.Dispatch<React.SetStateAction<IAccessory | null>>;
   setShowAccessory: (value: boolean) => void;
 }
+
 const CashTab = ({
   productDetails,
   selections,
   setSelections,
   cashTabStep,
+  showCheckOutForm,
+  setShowCheckOutForm,
   accessoryList,
   handleAccessoryChange,
   handleAccessoryQtyChange,
@@ -46,7 +52,11 @@ const CashTab = ({
 }: ICashTabProps) => {
   const productName = productDetails.name;
 
-
+  // useEffect(() => {
+  //   if (cashTabStep > 2) {
+  //     setShowCheckOutForm(true);
+  //   }
+  // }, [cashTabStep]);
   const CashTabStepOne = () => {
     return (
       <div className="">
@@ -109,14 +119,16 @@ const CashTab = ({
               name="qty"
               placeholder="1"
               required
+              maxUnit={5}
+              maxlength={1}
               id="baseQty"
               classes="flex-1 max-w-14 h-auto"
               type="number"
               value={selections.baseUnitQty || 1}
               onChange={(e) => {
-                const value = parseInt(e.target.value, 10);
-                if (value > 5) {
-                  return;
+                let value = parseInt(e.target.value, 10);
+                if (value.toString().split("").length > 1) {
+                  value = Number(value.toString().split("")[1]);
                 }
                 setSelections((prevState) => ({
                   ...prevState,
@@ -134,22 +146,26 @@ const CashTab = ({
               Add-On Accessories
             </h3>
             <div className="space-y-2 lg:space-y-6">
-              {accessoryList.map((accessory,id) => {
+              {accessoryList.map((accessory, id) => {
                 const isSelected =
                   selections.accessories[accessory.id]?.selected;
                 const qty = selections.accessories[accessory.id]?.qty || 1;
 
                 return (
                   <div
-                    key={id}
+                    key={accessory.id}
                     className={`p-2 transition-all duration-300 font-roboto ${
                       isSelected ? "text-black" : ""
                     }`}
                   >
-                    <div className="flex flex-row items-center justify-between gap-2">
+                    <div
+                      key={accessory.id}
+                      className=" flex flex-row items-center justify-between gap-2"
+                    >
                       {/* Accessory Checkbox & Label */}
                       <div className="flex items-center gap-2">
                         <input
+                          key={id}
                           name="accessory"
                           type="checkbox"
                           id={accessory.id}
@@ -163,9 +179,12 @@ const CashTab = ({
                           }
                         />
                         <label
+                          key={accessory.id}
                           htmlFor={accessory.id}
                           className={`font-semibold font-roboto capitalize text-sm xl:text-lg ${
-                            isSelected ? "text-gray-800" : "text-custom-med-gray"
+                            isSelected
+                              ? "text-gray-800"
+                              : "text-custom-med-gray"
                           }`}
                         >
                           {accessory.name}
@@ -207,16 +226,19 @@ const CashTab = ({
                           <InputField
                             name={`${accessory.id}-qty`}
                             placeholder="1"
+                            maxUnit={5}
+                            maxlength={2}
                             required
                             id={`${accessory.id}-qty`}
                             classes="max-w-14 h-fit"
                             type="number"
                             value={qty}
                             onChange={(e) => {
-                              const newQty = parseInt(e.target.value, 10);
-                              if (newQty > 5) {
-                                return;
+                              let newQty = parseInt(e.target.value, 10);
+                              if (newQty.toString().split("").length > 1) {
+                                newQty = Number(newQty.toString().split("")[1]);
                               }
+
                               handleAccessoryQtyChange(
                                 accessory.id,
                                 isNaN(newQty) || newQty < 1 ? 1 : newQty
@@ -240,7 +262,10 @@ const CashTab = ({
           </h3>
           <div className="space-y-4">
             {shippingOptions.map((option) => (
-              <div key={option} className="flex items-center justify-between">
+              <div
+                key={option.id}
+                className="flex items-center justify-between"
+              >
                 <div className="flex items-center gap-3">
                   <input
                     type="checkbox"
@@ -285,7 +310,7 @@ const CashTab = ({
               Build Total
             </p>
             <p className="text-custom-orange text-md md:text-lg lg:text-xl font-semibold">
-              ${(totalPrices.netPrice).toLocaleString()}
+              ${totalPrices.netPrice.toLocaleString()}
             </p>
           </div>
           <div>
@@ -321,12 +346,14 @@ const CashTab = ({
                           key={accessory.id}
                           className="flex justify-between items-center font-roboto text-sm md:text-base"
                         >
-                          <span className="font-semibold capitalize ">{accessory.name}</span>
+                          <span className="font-semibold capitalize ">
+                            {accessory.name}
+                          </span>
                           <span className="capitalize font-bold">
-                            ${accessory.price} {" "}
+                            ${accessory.price}{" "}
                             <span className="text-custom-med-gray">
                               ({qty})
-                              </span> 
+                            </span>
                           </span>
                         </div>
                       );
@@ -334,7 +361,11 @@ const CashTab = ({
                   </div>
                 );
               } else {
-                return <p className="text-sm md:text-base font-semibold">No Accessories Selected</p>;
+                return (
+                  <p className="text-sm md:text-base font-semibold">
+                    No Accessories Selected
+                  </p>
+                );
               }
             })()
           ) : (
@@ -354,7 +385,7 @@ const CashTab = ({
                   key={option.id}
                   className="flex font-semibold justify-between items-center text-sm md:text-base"
                 >
-                  <span >{option.name}</span>
+                  <span>{option.name}</span>
                   <span>${option.price}</span>
                 </div>
               )
@@ -371,6 +402,24 @@ const CashTab = ({
             <span>${1500}</span>
           </div>
         </div>
+
+        {/* checkout form */}
+        {/* {showCheckOutForm &&
+          ReactDOM.createPortal(
+            <div className="fixed top-0 z-30 inset-0 backdrop-blur-sm bg-black bg-opacity-10 flex items-center justify-center p-4">
+              <button onClick={() => setShowCheckOutForm(false)}>X</button>
+              <CheckoutForm  setShowCheckOutForm={setShowCheckOutForm}/>
+            </div>,
+            document.body
+          )} */}
+        {showCheckOutForm &&
+          ReactDOM.createPortal(
+            <div className="fixed top-0 z-30 inset-0 backdrop-blur-sm bg-black bg-opacity-10 flex items-center justify-center p-4">
+              <button onClick={() => setShowCheckOutForm(false)}>X</button>
+              <CheckoutForm  setShowCheckOutForm={setShowCheckOutForm}/>
+            </div>,
+            document.body
+          )}
       </div>
     );
   };

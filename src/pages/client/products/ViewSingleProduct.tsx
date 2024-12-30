@@ -78,12 +78,12 @@ const ViewSingleProduct = () => {
       const data = resData.data.data;
       setProductDetails(data);
       setLoading(false);
-      const hieghtFt = data.lift_height.split(".")[0];
-      const hieghtInch = data.lift_height.split(".")[1];
+      const heightFt = data.lift_height.split(".")[0];
+      const heightInch = data.lift_height.split(".")[1];
       setBuildList([
         { title: "GVWR", value: `${data.gvwr} lbs` },
         { title: "Lift Capacity", value: `${data.lift_capacity} lbs` },
-        { title: "Lift Height", value: `${hieghtFt}'-${hieghtInch}"` },
+        { title: "Lift Height", value: `${heightFt}'-${heightInch||0}"` },
         { title: "Container", value: `${data.container_capacity} cu yds` },
       ]);
 
@@ -250,13 +250,13 @@ const ViewSingleProduct = () => {
             {/* Left content */}
             <div className="w-full xl:w-[63%]">
               {/* Build + Buy heading */}
-              <div className="main-heading relative top-0 lg:block ">
+              <div className="main-heading relative -top-6 lg:block ">
                 <h1 className="uppercase text-sm lg:text-[10px] font-roboto text-gray-700">
                   Build + Buy
                 </h1>
               </div>
               {/* Image Slider */}
-              <div className="relative -top-12 xl:-top-20">
+              <div className="relative top-0 xl:-top-8">
                 {slides.length > 1 ? (
                   <CustomSlider slides={slides} />
                 ) : (
@@ -270,7 +270,7 @@ const ViewSingleProduct = () => {
               </div>
 
               {/* Build lists content */}
-              <div className="grid grid-cols-4 text-left w-full">
+              <div className="grid grid-cols-4 xl:mt-12 mt-8 text-left w-full">
                 {buildList.map((item, index) => (
                   <div key={index} className="w-full my-2 lg:m-0">
                     <h4 className="font-roboto text-[10px] lg:text-lg">

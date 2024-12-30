@@ -74,10 +74,6 @@ const Header = () => {
   if (isLoading) {
     return <LoaderSpinner/>;
   }
-
-  
-  
-  
   
   return (
     <header className="bg-white shadow-md ">
