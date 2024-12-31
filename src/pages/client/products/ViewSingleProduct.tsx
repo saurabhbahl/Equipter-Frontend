@@ -55,7 +55,7 @@ const ViewSingleProduct = () => {
     accessories: {},
     shippingOption: null,
   });
-
+console.log(selections,accessoryList,buildList)
   const [totalPrices, setTotalPrices] = useState({
     basePrice: 0,
     addOns: 0,

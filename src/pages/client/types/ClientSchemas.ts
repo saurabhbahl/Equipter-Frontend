@@ -66,7 +66,6 @@ export interface IFirstPageForm {
   isFormFilled: boolean;
 }
 
-
 export interface ICheckoutForm {
   financing: string;
   product_id: string;
@@ -78,7 +77,7 @@ export interface ICheckoutForm {
   contact_first_name: string;
   contact_last_name: string;
   contact_company_name: string;
-  contact_phone_number: number;
+  contact_phone_number: number|string;
   contact_email: string;
   contact_industry: string;
   contact_job_title: string;
@@ -108,3 +107,43 @@ export interface ICheckoutForm {
   i_understand_deposit_is_non_refundable: boolean;
 }
 
+export const CheckoutFormDefaultValues = {
+  financing: "",
+  product_id: "",
+  product_name: "",
+  product_price: "",
+  product_qty: "",
+  shipping_method_id: "",
+  zone_id: "",
+  contact_first_name: "",
+  contact_last_name: "",
+  contact_company_name: "",
+  payment_name_on_card: "",     
+  payment_card_number: "",      
+  payment_expiry: "",           
+  payment_cvc: "", 
+  contact_phone_number: "",
+  contact_email: "",
+  contact_industry: "",
+  contact_job_title: "",
+  billing_same_as_delivery: false,
+  billing_address_street: "",
+  billing_address_city: "",
+  billing_address_state: "",
+  billing_address_zip_code: "",
+  billing_address_country: "",
+  delivery_cost: "",
+  delivery_address_street: "",
+  delivery_address_city: "",
+  delivery_address_state_id: "",
+  delivery_address_zip_code: "",
+  delivery_address_country: "",
+  estimated_delivery_date: "",
+  pickup_location_name: "",
+  pickup_location_address: "",
+  pickup_scheduled_date: "",
+  payment_type: "",
+  product_total_cost: "",
+  non_refundable_deposit: "",
+  i_understand_deposit_is_non_refundable: false,
+};

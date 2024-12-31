@@ -81,8 +81,6 @@
 
 // export default InputFieldCurved;
 
-
-
 import React from "react";
 
 interface InputFieldCurvedProps {
@@ -104,27 +102,7 @@ interface InputFieldCurvedProps {
   ref?: React.Ref<HTMLInputElement>;
 }
 
-const InputFieldCurved = React.forwardRef<HTMLInputElement, InputFieldCurvedProps>(
-  (
-    {
-      label,
-      type,
-      id,
-      name,
-      maxlength,
-      disabled = false,
-      required = false,
-      value,
-      maxUnit,
-      onChange,
-      placeholder,
-      checked,
-      readonly = false,
-      error,
-      classes,
-    },
-    ref
-  ) => {
+const InputFieldCurved = React.forwardRef<HTMLInputElement,InputFieldCurvedProps>(({label,type,id,name,maxlength,disabled = false,required = false,value,maxUnit,onChange,placeholder,checked,readonly = false,error,classes,},ref) => {
     return (
       <div className={`${label ? "mb-4" : ""}`}>
         {label && (
@@ -136,7 +114,7 @@ const InputFieldCurved = React.forwardRef<HTMLInputElement, InputFieldCurvedProp
           </label>
         )}
         <input
-          type={type}
+        type={type}
           {...(maxlength && { maxLength: maxlength })}
           {...(maxUnit && { max: maxUnit })}
           ref={ref}

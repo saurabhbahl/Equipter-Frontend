@@ -6,6 +6,7 @@ import CustomSlider from "../../components/CustomSlider";
 import CheckoutForm from "./CheckoutForm";
 import { useEffect, useState } from "react";
 import ReactDOM from "react-dom";
+import Text from "./Text";
 interface AccessorySelection {
   selected: boolean;
   qty: number;
@@ -404,19 +405,10 @@ const CashTab = ({
         </div>
 
         {/* checkout form */}
-        {/* {showCheckOutForm &&
-          ReactDOM.createPortal(
-            <div className="fixed top-0 z-30 inset-0 backdrop-blur-sm bg-black bg-opacity-10 flex items-center justify-center p-4">
-              <button onClick={() => setShowCheckOutForm(false)}>X</button>
-              <CheckoutForm  setShowCheckOutForm={setShowCheckOutForm}/>
-            </div>,
-            document.body
-          )} */}
         {showCheckOutForm &&
           ReactDOM.createPortal(
             <div className="fixed top-0 z-30 inset-0 backdrop-blur-sm bg-black bg-opacity-10 flex items-center justify-center p-4">
-              <button onClick={() => setShowCheckOutForm(false)}>X</button>
-              <CheckoutForm  setShowCheckOutForm={setShowCheckOutForm}/>
+              <CheckoutForm setShowCheckOutForm={setShowCheckOutForm} />
             </div>,
             document.body
           )}
