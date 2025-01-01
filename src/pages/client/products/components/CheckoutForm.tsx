@@ -16,19 +16,31 @@ import {
 } from "../../types/ClientSchemas";
 import { CheckoutFormSchema } from "../../types/Validations";
 import SelectField from "../../../../components/utils/SelectFeild";
-
+interface ICheckoutFormProps{
+  setShowCheckOutForm: Dispatch<SetStateAction<boolean>>;
+}
 const CheckoutForm = ({
   setShowCheckOutForm,
-}: {
-  setShowCheckOutForm: Dispatch<SetStateAction<boolean>>;
-}) => {
+  productDetails,
+  selections,
+  setSelections,
+  cashTabStep,
+  filteredAccessory,
+  accessoryList,
+  handleAccessoryChange,
+  handleAccessoryQtyChange,
+  shippingOptions,
+  handleShippingChange,
+  totalPrices,
+  setModalAccessory,
+  setShowAccessory,
+  
+}: any) => {
+  
   const { firstPageForm } = useClientContext();
   const [checkoutForm, setCheckoutForm] = useState<ICheckoutForm>(
     CheckoutFormDefaultValues
   );
-  // const [validationErrors, setVlidationErrors] = useState(
-  //   CheckoutFormDefaultValues
-  // );
   const [validationErrors, setValidationErrors] = useState<
     { [key in keyof ICheckoutForm]?: string }
   >({});
@@ -40,34 +52,61 @@ const CheckoutForm = ({
   const [isBillingInfoOpen, setIsBillingInfoOpen] = useState(true);
   const inputRef: React.RefObject<HTMLInputElement> = useRef(null);
 
-  // const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  //   const { name, value, type, checked } = e.target;
-  //   console.log(name, value, type, checked);
-  //   if (name === "billing_same_as_delivery" && checked === true) {
-  //     setCheckoutForm((prevForm) => ({
-  //       ...prevForm,
-  //       billing_same_as_delivery: true,
-  //       billing_address_street: prevForm.delivery_address_street,
-  //       billing_address_city: prevForm.delivery_address_city,
-  //       billing_address_state: prevForm.delivery_address_state_id,
-  //       billing_address_zip_code: prevForm.delivery_address_zip_code,
-  //       billing_address_country: prevForm.delivery_address_country,
-  //     }));
-  //     return;
-  //   }
-
-  //   setCheckoutForm((prevForm) => ({
-  //     ...prevForm,
-  //     [name]: type === "checkbox" ? checked : value,
-  //   }));
-  // };
-
+  
+  console.log("Selections",selections)
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
-    const { name, value, type, checked } = e.target;
-    const newValue = type === "checkbox" ? checked : value;
+    // const { name, value, type, checked } = e.target;
+    
+    // let newValue: string | boolean = type === "checkbox" ? checked : value;
+    const { name, value, type } = e.target;
 
+    let newValue: string | boolean;
+    let checked
+
+    if (type === "checkbox") {
+       checked = e.target.checked;
+      newValue = checked;
+    } else {
+      newValue = value;
+    }
+    
+    
+    
+    // Function to remove non-digit characters
+    const getDigits = (input: string) => input.replace(/\D/g, "");
+  
+    if (name === "payment_card_number") {
+      // Remove all non-digit characters
+      const digits = getDigits(value).slice(0, 16); // Limit to 16 digits
+  
+      // Insert hyphens after every 4 digits
+      let formattedCardNumber = digits.replace(/(.{4})/g, "$1-").trim();
+      if (formattedCardNumber.endsWith("-")) {
+        formattedCardNumber = formattedCardNumber.slice(0, -1);
+      }
+  
+      newValue = formattedCardNumber;
+    }
+  
+    if (name === "payment_expiry") {
+      // Remove all non-digit characters
+      let digits = getDigits(value).slice(0, 4); // MMYY
+  
+      // Insert slash after 2 digits
+      if (digits.length > 2) {
+        digits = digits.slice(0, 2) + "/" + digits.slice(2);
+      }
+  
+      newValue = digits;
+    }
+  
+    if (name === "payment_cvc") {
+      // Remove all non-digit characters and limit to 4 digits
+      newValue = getDigits(value).slice(0, 4);
+    }
+  
     // Handle 'billing_same_as_delivery' checkbox
     if (name === "billing_same_as_delivery" && checked === true) {
       setValidationErrors((prevErrors) => ({
@@ -85,19 +124,19 @@ const CheckoutForm = ({
       }));
       return;
     }
-
+  
     setCheckoutForm((prevForm) => ({
       ...prevForm,
       [name]: newValue,
     }));
+  
 
-    // Clear the error message for the field being updated
     setValidationErrors((prevErrors) => ({
       ...prevErrors,
       [name]: undefined,
     }));
-  };
-
+  }; 
+  
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     // Submit logic here
@@ -132,24 +171,7 @@ const CheckoutForm = ({
       };
     });
   }, []);
-  // useEffect(()=>{
-  //   // if (name === "billing_same_as_delivery" && checked === true) {
-  //     setValidationErrors((prevErrors) => ({
-  //       ...prevErrors,
-  //       [name]: undefined,
-  //     }));
-  //     setCheckoutForm((prevForm) => ({
-  //       ...prevForm,
-  //       billing_same_as_delivery: true,
-  //       billing_address_street: prevForm.delivery_address_street,
-  //       billing_address_city: prevForm.delivery_address_city,
-  //       billing_address_state: prevForm.delivery_address_state_id,
-  //       billing_address_zip_code: prevForm.delivery_address_zip_code,
-  //       billing_address_country: prevForm.delivery_address_country,
-  //     }));
-  //     return;
-  //   // }
-  // },[checkoutForm])
+console.log(filteredAccessory)
 
   return (
     <form
@@ -180,28 +202,32 @@ const CheckoutForm = ({
         {isBuildSummaryOpen ? (
           <div
             className="flex-1"
-            id="buildSummaryContent"
-            style={{ display: isBuildSummaryOpen ? "block" : "none" }}
-          >
+            id="buildSummaryContent">
             <h2 className="font-bold text-xl mb-4 text-custom-black-200">
               Build Summary
             </h2>
             <div className="flex flex-col w-[60%] text-black font-bold text-[17px] space-y-2">
               <div className="flex justify-between">
-                <p>Equiter 4000</p>
+                <p>Equiter {productDetails.name}</p>
                 <p>
-                  $38,900 <span className="text-custom-med-gray">(1)</span>
+                  ${Number(productDetails.price)*selections.baseUnitQty} <span className="text-custom-med-gray">({selections.baseUnitQty})</span>
                 </p>
               </div>
-              <div className="flex justify-between">
-                <p>Roofing Accessories Package</p>
+              <div className="flex justify-between flex-col">
+                {filteredAccessory.map((a)=>{
+                 return <div className="flex justify-between ">
+                    <p className="capitalize">{a.name}</p>
                 <p>
-                  $995 <span className="text-custom-med-gray">(1)</span>
+                  ${Number(a.price)*a.qty} <span className="text-custom-med-gray">({a.qty})</span>
                 </p>
+                  </div>
+                })}
+                
               </div>
+              
               <div className="flex justify-between pr-5">
-                <p>Pick-up</p>
-                <p>$0</p>
+                <p>{selections.shippingOption=="pickup"?'Pickup':`Delivery to the State of ${checkoutForm.delivery_address_state_id}`}</p>
+                <p>{selections.shippingOption=="pickup"?'$0':`$${400}`}</p>
               </div>
             </div>
           </div>
@@ -323,6 +349,7 @@ const CheckoutForm = ({
                 type="text"
                 id="payment_card_number"
                 name="payment_card_number"
+                maxlength={19}
                 error={validationErrors.payment_card_number}
                 value={checkoutForm.payment_card_number}
                 onChange={handleChange}
@@ -333,6 +360,7 @@ const CheckoutForm = ({
                   type="text"
                   id="payment_expiry"
                   name="payment_expiry"
+                  maxlength={5}
                   value={checkoutForm.payment_expiry}
                   error={validationErrors.payment_expiry}
                   onChange={handleChange}
@@ -341,6 +369,7 @@ const CheckoutForm = ({
                   label="CVC"
                   type="text"
                   id="payment_cvc"
+                  maxlength={4}
                   name="payment_cvc"
                   value={checkoutForm.payment_cvc}
                   error={validationErrors.payment_cvc}

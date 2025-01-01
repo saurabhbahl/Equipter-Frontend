@@ -6,7 +6,7 @@ import CustomSlider from "../../components/CustomSlider";
 import CheckoutForm from "./CheckoutForm";
 import { useEffect, useState } from "react";
 import ReactDOM from "react-dom";
-import Text from "./Text";
+
 interface AccessorySelection {
   selected: boolean;
   qty: number;
@@ -52,12 +52,31 @@ const CashTab = ({
   setShowAccessory,
 }: ICashTabProps) => {
   const productName = productDetails.name;
-
+  const [filteredAccessory, setFilteredAccessory] = useState<any>();
   // useEffect(() => {
-  //   if (cashTabStep > 2) {
-  //     setShowCheckOutForm(true);
-  //   }
-  // }, [cashTabStep]);
+  //   // const ans=selections.accessories.filter((e)=>e.selected)
+  //   // console.log(ans)
+  //   const selectedAccessories = accessoryList.filter((accessory) => selections.accessories[accessory.id]?.selected);
+  //   setFilteredAccessory(selectedAccessories);
+
+  // }, [setSelections,selections]);
+
+  useEffect(() => {
+    if (!accessoryList || accessoryList.length === 0) return;
+  
+    const selectedAccessories = accessoryList
+      .filter((accessory) => selections.accessories[accessory.id]?.selected)
+      .map((accessory) => ({
+        ...accessory,
+        qty: selections.accessories[accessory.id]?.qty || 1,
+      }));
+  
+    setFilteredAccessory(selectedAccessories);
+    console.log('Selected=>Acc',selectedAccessories);
+    console.log('Selections',selections);
+    
+  }, [selections, accessoryList]);
+
   const CashTabStepOne = () => {
     return (
       <div className="">
@@ -408,7 +427,7 @@ const CashTab = ({
         {showCheckOutForm &&
           ReactDOM.createPortal(
             <div className="fixed top-0 z-30 inset-0 backdrop-blur-sm bg-black bg-opacity-10 flex items-center justify-center p-4">
-              <CheckoutForm setShowCheckOutForm={setShowCheckOutForm} />
+              <CheckoutForm setShowCheckOutForm={setShowCheckOutForm} productDetails={productDetails} filteredAccessory={filteredAccessory} selections={selections}/>
             </div>,
             document.body
           )}

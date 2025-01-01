@@ -30,7 +30,7 @@ interface AccessorySelection {
   qty: number;
 }
 
-interface SelectionsType {
+export interface SelectionsType {
   baseUnitQty: number;
   accessories: {
     [accId: string]: AccessorySelection;
@@ -55,7 +55,7 @@ const ViewSingleProduct = () => {
     accessories: {},
     shippingOption: null,
   });
-console.log(selections,accessoryList,buildList)
+console.log(selections,accessoryList)
   const [totalPrices, setTotalPrices] = useState({
     basePrice: 0,
     addOns: 0,
@@ -104,9 +104,7 @@ console.log(selections,accessoryList,buildList)
       setSelections((prevState) => ({
         ...prevState,
         accessories: initialAccessoriesState,
-        shippingOption: shippingOptionState
-          ? shippingOptions[1].id
-          : shippingOptions[0].id,
+        shippingOption: shippingOptionState ? shippingOptions[1].id : shippingOptions[0].id,
       }));
 
       // Set total prices based on base price
@@ -163,15 +161,9 @@ console.log(selections,accessoryList,buildList)
   }, [selections, productDetails?.price, accessoryList]);
 
 
-  const handleTabClick = useCallback(
-    (tab: string) => {
-      setActiveTab(tab);
-    },
-    [accessoryList]
-  );
+  const handleTabClick = useCallback((tab: string) => {setActiveTab(tab);},[accessoryList]);
 
   const handleAccessoryChange = (accId: string, isChecked: boolean) => {
-    console.log(isChecked);
     setSelections((prevState) => ({
       ...prevState,
       accessories: {
