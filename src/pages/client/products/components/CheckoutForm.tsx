@@ -16,17 +16,21 @@ import {
 } from "../../types/ClientSchemas";
 import { CheckoutFormSchema } from "../../types/Validations";
 import SelectField from "../../../../components/utils/SelectFeild";
-interface ICheckoutFormProps{
+
+interface ICheckoutFormProps {
   setShowCheckOutForm: Dispatch<SetStateAction<boolean>>;
 }
+
 const CheckoutForm = ({
   setShowCheckOutForm,
   productDetails,
+  setShowThankYouTab,
   selections,
   setSelections,
   cashTabStep,
   filteredAccessory,
   accessoryList,
+  financing,
   handleAccessoryChange,
   handleAccessoryQtyChange,
   shippingOptions,
@@ -34,13 +38,13 @@ const CheckoutForm = ({
   totalPrices,
   setModalAccessory,
   setShowAccessory,
-  
 }: any) => {
-  
   const { firstPageForm } = useClientContext();
+
   const [checkoutForm, setCheckoutForm] = useState<ICheckoutForm>(
     CheckoutFormDefaultValues
   );
+
   const [validationErrors, setValidationErrors] = useState<
     { [key in keyof ICheckoutForm]?: string }
   >({});
@@ -50,99 +54,122 @@ const CheckoutForm = ({
   const [isPaymentDetailsOpen, setIsPaymentDetailsOpen] = useState(true);
   const [isDeliveryAddressOpen, setIsDeliveryAddressOpen] = useState(true);
   const [isBillingInfoOpen, setIsBillingInfoOpen] = useState(true);
+
   const inputRef: React.RefObject<HTMLInputElement> = useRef(null);
 
-  
-  console.log("Selections",selections)
+  const getDigits = (input: string) => input.replace(/\D/g, "");
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
-    // const { name, value, type, checked } = e.target;
-    
-    // let newValue: string | boolean = type === "checkbox" ? checked : value;
     const { name, value, type } = e.target;
-
     let newValue: string | boolean;
-    let checked
+    let checked;
 
     if (type === "checkbox") {
-       checked = e.target.checked;
+      checked = (e.target as HTMLInputElement).checked;
       newValue = checked;
     } else {
       newValue = value;
     }
-    
-    
-    
-    // Function to remove non-digit characters
-    const getDigits = (input: string) => input.replace(/\D/g, "");
-  
+
+    // Handle card number formatting
     if (name === "payment_card_number") {
-      // Remove all non-digit characters
-      const digits = getDigits(value).slice(0, 16); // Limit to 16 digits
-  
-      // Insert hyphens after every 4 digits
+      const digits = getDigits(value).slice(0, 16);
       let formattedCardNumber = digits.replace(/(.{4})/g, "$1-").trim();
       if (formattedCardNumber.endsWith("-")) {
         formattedCardNumber = formattedCardNumber.slice(0, -1);
       }
-  
       newValue = formattedCardNumber;
     }
-  
+
+    // Handle card expiry validation
     if (name === "payment_expiry") {
-      // Remove all non-digit characters
       let digits = getDigits(value).slice(0, 4); // MMYY
-  
-      // Insert slash after 2 digits
       if (digits.length > 2) {
         digits = digits.slice(0, 2) + "/" + digits.slice(2);
       }
-  
       newValue = digits;
+
+      const [month, year] = (newValue as string).split("/").map(Number);
+      const currentDate = new Date();
+      const currentYear = currentDate.getFullYear() % 100;
+      const currentMonth = currentDate.getMonth() + 1;
+
+      if (
+        isNaN(month) ||
+        isNaN(year) ||
+        month < 1 ||
+        month > 12 ||
+        year < currentYear ||
+        (year === currentYear && month < currentMonth)
+      ) {
+        setValidationErrors((prevErrors) => ({
+          ...prevErrors,
+          payment_expiry: "Card has expired or invalid expiry date.",
+        }));
+      } else {
+        setValidationErrors((prevErrors) => ({
+          ...prevErrors,
+          payment_expiry: undefined,
+        }));
+      }
     }
-  
+
+    // Handle CVC (limit to 4 digits)
     if (name === "payment_cvc") {
-      // Remove all non-digit characters and limit to 4 digits
       newValue = getDigits(value).slice(0, 4);
     }
-  
-    // Handle 'billing_same_as_delivery' checkbox
-    if (name === "billing_same_as_delivery" && checked === true) {
-      setValidationErrors((prevErrors) => ({
-        ...prevErrors,
-        [name]: undefined,
-      }));
-      setCheckoutForm((prevForm) => ({
-        ...prevForm,
-        billing_same_as_delivery: true,
-        billing_address_street: prevForm.delivery_address_street,
-        billing_address_city: prevForm.delivery_address_city,
-        billing_address_state: prevForm.delivery_address_state_id,
-        billing_address_zip_code: prevForm.delivery_address_zip_code,
-        billing_address_country: prevForm.delivery_address_country,
-      }));
+
+    // Handle Billing same as Delivery
+    if (name === "billing_same_as_delivery") {
+      if (checked) {
+        // Remove any validation errors for billing address
+        setValidationErrors((prevErrors) => ({
+          ...prevErrors,
+          billing_address_street: undefined,
+          billing_address_city: undefined,
+          billing_address_state: undefined,
+          billing_address_zip_code: undefined,
+          billing_address_country: undefined,
+        }));
+
+        setCheckoutForm((prevForm) => ({
+          ...prevForm,
+          billing_same_as_delivery: true,
+          billing_address_street: prevForm.delivery_address_street,
+          billing_address_city: prevForm.delivery_address_city,
+          billing_address_state: prevForm.delivery_address_state_id,
+          billing_address_zip_code: prevForm.delivery_address_zip_code,
+          billing_address_country: prevForm.delivery_address_country,
+        }));
+      } else {
+        // If user unchecks, just set it to false (fields remain but are again independent)
+        setCheckoutForm((prevForm) => ({
+          ...prevForm,
+          billing_same_as_delivery: false,
+        }));
+      }
       return;
     }
-  
+
     setCheckoutForm((prevForm) => ({
       ...prevForm,
       [name]: newValue,
     }));
-  
 
+    // Clear individual field error when user changes that field
     setValidationErrors((prevErrors) => ({
       ...prevErrors,
       [name]: undefined,
     }));
-  }; 
-  
+  };
+
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // Submit logic here
+
     const validation = CheckoutFormSchema.safeParse(checkoutForm);
     console.log(validation);
-    console.log("Form data:", checkoutForm);
     if (!validation.success) {
       const newErrors: { [key in keyof ICheckoutForm]?: string } = {};
       validation.error.issues.forEach((issue) => {
@@ -151,32 +178,122 @@ const CheckoutForm = ({
       });
       setValidationErrors(newErrors);
 
+      const sections = {
+        contactInfo: [
+          "contact_first_name",
+          "contact_last_name",
+          "contact_company_name",
+          "contact_phone_number",
+          "contact_email",
+        ] as const,
+        paymentDetails: [
+          "payment_name_on_card",
+          "payment_card_number",
+          "payment_expiry",
+          "payment_cvc",
+        ] as const,
+        deliveryAddress: [
+          "delivery_address_street",
+          "delivery_address_city",
+          "delivery_address_state_id",
+          "delivery_address_zip_code",
+          "delivery_address_country",
+        ] as const,
+        billingInfo: [
+          "billing_address_street",
+          "billing_address_city",
+          "billing_address_state",
+          "billing_address_zip_code",
+          "billing_address_country",
+        ] as const,
+        depositAgreement: ["i_understand_deposit_is_non_refundable"] as const,
+      };
+
+      // Function to check if any fields in a section have errors
+      const hasErrorsInSection = (fields: readonly (keyof ICheckoutForm)[]) =>
+        fields.some((field) => newErrors[field]);
+
+      // Open sections that have validation errors
+      if (hasErrorsInSection(sections.contactInfo)) {
+        setIsContactInfoOpen(true);
+      }
+      if (hasErrorsInSection(sections.paymentDetails)) {
+        setIsPaymentDetailsOpen(true);
+      }
+      if (hasErrorsInSection(sections.deliveryAddress)) {
+        setIsDeliveryAddressOpen(true);
+      }
+      if (hasErrorsInSection(sections.billingInfo)) {
+        setIsBillingInfoOpen(true);
+      }
+      // if (hasErrorsInSection(sections.depositAgreement)) {
+      //   // If you have a collapsible section for deposit agreement, handle it here
+      //   // Otherwise, you might want to scroll to the submit button or display a message
+      // }
+
       return;
     }
+    setShowCheckOutForm(false);
+    setShowThankYouTab(true)
+    // Form is valid, you can proceed with submission / next steps
+    console.log("Form data:", checkoutForm);
   };
+
+  //  the first input on mount
   useEffect(() => {
     if (inputRef.current !== null) {
-      inputRef?.current?.focus();
+      inputRef.current.focus();
     }
-    setCheckoutForm((prev: ICheckoutForm) => {
-      return {
-        ...prev,
-        contact_first_name: firstPageForm.fName,
-        contact_last_name: firstPageForm.lName,
-        contact_company_name: firstPageForm.company,
-        contact_phone_number: firstPageForm.phNo,
-        contact_email: firstPageForm.email,
-        contact_job_title: firstPageForm.jobTitle,
-        delivery_address_state_id: firstPageForm.state,
-      };
-    });
-  }, []);
-console.log(filteredAccessory)
+
+    // Prefill certain fields from firstPageForm
+    setCheckoutForm((prev: ICheckoutForm) => ({
+      ...prev,
+      contact_first_name: firstPageForm.fName,
+      contact_last_name: firstPageForm.lName,
+      contact_company_name: firstPageForm.company,
+      contact_phone_number: firstPageForm.phNo,
+      contact_email: firstPageForm.email,
+      contact_job_title: firstPageForm.jobTitle,
+      delivery_address_state_id: firstPageForm.state,
+      financing: financing,
+      product_id: productDetails.id,
+      product_name: productDetails.name,
+      product_price: Number(productDetails.price),
+      product_qty: selections.baseUnitQty,
+      product_total_cost: Number(productDetails.price) * selections.baseUnitQty,
+      shipping_method_id: selections.shippingOption,
+      contact_industry: firstPageForm.industry,
+    }));
+  }, [firstPageForm, financing]);
+
+  // Sync up billing if "billing_same_as_delivery" is true
+  useEffect(() => {
+    if (checkoutForm.billing_same_as_delivery) {
+      setCheckoutForm((prevForm) => ({
+        ...prevForm,
+        billing_address_street: prevForm.delivery_address_street,
+        billing_address_city: prevForm.delivery_address_city,
+        billing_address_state: prevForm.delivery_address_state_id,
+        billing_address_zip_code: prevForm.delivery_address_zip_code,
+        billing_address_country: prevForm.delivery_address_country,
+      }));
+    }
+  }, [
+    checkoutForm.delivery_address_street,
+    checkoutForm.delivery_address_city,
+    checkoutForm.delivery_address_state_id,
+    checkoutForm.delivery_address_zip_code,
+    checkoutForm.delivery_address_country,
+    checkoutForm.billing_same_as_delivery,
+  ]);
+
+  console.log(filteredAccessory);
 
   return (
     <form
       onSubmit={handleSubmit}
-      className="w-full max-w-[50%] mx-auto p-4 lg:p-8 lg:pl-5 bg-white overflow-y-auto max-h-[900px] shadow-2xl relative scrollbar-custom pt-16"
+      className="z-50 w-full md:max-w-[80%] xl:max-w-[60%] mx-auto p-4 lg:p-8 lg:pl-5 bg-white overflow-y-auto    shadow-2xl relative scrollbar-custom pt-16  max-h-[90vh]        
+   sm:max-h-[80vh]   md:max-h-[80%]     xl:max-h-[85vh] "
     >
       {/* close btn */}
       <button
@@ -187,7 +304,7 @@ console.log(filteredAccessory)
         <CloseBtn />
       </button>
       {/* Build Summary */}
-      <div className="flex items-start mb-4">
+      <div className="flex items-start mb-4 overflow-y-auto">
         <button
           type="button"
           tabIndex={-1}
@@ -200,39 +317,48 @@ console.log(filteredAccessory)
         </button>
 
         {isBuildSummaryOpen ? (
-          <div
-            className="flex-1"
-            id="buildSummaryContent">
-            <h2 className="font-bold text-xl mb-4 text-custom-black-200">
+          <div className="flex-1" id="buildSummaryContent">
+            <h2 className="font-semibold text-md  lg:font-bold  lg:text-xl  mb-4 text-custom-black-200">
               Build Summary
             </h2>
-            <div className="flex flex-col w-[60%] text-black font-bold text-[17px] space-y-2">
+            <div className="flex flex-col w-[60%] text-black lg:font-bold font-semibold text-sm lg:text-[17px] space-y-2">
               <div className="flex justify-between">
                 <p>Equiter {productDetails.name}</p>
                 <p>
-                  ${Number(productDetails.price)*selections.baseUnitQty} <span className="text-custom-med-gray">({selections.baseUnitQty})</span>
+                  ${Number(productDetails.price) * selections.baseUnitQty}{" "}
+                  <span className="text-custom-med-gray">
+                    ({selections.baseUnitQty})
+                  </span>
                 </p>
               </div>
               <div className="flex justify-between flex-col">
-                {filteredAccessory.map((a)=>{
-                 return <div className="flex justify-between ">
-                    <p className="capitalize">{a.name}</p>
-                <p>
-                  ${Number(a.price)*a.qty} <span className="text-custom-med-gray">({a.qty})</span>
-                </p>
-                  </div>
+                {filteredAccessory.map((a) => {
+                  return (
+                    <div className="flex justify-between ">
+                      <p className="capitalize">{a.name}</p>
+                      <p>
+                        ${Number(a.price) * a.qty}{" "}
+                        <span className="text-custom-med-gray">({a.qty})</span>
+                      </p>
+                    </div>
+                  );
                 })}
-                
               </div>
-              
+
               <div className="flex justify-between pr-5">
-                <p>{selections.shippingOption=="pickup"?'Pickup':`Delivery to the State of ${checkoutForm.delivery_address_state_id}`}</p>
-                <p>{selections.shippingOption=="pickup"?'$0':`$${400}`}</p>
+                <p>
+                  {selections.shippingOption == "pickup"
+                    ? "Pickup"
+                    : `Delivery to the State of ${checkoutForm.delivery_address_state_id}`}
+                </p>
+                <p>
+                  {selections.shippingOption == "pickup" ? "$0" : `$${400}`}
+                </p>
               </div>
             </div>
           </div>
         ) : (
-          <h2 className="flex-1 font-bold text-xl mb-4 text-custom-black-200">
+          <h2 className="flex-1 font-semibold text-md  lg:font-bold  lg:text-xl  mb-4 text-custom-black-200">
             Build Summary
           </h2>
         )}
@@ -254,7 +380,7 @@ console.log(filteredAccessory)
         </button>
         {isContactInfoOpen ? (
           <div className="flex-1" id="contactInfoContent">
-            <h2 className="font-bold text-xl mb-4 text-custom-black-200">
+            <h2 className="font-semibold text-md  lg:font-bold  lg:text-xl  mb-4 text-custom-black-200">
               Contact Info
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 md:gap-4">
@@ -307,7 +433,7 @@ console.log(filteredAccessory)
             </div>
           </div>
         ) : (
-          <h2 className="font-bold text-xl mb-4 text-custom-black-200">
+          <h2 className="font-semibold text-md  lg:font-bold  lg:text-xl  mb-4 text-custom-black-200">
             Contact Info
           </h2>
         )}
@@ -331,12 +457,12 @@ console.log(filteredAccessory)
         </button>
         {isPaymentDetailsOpen ? (
           <div className="flex-1" id="paymentDetailsContent">
-            <h2 className="font-bold text-xl mb-4 text-custom-black-200">
+            <h2 className="font-semibold text-md  lg:font-bold  lg:text-xl  mb-4 text-custom-black-200">
               Payment Details
             </h2>
             <div className="grid grid-cols-1 ">
               <InputFieldCurved
-                label="Name on Card"
+                label="Name on Card*"
                 type="text"
                 id="payment_name_on_card"
                 name="payment_name_on_card"
@@ -345,7 +471,7 @@ console.log(filteredAccessory)
                 error={validationErrors.payment_name_on_card}
               />
               <InputFieldCurved
-                label="Card Number"
+                label="Card Number*"
                 type="text"
                 id="payment_card_number"
                 name="payment_card_number"
@@ -356,7 +482,7 @@ console.log(filteredAccessory)
               />
               <div className="flex gap-3 grid-cols-2">
                 <InputFieldCurved
-                  label="Expiration (MM/YY)"
+                  label="Expiration (MM/YY)*"
                   type="text"
                   id="payment_expiry"
                   name="payment_expiry"
@@ -366,8 +492,8 @@ console.log(filteredAccessory)
                   onChange={handleChange}
                 />
                 <InputFieldCurved
-                  label="CVC"
-                  type="text"
+                  label="CVC*"
+                  type="number"
                   id="payment_cvc"
                   maxlength={4}
                   name="payment_cvc"
@@ -379,7 +505,7 @@ console.log(filteredAccessory)
             </div>
           </div>
         ) : (
-          <h2 className="font-bold text-xl mb-4 text-custom-black-200">
+          <h2 className="font-semibold text-md  lg:font-bold  lg:text-xl  mb-4 text-custom-black-200">
             Payment Details
           </h2>
         )}
@@ -404,7 +530,7 @@ console.log(filteredAccessory)
         </button>
         {isDeliveryAddressOpen ? (
           <div className="flex-1" id="deliveryAddressContent">
-            <h2 className="font-bold text-xl mb-4 text-custom-black-200">
+            <h2 className="font-semibold text-md  lg:font-bold  lg:text-xl  mb-4 text-custom-black-200">
               Delivery Address
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 md:gap-4">
@@ -444,7 +570,7 @@ console.log(filteredAccessory)
 
               <InputFieldCurved
                 label="Zip Code"
-                type="text"
+                type="number"
                 id="delivery_address_zip_code"
                 name="delivery_address_zip_code"
                 value={checkoutForm.delivery_address_zip_code}
@@ -466,7 +592,7 @@ console.log(filteredAccessory)
             </div>
           </div>
         ) : (
-          <h2 className="font-bold text-xl mb-4 text-custom-black-200">
+          <h2 className="font-semibold text-md  lg:font-bold  lg:text-xl  mb-4 text-custom-black-200">
             Delivery Address
           </h2>
         )}
@@ -488,16 +614,16 @@ console.log(filteredAccessory)
         </button>
         {isBillingInfoOpen ? (
           <div className="flex-1" id="billingInfoContent">
-            <div className="mb-4 flex items-center space-x-2">
-              <h2 className="font-bold text-xl  text-custom-black-200">
+            <div className="flex mb-4 md:flex-row flex-col">
+              <h2 className="font-semibold text-md  lg:font-bold  lg:text-xl   text-custom-black-200">
                 Billing Information
               </h2>
               <label
                 htmlFor="billing_same_as_delivery"
-                className="text-sm !ml-8  text-[#666666] flex items-end "
+                className=" text-xs lg:text-sm lg:!ml-8  text-[#666666] lg:flex items-end "
               >
                 <input
-                  className="form-checkbox mr-3  "
+                  className="form-checkbox mr-3 pt-1 mt-0.5 "
                   type="checkbox"
                   id="billing_same_as_delivery"
                   name="billing_same_as_delivery"
@@ -548,7 +674,7 @@ console.log(filteredAccessory)
 
               <InputFieldCurved
                 label="Zip Code*"
-                type="text"
+                type="number"
                 disabled={checkoutForm.billing_same_as_delivery}
                 id="billing_address_zip_code"
                 name="billing_address_zip_code"
@@ -565,21 +691,18 @@ console.log(filteredAccessory)
                 error={validationErrors.billing_address_country}
                 value={checkoutForm.billing_address_country}
                 onChange={handleChange}
-                options={[
-                  { value: "United States", label: "United States" },
-                  { value: "Canada", label: "Canada" },
-                ]}
+                options={[{ value: "United States", label: "United States" }]}
               />
             </div>
           </div>
         ) : (
           <div className="flex items-center mb-2">
-            <h2 className="font-bold text-xl  text-custom-black-200">
+            <h2 className="font-semibold text-md  lg:font-bold  lg:text-xl  text-custom-black-200">
               Billing Information
             </h2>
             <label
               htmlFor="billing_same_as_delivery"
-              className="text-sm !ml-8  text-[#666666] flex items-end "
+              className="text-xs lg:text-sm lg:!ml-8  text-[#666666] flex items-end "
             >
               <input
                 className="form-checkbox mr-3  "
@@ -595,26 +718,46 @@ console.log(filteredAccessory)
         )}
       </div>
       {/* submit btn */}
-      <div className="pl-6 flex flex-col mb-8 gap-2">
-        <div className="font-roboto gap-8 flex w-full justify-between items-center">
-          <div className="w-[60%]">
-            <p className="text-[#666666] font-bold text-[17px]">Due Today</p>
-            <p className="text-black font-bold text-[23px]">
-              Non-Refundable Deposit <span className="ml-[35%]">$1,500</span>
+      <div className="pl-6 flex  flex-col mb-8 gap-2">
+        <div className="font-roboto gap-3 lg:gap-8 flex flex-col lg:flex-row w-full justify-between items-center">
+          <div className="w-[100%] lg:w-[60%]">
+            <p className="text-[#666666] font-semibold lg:font-bold lg:text-[17px]">
+              Due Today
             </p>
+            <div className="flex w-full justify-between items-center font-semibold lg:font-bold">
+              <p className="text-black  text-[16px]  2xl:text-[23px]">
+                Non-Refundable Deposit
+              </p>
+              <span className=" ">$1,500</span>
+            </div>
+
             <p className="text-custom-med-gray text-[12px] mt-1">
               Once you confirm your build, your Equipter will be set for
               production and your deposit will be non-refundable. Pricing and
               options are subject to change until your Equiper is built.
             </p>
           </div>
-          <button className="btn-yellow w-[25%] h-fit capitalize">
+          <label
+            htmlFor="depositAgree"
+            className="text-sm text-[#666666] flex lg:hidden items-center font-noto-sans"
+          >
+            <input
+              className="form-checkbox mr-3"
+              type="checkbox"
+              id="i_understand_deposit_is_non_refundable"
+              name="i_understand_deposit_is_non_refundable"
+              checked={checkoutForm.i_understand_deposit_is_non_refundable}
+              onChange={handleChange}
+            />
+            I understand my deposit is non-refundable.
+          </label>
+          <button className="btn-yellow w-full lg:w-[35%] h-fit capitalize">
             Submit Deposit
           </button>
         </div>
         <label
           htmlFor="depositAgree"
-          className="text-sm text-[#666666] flex items-center font-noto-sans"
+          className="text-sm hidden  text-[#666666] lg:flex items-center font-noto-sans"
         >
           <input
             className="form-checkbox mr-3"

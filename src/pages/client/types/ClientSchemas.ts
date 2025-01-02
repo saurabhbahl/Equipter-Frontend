@@ -70,10 +70,10 @@ export interface ICheckoutForm {
   financing: string;
   product_id: string;
   product_name: string;
-  product_price: string;
-  product_qty: string;
+  product_price: number;
+  product_qty: number;
   shipping_method_id: string;
-  zone_id: string;
+  zone_id?: string;
   contact_first_name: string;
   contact_last_name: string;
   contact_company_name: string;
@@ -91,19 +91,19 @@ export interface ICheckoutForm {
   billing_address_state: string;
   billing_address_zip_code: string;
   billing_address_country: string;
-  delivery_cost: string;
+  delivery_cost?: string;
   delivery_address_street: string;
   delivery_address_city: string;
   delivery_address_state_id: string;
   delivery_address_zip_code: string;
   delivery_address_country: string;
-  estimated_delivery_date: string;
-  pickup_location_name: string;
-  pickup_location_address: string;
-  pickup_scheduled_date: string;
-  payment_type: string;
-  product_total_cost: string;
-  non_refundable_deposit: string;
+  estimated_delivery_date?: string;
+  pickup_location_name?: string;
+  pickup_location_address?: string;
+  pickup_scheduled_date?: string;
+  payment_type?: string;
+  product_total_cost: number;
+  non_refundable_deposit?: number;
   i_understand_deposit_is_non_refundable: boolean;
 }
 

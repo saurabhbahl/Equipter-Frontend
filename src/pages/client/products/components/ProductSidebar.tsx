@@ -1,7 +1,11 @@
 import { IProduct, IAccessory } from "../../types/ClientSchemas";
 import FinancingTab from "./FinancingTab";
 import CashTab from "./CashTab";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import CheckoutForm from "./CheckoutForm";
+import ReactDOM from "react-dom";
+import ThankTab from "./ThankYouTab";
+import ThankYouTab from "./ThankYouTab";
 
 interface AccessorySelection {
   selected: boolean;
@@ -72,6 +76,23 @@ const ProductSidebar = ({
   const [cashTabStep, setCashTabStep] = useState(1);
   const [financingTabStep, setFinancingTabStep] = useState(1);
   const [showCheckOutForm, setShowCheckOutForm] = useState(false);
+  const [filteredAccessory, setFilteredAccessory] = useState<any>();
+  const [showThankYouTab, setShowThankYouTab] = useState(false);
+
+  useEffect(() => {
+    if (!accessoryList || accessoryList.length === 0) return;
+
+    const selectedAccessories = accessoryList
+      .filter((accessory) => selections.accessories[accessory.id]?.selected)
+      .map((accessory) => ({
+        ...accessory,
+        qty: selections.accessories[accessory.id]?.qty || 1,
+      }));
+
+    setFilteredAccessory(selectedAccessories);
+    console.log("Selected=>Acc", selectedAccessories);
+    console.log("Selections", selections);
+  }, [selections, accessoryList]);
 
   const currentDate = new Date();
   // Next two months
@@ -152,7 +173,7 @@ const ProductSidebar = ({
           {activeTab === "cash" ? (
             <CashTab
               productDetails={productDetails}
-              showCheckOutForm={showCheckOutForm} 
+              showCheckOutForm={showCheckOutForm}
               setShowCheckOutForm={setShowCheckOutForm}
               selections={selections}
               setSelections={setSelections}
@@ -170,7 +191,30 @@ const ProductSidebar = ({
             <FinancingTab />
           )}
         </div>
-
+        {/* checkout form */}
+        {showCheckOutForm &&
+          ReactDOM.createPortal(
+            <div className="fixed top-0 z-30 inset-0 backdrop-blur-sm bg-black bg-opacity-10 flex items-center justify-center lg:p-4 p-8">
+              <CheckoutForm
+                setShowCheckOutForm={setShowCheckOutForm}
+                productDetails={productDetails}
+                filteredAccessory={filteredAccessory}
+                selections={selections}
+                financing={activeTab}
+                setShowThankYouTab={setShowThankYouTab}
+              />
+            </div>,
+            document.body
+          )}
+    
+        
+        {showThankYouTab &&
+          ReactDOM.createPortal(
+            <div className="fixed top-0 z-30 inset-0 backdrop-blur-sm bg-black bg-opacity-10 flex items-center justify-center lg:p-4 p-8">
+             <ThankYouTab />
+            </div>,
+            document.body
+          )}
         {/* Order Block */}
         <div className=" border-t font-roboto border-gray-400 pt-9 mt-7 max-w-7xl mx-auto  capitalize">
           <h2 className="text-lg lg:text-2xl font-semibold text-custom-black-200 text-center">
