@@ -72,7 +72,7 @@ export interface ICheckoutForm {
   product_name: string;
   product_price: number;
   product_qty: number;
-  shipping_method_id: string;
+  shipping_method_id?: string|null;
   zone_id?: string;
   contact_first_name: string;
   contact_last_name: string;
@@ -107,13 +107,13 @@ export interface ICheckoutForm {
   i_understand_deposit_is_non_refundable: boolean;
 }
 
-export const CheckoutFormDefaultValues = {
+export const CheckoutFormDefaultValues:ICheckoutForm = {
   financing: "",
   product_id: "",
   product_name: "",
-  product_price: "",
-  product_qty: "",
-  shipping_method_id: "",
+  product_price: 0,
+  product_qty: 1,
+  shipping_method_id: null,
   zone_id: "",
   contact_first_name: "",
   contact_last_name: "",
@@ -143,7 +143,7 @@ export const CheckoutFormDefaultValues = {
   pickup_location_address: "",
   pickup_scheduled_date: "",
   payment_type: "",
-  product_total_cost: "",
-  non_refundable_deposit: "",
+  product_total_cost: 0,
+  non_refundable_deposit: 0,
   i_understand_deposit_is_non_refundable: false,
 };

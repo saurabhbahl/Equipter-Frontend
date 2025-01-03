@@ -59,11 +59,13 @@ interface SelectFieldProps {
   value?: string;
   onChange?: (e: React.ChangeEvent<HTMLSelectElement>) => void;
   error?: string;
+  labelClasses?:string;
 }
 
 const SelectField: React.FC<SelectFieldProps> = ({
   label,
   id,
+  labelClasses,
   name,
   classes,
   defaultValue,
@@ -75,7 +77,7 @@ const SelectField: React.FC<SelectFieldProps> = ({
 }) => {
   return (
     <div className="mb-4">
-      <label htmlFor={id} className="block font-medium text-custom-gray">
+      <label htmlFor={id} className={`block font-medium text-custom-gray  ${labelClasses}`}>
         {label}
       </label>
       <select

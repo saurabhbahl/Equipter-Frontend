@@ -12,43 +12,48 @@ import { useClientContext } from "../../../../hooks/useClientContext";
 import CloseBtn from "../../../utils/CloseBtn";
 import {
   CheckoutFormDefaultValues,
+  IAccessory,
   ICheckoutForm,
+  IProduct,
 } from "../../types/ClientSchemas";
 import { CheckoutFormSchema } from "../../types/Validations";
 import SelectField from "../../../../components/utils/SelectFeild";
+import { SelectionsType } from "../ViewSingleProduct";
 
+
+interface IAccessories extends IAccessory {
+  qty:number;
+}
 interface ICheckoutFormProps {
   setShowCheckOutForm: Dispatch<SetStateAction<boolean>>;
+  productDetails: IProduct;
+  setThankYouTab: Dispatch<SetStateAction<boolean>>;
+  selections:SelectionsType,
+  filteredAccessory: IAccessories[];
+  financing: string;
 }
+
+
 
 const CheckoutForm = ({
   setShowCheckOutForm,
   productDetails,
-  setShowThankYouTab,
+  setThankYouTab,
   selections,
-  setSelections,
-  cashTabStep,
   filteredAccessory,
-  accessoryList,
   financing,
-  handleAccessoryChange,
-  handleAccessoryQtyChange,
-  shippingOptions,
-  handleShippingChange,
-  totalPrices,
-  setModalAccessory,
-  setShowAccessory,
-}: any) => {
-  const { firstPageForm } = useClientContext();
-
-  const [checkoutForm, setCheckoutForm] = useState<ICheckoutForm>(
-    CheckoutFormDefaultValues
-  );
+}: ICheckoutFormProps) => {
+  const {
+    firstPageForm,
+    loadFromLocalStorage,
+    saveToLocalStorage,
+  } = useClientContext();
+  const STORAGE_KEY = "checkoutData";
+  const [checkoutForm, setCheckoutForm] = useState<ICheckoutForm>(CheckoutFormDefaultValues);
 
   const [validationErrors, setValidationErrors] = useState<
     { [key in keyof ICheckoutForm]?: string }
   >({});
-
   const [isBuildSummaryOpen, setIsBuildSummaryOpen] = useState(true);
   const [isContactInfoOpen, setIsContactInfoOpen] = useState(true);
   const [isPaymentDetailsOpen, setIsPaymentDetailsOpen] = useState(true);
@@ -63,7 +68,7 @@ const CheckoutForm = ({
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value, type } = e.target;
-    let newValue: string | boolean;
+    let newValue: string | boolean | number;
     let checked;
 
     if (type === "checkbox") {
@@ -90,30 +95,6 @@ const CheckoutForm = ({
         digits = digits.slice(0, 2) + "/" + digits.slice(2);
       }
       newValue = digits;
-
-      const [month, year] = (newValue as string).split("/").map(Number);
-      const currentDate = new Date();
-      const currentYear = currentDate.getFullYear() % 100;
-      const currentMonth = currentDate.getMonth() + 1;
-
-      if (
-        isNaN(month) ||
-        isNaN(year) ||
-        month < 1 ||
-        month > 12 ||
-        year < currentYear ||
-        (year === currentYear && month < currentMonth)
-      ) {
-        setValidationErrors((prevErrors) => ({
-          ...prevErrors,
-          payment_expiry: "Card has expired or invalid expiry date.",
-        }));
-      } else {
-        setValidationErrors((prevErrors) => ({
-          ...prevErrors,
-          payment_expiry: undefined,
-        }));
-      }
     }
 
     // Handle CVC (limit to 4 digits)
@@ -157,8 +138,7 @@ const CheckoutForm = ({
       ...prevForm,
       [name]: newValue,
     }));
-
-    // Clear individual field error when user changes that field
+    saveToLocalStorage(checkoutForm, STORAGE_KEY, 15 * 24 * 60 * 60 * 1000);
     setValidationErrors((prevErrors) => ({
       ...prevErrors,
       [name]: undefined,
@@ -226,16 +206,11 @@ const CheckoutForm = ({
       if (hasErrorsInSection(sections.billingInfo)) {
         setIsBillingInfoOpen(true);
       }
-      // if (hasErrorsInSection(sections.depositAgreement)) {
-      //   // If you have a collapsible section for deposit agreement, handle it here
-      //   // Otherwise, you might want to scroll to the submit button or display a message
-      // }
-
       return;
     }
     setShowCheckOutForm(false);
-    setShowThankYouTab(true)
-    // Form is valid, you can proceed with submission / next steps
+    setThankYouTab(true);
+
     console.log("Form data:", checkoutForm);
   };
 
@@ -248,7 +223,7 @@ const CheckoutForm = ({
     // Prefill certain fields from firstPageForm
     setCheckoutForm((prev: ICheckoutForm) => ({
       ...prev,
-      contact_first_name: firstPageForm.fName,
+      contact_first_name: firstPageForm.fName as string,
       contact_last_name: firstPageForm.lName,
       contact_company_name: firstPageForm.company,
       contact_phone_number: firstPageForm.phNo,
@@ -262,8 +237,12 @@ const CheckoutForm = ({
       product_qty: selections.baseUnitQty,
       product_total_cost: Number(productDetails.price) * selections.baseUnitQty,
       shipping_method_id: selections.shippingOption,
-      contact_industry: firstPageForm.industry,
+      contact_industry: firstPageForm.industry as string ?? "" ,
     }));
+    const savedData = loadFromLocalStorage(STORAGE_KEY);
+    if (savedData) {
+      setCheckoutForm({ ...savedData ,i_understand_deposit_is_non_refundable:false,payment_card_number:"",payment_cvc:"",payment_expiry:"",payment_name_on_card:"",});
+    }
   }, [firstPageForm, financing]);
 
   // Sync up billing if "billing_same_as_delivery" is true
@@ -292,13 +271,12 @@ const CheckoutForm = ({
   return (
     <form
       onSubmit={handleSubmit}
-      className="z-50 w-full md:max-w-[80%] xl:max-w-[60%] mx-auto p-4 lg:p-8 lg:pl-5 bg-white overflow-y-auto    shadow-2xl relative scrollbar-custom pt-16  max-h-[90vh]        
-   sm:max-h-[80vh]   md:max-h-[80%]     xl:max-h-[85vh] "
+      className="z-50 w-full md:max-w-[80%] xl:max-w-[60%] mx-auto p-4 p lg:p-8 lg:pl-5 bg-white overflow-y-auto    shadow-2xl relative scrollbar-custom pt-10  max-h-[90vh]   sm:max-h-[80vh]   md:max-h-[80%]     xl:max-h-[85vh] "
     >
       {/* close btn */}
       <button
         tabIndex={-1}
-        className="absolute right-6"
+        className="absolute right-3 top-5 lg:right-6"
         onClick={() => setShowCheckOutForm(false)}
       >
         <CloseBtn />
@@ -321,7 +299,7 @@ const CheckoutForm = ({
             <h2 className="font-semibold text-md  lg:font-bold  lg:text-xl  mb-4 text-custom-black-200">
               Build Summary
             </h2>
-            <div className="flex flex-col w-[60%] text-black lg:font-bold font-semibold text-sm lg:text-[17px] space-y-2">
+            <div className="flex flex-col lg:w-[60%] text-black lg:font-bold font-semibold text-sm lg:text-[17px] space-y-2">
               <div className="flex justify-between">
                 <p>Equiter {productDetails.name}</p>
                 <p>
@@ -482,7 +460,7 @@ const CheckoutForm = ({
               />
               <div className="flex gap-3 grid-cols-2">
                 <InputFieldCurved
-                  label="Expiration (MM/YY)*"
+                  label="Expiration(MM/YY)*"
                   type="text"
                   id="payment_expiry"
                   name="payment_expiry"
@@ -556,7 +534,8 @@ const CheckoutForm = ({
                 label="State*"
                 id="delivery_address_state_id"
                 name="delivery_address_state_id"
-                classes="mt-1 text-[#666666] text-xs font-noto-sans rounded-md block w-full py-3.5 border border-inset border-custom-gray-200 outline-none px-3 h-12"
+                labelClasses={"text-[12px] lg:text-[14px]  mb-2 !text-[#666666]"}
+                classes="mt-1 text-[#666666] text-xs font-noto-sans rounded-md block w-full  border border-inset border-custom-gray-200 outline-none px-3 h-8 lg:h-12 py-2 lg:py-3.5"
                 defaultValue="Select State*"
                 value={checkoutForm.delivery_address_state_id}
                 onChange={handleChange}
@@ -580,7 +559,8 @@ const CheckoutForm = ({
 
               <SelectField
                 label="Country*"
-                classes="mt-1 text-[#666666] text-xs font-noto-sans rounded-md block w-full py-3.5 border border-inset border-custom-gray-200 outline-none px-3 h-12"
+                labelClasses={"text-[12px] lg:text-[14px]  mb-2 !text-[#666666]"}
+                classes="mt-1 text-[#666666] text-xs font-noto-sans rounded-md block w-full  border border-inset border-custom-gray-200 outline-none px-3 h-8 lg:h-12 py-2 lg:py-3.5"
                 defaultValue="Select Country"
                 id="delivery_address_country"
                 name="delivery_address_country"
@@ -658,7 +638,9 @@ const CheckoutForm = ({
 
               <SelectField
                 label="State*"
-                classes="mt-1 text-[#666666] text-xs font-noto-sans rounded-md block w-full py-3.5 border border-inset border-custom-gray-200 outline-none px-3 h-12"
+                
+        labelClasses={"text-[12px] lg:text-[14px]  mb-2 !text-[#666666]"}
+                classes="mt-1 text-[#666666] text-xs font-noto-sans rounded-md block w-full  border border-inset border-custom-gray-200 outline-none px-3 h-8 lg:h-12 py-2 lg:py-3.5"
                 defaultValue="Select State"
                 id="billing_address_state"
                 name="billing_address_state"
@@ -683,8 +665,9 @@ const CheckoutForm = ({
                 onChange={handleChange}
               />
               <SelectField
+             labelClasses={"text-[12px] lg:text-[14px]  mb-2 !text-[#666666]"}
+                classes="mt-1 text-[#666666] text-xs font-noto-sans rounded-md block w-full  border border-inset border-custom-gray-200 outline-none px-3 h-8 lg:h-12 py-2 lg:py-3.5"
                 label="Country*"
-                classes="mt-1 text-[#666666] text-xs font-noto-sans rounded-md block w-full py-3.5 border border-inset border-custom-gray-200 outline-none px-3 h-12"
                 defaultValue="Select Country"
                 id="billing_address_country"
                 name="billing_address_country"
@@ -769,6 +752,7 @@ const CheckoutForm = ({
           />
           I understand my deposit is non-refundable.
         </label>
+        {validationErrors.i_understand_deposit_is_non_refundable && <span className="text-red-500 h-6 text-[10px] font-bold">{validationErrors.i_understand_deposit_is_non_refundable}</span>}
       </div>
     </form>
   );
