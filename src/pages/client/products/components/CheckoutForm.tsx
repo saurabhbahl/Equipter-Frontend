@@ -19,17 +19,18 @@ import {
 import { CheckoutFormSchema } from "../../types/Validations";
 import SelectField from "../../../../components/utils/SelectFeild";
 import { SelectionsType } from "../ViewSingleProduct";
+import { apiClient, publicApiClient } from "../../../../utils/axios";
 
 
-interface IAccessories extends IAccessory {
-  qty:number;
-}
+// interface IAccessories extends IAccessory {
+//   qty:number;
+// }
 interface ICheckoutFormProps {
   setShowCheckOutForm: Dispatch<SetStateAction<boolean>>;
   productDetails: IProduct;
   setThankYouTab: Dispatch<SetStateAction<boolean>>;
   selections:SelectionsType,
-  filteredAccessory: IAccessories[];
+  filteredAccessory: IAccessory[];
   financing: string;
 }
 
@@ -145,9 +146,17 @@ const CheckoutForm = ({
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async(e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
+    setCheckoutForm((prev: ICheckoutForm) => ({
+      ...prev,
+      
+   zone_id:null,
+      delivery_cost:null
+      ,accessories:filteredAccessory
+    
+    }));
+  console.log("Form data:", checkoutForm);
     const validation = CheckoutFormSchema.safeParse(checkoutForm);
     console.log(validation);
     if (!validation.success) {
@@ -208,10 +217,15 @@ const CheckoutForm = ({
       }
       return;
     }
-    setShowCheckOutForm(false);
-    setThankYouTab(true);
 
+    // setShowCheckOutForm(false);
+    // setThankYouTab(true);
     console.log("Form data:", checkoutForm);
+   const result=await publicApiClient.post("/webquote",{checkoutForm})
+   console.log(result.data)
+    
+    
+    
   };
 
   //  the first input on mount
@@ -236,12 +250,14 @@ const CheckoutForm = ({
       product_price: Number(productDetails.price),
       product_qty: selections.baseUnitQty,
       product_total_cost: Number(productDetails.price) * selections.baseUnitQty,
-      shipping_method_id: selections.shippingOption,
+      shipping_method_used: selections.shippingOption || "pickup",
       contact_industry: firstPageForm.industry as string ?? "" ,
     }));
     const savedData = loadFromLocalStorage(STORAGE_KEY);
     if (savedData) {
-      setCheckoutForm({ ...savedData ,i_understand_deposit_is_non_refundable:false,payment_card_number:"",payment_cvc:"",payment_expiry:"",payment_name_on_card:"",});
+      setCheckoutForm({ ...savedData ,
+        // i_understand_deposit_is_non_refundable:false,payment_card_number:"",payment_cvc:"",payment_expiry:"",payment_name_on_card:"",
+      });
     }
   }, [firstPageForm, financing]);
 
@@ -310,13 +326,13 @@ const CheckoutForm = ({
                 </p>
               </div>
               <div className="flex justify-between flex-col">
-                {filteredAccessory.map((a) => {
+                {filteredAccessory.map((acc) => {
                   return (
-                    <div className="flex justify-between ">
-                      <p className="capitalize">{a.name}</p>
+                    <div className="flex justify-between " key={acc.id}>
+                      <p className="capitalize">{acc.name}</p>
                       <p>
-                        ${Number(a.price) * a.qty}{" "}
-                        <span className="text-custom-med-gray">({a.qty})</span>
+                        ${Number(acc.price) * acc.qty}{" "}
+                        <span className="text-custom-med-gray">({acc.qty})</span>
                       </p>
                     </div>
                   );

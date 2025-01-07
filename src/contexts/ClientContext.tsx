@@ -10,6 +10,12 @@ export interface GlobalLoadingState {
   products: boolean;
   accessories: boolean;
 }
+export interface ShippingOption {
+  id: string;
+  name: string;
+  price: number;
+  uuid?: string;
+}
 
 export interface IClientContext {
   accessories: IAccessory[];
@@ -30,6 +36,8 @@ export interface IClientContext {
   setCheckoutForm: React.Dispatch<React.SetStateAction<ICheckoutForm>>;
   error: { [key: string]: string };
   setError: React.Dispatch<React.SetStateAction<{ [key: string]: string }>>;
+  shippingOptions: ShippingOption[];
+  setShippingOptions: React.Dispatch<React.SetStateAction<ShippingOption[]>>;
 }
 
 export const ClientContext = createContext<IClientContext | null>(null);
@@ -41,6 +49,9 @@ export const ClientContextProvider = ({
 }) => {
   const [accessories, setAccessories] = useState<IAccessory[]>([]);
   const [products, setProducts] = useState<IProduct[]>([]);
+  const [shippingOptions, setShippingOptions] = useState<ShippingOption[]>([
+    { id: "pickup", name: "Pick-up", price: 0 },
+  ]);
 
   const [loading, setLoading] = useState<GlobalLoadingState>({
     accessories: false,
@@ -61,7 +72,9 @@ export const ClientContextProvider = ({
     industry: "",
     isFormFilled: false,
   });
-  const [checkoutForm, setCheckoutForm] = useState<ICheckoutForm>(CheckoutFormDefaultValues);
+  const [checkoutForm, setCheckoutForm] = useState<ICheckoutForm>(
+    CheckoutFormDefaultValues
+  );
 
   // Save data to localStorage
   const saveToLocalStorage = (
@@ -103,6 +116,8 @@ export const ClientContextProvider = ({
         products,
         checkoutForm,
         setCheckoutForm,
+        shippingOptions,
+        setShippingOptions,
         setProducts,
         loadFromLocalStorage,
         firstPageForm,

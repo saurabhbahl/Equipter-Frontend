@@ -19,11 +19,6 @@ interface IBuildList {
   value: string;
 }
 
-interface ShippingOption {
-  id: string;
-  name: string;
-  price: number;
-}
 
 interface AccessorySelection {
   selected: boolean;
@@ -39,7 +34,7 @@ export interface SelectionsType {
 }
 
 const ViewSingleProduct = () => {
-  const { firstPageForm } = useClientContext();
+  const { firstPageForm,shippingOptions,setShippingOptions } = useClientContext();
   const { productUrl } = useParams();
   const [error, setError] = useState(false);
   const [activeTab, setActiveTab] = useState<string>("cash");
@@ -55,25 +50,37 @@ const ViewSingleProduct = () => {
     accessories: {},
     shippingOption: null,
   });
+  // const [shippingOptions,setShippingOptions]=useState<ShippingOption[]>([  { id: "pickup", name: "Pick-up", price: 0 },])
 console.log(selections,accessoryList)
   const [totalPrices, setTotalPrices] = useState({
     basePrice: 0,
     addOns: 0,
     netPrice: 0,
   });
-
-  const shippingOptions: ShippingOption[] = [
-    { id: "pickup", name: "Pick-up", price: 0 },
-    {
-      id: "delivery",
-      name: `Delivery to the State of ${firstPageForm.state}`,
-      price: 400,
-    },
-  ];
+  
+  
+  
+  
+  
+  // const shippingOptions: ShippingOption[] = [
+  //   { id: "pickup", name: "Pick-up", price: 0 },
+   
+  // ];
 
   // Fetch product data
   const fetchData = async () => {
     try {
+      const zoneDataRes=await publicApiClient.get(`/state/zonesbystate?stateId=${firstPageForm.state}`)
+      const zoneData=zoneDataRes.data.data[0]
+      console.log(zoneData)
+      shippingOptions.push( {
+        id: "delivery",
+        uuid:`${firstPageForm.state}`,
+        name: `Delivery to the State of ${zoneData.state_name}`,
+        price: Number(zoneData.shipping_rate),
+      },)
+      // setShippingOptions((prev)=>({...prev}))
+      
       const resData = await publicApiClient.get(`/product/url/${productUrl}`);
       const data = resData.data.data;
       setProductDetails(data);

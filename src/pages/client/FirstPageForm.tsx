@@ -1,8 +1,13 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import InputField from "../../components/utils/InputFeild";
 import SelectField from "../../components/utils/SelectFeild";
 import { useClientContext } from "../../hooks/useClientContext";
-
+import { publicApiClient } from "../../utils/axios";
+interface IState {
+  id: string;
+  state_name: string;
+  is_delivery_paused: boolean;
+}
 const FirstPageForm = () => {
   const {
     firstPageForm,
@@ -10,28 +15,41 @@ const FirstPageForm = () => {
     saveToLocalStorage,
     loadFromLocalStorage,
   } = useClientContext();
-  
+  const [statesData, setStatesData] = useState<IState[]>([]);
   const STORAGE_KEY = "firstPageForm";
 
   const EXPIRATION_TIME = 7 * 24 * 60 * 60 * 1000;
-  
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const updatedForm = { ...firstPageForm, [e.target.name]: e.target.value };
     setFirstPageForm(updatedForm);
-    saveToLocalStorage(updatedForm, STORAGE_KEY,EXPIRATION_TIME);
+    saveToLocalStorage(updatedForm, STORAGE_KEY, EXPIRATION_TIME);
   };
 
   const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const updatedForm = { ...firstPageForm, [e.target.name]: e.target.value };
     setFirstPageForm(updatedForm);
-    saveToLocalStorage(updatedForm, STORAGE_KEY,EXPIRATION_TIME);
+    saveToLocalStorage(updatedForm, STORAGE_KEY, EXPIRATION_TIME);
   };
-  
+  async function fetchStates() {
+    try {
+      const res = await publicApiClient.get("/state/states");
+
+      if (res.data) {
+        setStatesData(res.data.data);  
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }
   useEffect(() => {
     const savedData = loadFromLocalStorage(STORAGE_KEY);
     if (savedData) {
       setFirstPageForm({ ...savedData, isFormFilled: false });
     }
+     fetchStates()
+  
+    
   }, []);
   const IndustryFeilds = [
     { value: "residential_roofing", label: "Residential Roofing" },
@@ -169,11 +187,10 @@ const FirstPageForm = () => {
               required
               value={firstPageForm.state}
               onChange={handleSelectChange}
-              options={[
-                { value: "California", label: "California" },
-                { value: "Texas", label: "Texas" },
-                { value: "New York", label: "New York" },
-              ]}
+              options={statesData?.map((state:IState) => ({
+                value: state.id,
+                label: state.state_name,
+              }))}
             />
 
             {/* Industry Select */}

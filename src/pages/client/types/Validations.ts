@@ -26,7 +26,7 @@ export const CheckoutFormSchema = z.object({
   product_price: z.number().min(1, { message: "Product price is required." }),
   product_qty: z.number().min(1, { message: "Product quantity is required." }),
   
-  shipping_method_id: z.string().min(1, { message: "Shipping method is required." }),
+  shipping_method_used: z.string().min(1, { message: "Shipping method is required." }),
   // zone_id: z.string().min(1, { message: "Zone ID is required." }),
   
   contact_first_name: z.string().min(1, { message: "First name is required." }),
@@ -136,14 +136,14 @@ payment_expiry: z
   
   billing_address_street: z.string().min(1, { message: "Billing street address is required." }),
   billing_address_city: z.string().min(1, { message: "Billing city is required." }),
-  billing_address_state: z.string().min(1, { message: "Billing state is required." }),
+  // billing_address_state: z.string().min(1, { message: "Billing state is required." }),
   billing_address_zip_code: z.string().min(1, { message: "Billing zip code is required." }),
   billing_address_country: z.string().min(1, { message: "Billing country is required." }),
   
   // delivery_cost: z.string().min(1, { message: "Delivery cost is required." }).optional(),
   delivery_address_street: z.string().min(1, { message: "Delivery address is required." }),
   delivery_address_city: z.string().min(1, { message: "Delivery city is required." }),
-  delivery_address_state_id: z.string().min(1, { message: "Delivery state ID is required." }),
+  // delivery_address_state_id: z.string().min(1, { message: "Delivery state ID is required." }),
   delivery_address_zip_code: z.string().min(1, { message: "Delivery zip code is required." }),
   delivery_address_country: z.string().min(1, { message: "Delivery country is required." }),
   

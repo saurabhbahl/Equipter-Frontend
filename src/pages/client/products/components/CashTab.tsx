@@ -47,6 +47,7 @@ const CashTab = ({
   setShowAccessory,
 }: ICashTabProps) => {
   const productName = productDetails.name;
+  console.log(shippingOptions)
 
   const CashTabStepOne = () => {
     return (

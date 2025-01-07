@@ -32,6 +32,7 @@ export interface IAccessory {
   updated_at: string;
   product_id: string;
   images: IAccessoryImage[];
+  qty:number;
 }
 
 export interface IProduct {
@@ -72,8 +73,8 @@ export interface ICheckoutForm {
   product_name: string;
   product_price: number;
   product_qty: number;
-  shipping_method_id?: string|null;
-  zone_id?: string;
+  shipping_method_used: string;
+  zone_id?: string|null;
   contact_first_name: string;
   contact_last_name: string;
   contact_company_name: string;
@@ -91,37 +92,34 @@ export interface ICheckoutForm {
   billing_address_state: string;
   billing_address_zip_code: string;
   billing_address_country: string;
-  delivery_cost?: string;
+  delivery_cost?: string|null;
   delivery_address_street: string;
   delivery_address_city: string;
-  delivery_address_state_id: string;
+  delivery_address_state_id: string|null;
   delivery_address_zip_code: string;
   delivery_address_country: string;
-  estimated_delivery_date?: string;
-  pickup_location_name?: string;
-  pickup_location_address?: string;
-  pickup_scheduled_date?: string;
   payment_type?: string;
   product_total_cost: number;
   non_refundable_deposit?: number;
   i_understand_deposit_is_non_refundable: boolean;
+  accessories?:IAccessory[];
 }
 
 export const CheckoutFormDefaultValues:ICheckoutForm = {
   financing: "",
   product_id: "",
   product_name: "",
-  product_price: 0,
+  product_price: 0,accessories:[],
   product_qty: 1,
-  shipping_method_id: null,
-  zone_id: "",
+  shipping_method_used: "",
+  zone_id: null,
   contact_first_name: "",
   contact_last_name: "",
   contact_company_name: "",
-  payment_name_on_card: "",     
-  payment_card_number: "",      
-  payment_expiry: "",           
-  payment_cvc: "", 
+  payment_name_on_card: "66565",     
+  payment_card_number: "4569857456",      
+  payment_expiry: "1228",           
+  payment_cvc: "2564", 
   contact_phone_number: "",
   contact_email: "",
   contact_industry: "",
@@ -132,18 +130,14 @@ export const CheckoutFormDefaultValues:ICheckoutForm = {
   billing_address_state: "",
   billing_address_zip_code: "",
   billing_address_country: "",
-  delivery_cost: "",
+  delivery_cost: null,
   delivery_address_street: "",
   delivery_address_city: "",
-  delivery_address_state_id: "",
+  delivery_address_state_id: null,
   delivery_address_zip_code: "",
   delivery_address_country: "",
-  estimated_delivery_date: "",
-  pickup_location_name: "",
-  pickup_location_address: "",
-  pickup_scheduled_date: "",
   payment_type: "",
   product_total_cost: 0,
   non_refundable_deposit: 0,
-  i_understand_deposit_is_non_refundable: false,
+  i_understand_deposit_is_non_refundable: true,
 };
