@@ -5,9 +5,11 @@ import { useClientContext } from "../../../hooks/useClientContext";
 import LoaderSpinner from "../../../components/utils/LoaderSpinner";
 import {  publicApiClient } from "../../../utils/axios";
 import FirstPageForm from "../FirstPageForm";
+import { ShippingOption } from "aws-sdk/clients/snowball";
 
 const Products = () => {
-  const { products, setProducts, loading, setLoading ,firstPageForm} = useClientContext();
+  const { products, setProducts, loading, setLoading ,firstPageForm,shippingOptions,statesData,setShippingOptions} = useClientContext();
+  console.log(shippingOptions)
 
   // Fetch Products Data
   const fetchData = async () => {
@@ -28,6 +30,27 @@ const Products = () => {
       setLoading((prev) => ({ ...prev, products: true }));
       fetchData();
     }
+        // if (firstPageForm.state !== "") {
+        //   const selectedState = statesData.find(
+        //     (st) => st.state_id === firstPageForm.state
+        //   );
+        //   console.log(selectedState)
+    
+        //   if (selectedState) {
+        //     const newShippingOption: ShippingOption[] = [
+        //       // {
+        //       //   id: selectedState.id,
+        //       //   name: selectedState.zone_name,
+        //       //   price: parseFloat(selectedState.shipping_rate),
+        //       // },
+        //       { id: "pickup", name: "Pick-up", price: 0 },
+        //       { id: "pickup", name: "Pick-up", price: 0 },
+        //     ];
+    
+        //     console.log(newShippingOption);
+        //     setShippingOptions([...newShippingOption]);
+        //   }
+        // }
   }, []);
 
 

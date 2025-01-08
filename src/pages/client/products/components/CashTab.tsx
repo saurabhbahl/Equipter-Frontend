@@ -3,6 +3,8 @@ import { IAccessory, IProduct } from "../../types/ClientSchemas";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faInfo } from "@fortawesome/free-solid-svg-icons";
 import CustomSlider from "../../components/CustomSlider";
+import { useContext } from "react";
+import { useClientContext } from "../../../../hooks/useClientContext";
 
 interface AccessorySelection {
   selected: boolean;
@@ -25,7 +27,6 @@ interface ICashTabProps {
   accessoryList: IAccessory[];
   handleAccessoryChange: (id: string, isChecked: boolean) => void;
   handleAccessoryQtyChange: (id: string, qty: number) => void;
-  shippingOptions: any[];
   handleShippingChange: (optionId: string) => void;
   totalPrices: { basePrice: number; addOns: number; netPrice: number };
   setModalAccessory: React.Dispatch<React.SetStateAction<IAccessory | null>>;
@@ -40,14 +41,14 @@ const CashTab = ({
   accessoryList,
   handleAccessoryChange,
   handleAccessoryQtyChange,
-  shippingOptions,
   handleShippingChange,
   totalPrices,
   setModalAccessory,
   setShowAccessory,
 }: ICashTabProps) => {
   const productName = productDetails.name;
-  console.log(shippingOptions)
+
+  const {shippingOptions}=useClientContext()
 
   const CashTabStepOne = () => {
     return (

@@ -13,12 +13,12 @@ import AccessorySlider from "./components/AccessorySlider";
 import ProductSidebar from "./components/ProductSidebar";
 import FirstPageForm from "../FirstPageForm";
 import NotFound from "../../NotFound";
+import { ShippingOption } from "../../../contexts/ClientContext";
 
 interface IBuildList {
   title: string;
   value: string;
 }
-
 
 interface AccessorySelection {
   selected: boolean;
@@ -30,11 +30,14 @@ export interface SelectionsType {
   accessories: {
     [accId: string]: AccessorySelection;
   };
-  shippingOption: string | null;
+  shippingOption?: string;
 }
 
 const ViewSingleProduct = () => {
-  const { firstPageForm,shippingOptions,setShippingOptions } = useClientContext();
+  const {
+    firstPageForm,
+    shippingOptions,
+  } = useClientContext();
   const { productUrl } = useParams();
   const [error, setError] = useState(false);
   const [activeTab, setActiveTab] = useState<string>("cash");
@@ -48,39 +51,19 @@ const ViewSingleProduct = () => {
   const [selections, setSelections] = useState<SelectionsType>({
     baseUnitQty: 1,
     accessories: {},
-    shippingOption: null,
+    shippingOption: "",
   });
-  // const [shippingOptions,setShippingOptions]=useState<ShippingOption[]>([  { id: "pickup", name: "Pick-up", price: 0 },])
-console.log(selections,accessoryList)
+
   const [totalPrices, setTotalPrices] = useState({
     basePrice: 0,
     addOns: 0,
     netPrice: 0,
   });
-  
-  
-  
-  
-  
-  // const shippingOptions: ShippingOption[] = [
-  //   { id: "pickup", name: "Pick-up", price: 0 },
-   
-  // ];
 
   // Fetch product data
   const fetchData = async () => {
     try {
-      const zoneDataRes=await publicApiClient.get(`/state/zonesbystate?stateId=${firstPageForm.state}`)
-      const zoneData=zoneDataRes.data.data[0]
-      console.log(zoneData)
-      shippingOptions.push( {
-        id: "delivery",
-        uuid:`${firstPageForm.state}`,
-        name: `Delivery to the State of ${zoneData.state_name}`,
-        price: Number(zoneData.shipping_rate),
-      },)
-      // setShippingOptions((prev)=>({...prev}))
-      
+      // get product data
       const resData = await publicApiClient.get(`/product/url/${productUrl}`);
       const data = resData.data.data;
       setProductDetails(data);
@@ -90,7 +73,7 @@ console.log(selections,accessoryList)
       setBuildList([
         { title: "GVWR", value: `${data.gvwr} lbs` },
         { title: "Lift Capacity", value: `${data.lift_capacity} lbs` },
-        { title: "Lift Height", value: `${heightFt}'-${heightInch||0}"` },
+        { title: "Lift Height", value: `${heightFt}'-${heightInch || 0}"` },
         { title: "Container", value: `${data.container_capacity} cu yds` },
       ]);
 
@@ -101,17 +84,20 @@ console.log(selections,accessoryList)
 
       setAccessoryList(data.accessories || []);
 
-      const initialAccessoriesState: {
-        [key: string]: AccessorySelection;
-      } = {};
+      const initialAccessoriesState: { [key: string]: AccessorySelection } = {};
+      
       (data.accessories || []).forEach((acc: IAccessory) => {
         initialAccessoriesState[acc.id] = { selected: false, qty: 1 };
       });
+      console.log(shippingOptions)
       const shippingOptionState = firstPageForm.state;
       setSelections((prevState) => ({
         ...prevState,
         accessories: initialAccessoriesState,
-        shippingOption: shippingOptionState ? shippingOptions[1].id : shippingOptions[0].id,
+        shippingOption: shippingOptions[1]?.id,
+        // shippingOption: shippingOptionState
+        //   ? shippingOptions[1]?.id
+        //   : shippingOptions[0]?.id,
       }));
 
       // Set total prices based on base price
@@ -167,8 +153,12 @@ console.log(selections,accessoryList)
     });
   }, [selections, productDetails?.price, accessoryList]);
 
-
-  const handleTabClick = useCallback((tab: string) => {setActiveTab(tab);},[accessoryList]);
+  const handleTabClick = useCallback(
+    (tab: string) => {
+      setActiveTab(tab);
+    },
+    [accessoryList]
+  );
 
   const handleAccessoryChange = (accId: string, isChecked: boolean) => {
     setSelections((prevState) => ({
@@ -199,7 +189,13 @@ console.log(selections,accessoryList)
     }));
   };
 
-  const handleShippingChange = (optionId: string) => {
+  const handleShippingChange = (optionId: any) => {
+    // let option:string
+    // if(optionId.includes("pickup")){
+    //   option=optionId
+    // }else{
+    //   option="delivery"
+    // }
     setSelections((prevState) => ({
       ...prevState,
       shippingOption: optionId,

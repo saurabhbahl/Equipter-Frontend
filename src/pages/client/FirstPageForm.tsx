@@ -1,24 +1,22 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import InputField from "../../components/utils/InputFeild";
 import SelectField from "../../components/utils/SelectFeild";
 import { useClientContext } from "../../hooks/useClientContext";
-import { publicApiClient } from "../../utils/axios";
-interface IState {
-  id: string;
-  state_name: string;
-  is_delivery_paused: boolean;
-}
+import { IState, ShippingOption } from "../../contexts/ClientContext";
+
+const STORAGE_KEY = "firstPageForm";
+
+const EXPIRATION_TIME = 7 * 24 * 60 * 60 * 1000;
+
 const FirstPageForm = () => {
   const {
     firstPageForm,
     setFirstPageForm,
     saveToLocalStorage,
+    setShippingOptions,
     loadFromLocalStorage,
+    statesData,
   } = useClientContext();
-  const [statesData, setStatesData] = useState<IState[]>([]);
-  const STORAGE_KEY = "firstPageForm";
-
-  const EXPIRATION_TIME = 7 * 24 * 60 * 60 * 1000;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const updatedForm = { ...firstPageForm, [e.target.name]: e.target.value };
@@ -31,26 +29,33 @@ const FirstPageForm = () => {
     setFirstPageForm(updatedForm);
     saveToLocalStorage(updatedForm, STORAGE_KEY, EXPIRATION_TIME);
   };
-  async function fetchStates() {
-    try {
-      const res = await publicApiClient.get("/state/states");
 
-      if (res.data) {
-        setStatesData(res.data.data);  
+  async function handleSubmit(e: React.ChangeEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setFirstPageForm((prev) => ({ ...prev, isFormFilled: true }));
+
+    if (firstPageForm.state !== "") {
+      const selectedState = statesData.find(
+        (st) => st.state_id === firstPageForm.state
+      );
+
+      if (selectedState) {
+        const newShippingOption: ShippingOption[] = [
+          { id: "pickup", name: "Pick-up", price: 0 },
+          {
+            id: selectedState.state_name,
+            name: `Delivery to the State of ${selectedState.state_name}`,
+            price: parseFloat(selectedState.shipping_rate),
+            uuid: selectedState.state_id,
+            zone_id: selectedState.zone_id,
+            zone_name: selectedState.zone_name,
+          },
+        ];
+        setShippingOptions([...newShippingOption]);
       }
-    } catch (error) {
-      console.log(error);
     }
   }
-  useEffect(() => {
-    const savedData = loadFromLocalStorage(STORAGE_KEY);
-    if (savedData) {
-      setFirstPageForm({ ...savedData, isFormFilled: false });
-    }
-     fetchStates()
-  
-    
-  }, []);
+
   const IndustryFeilds = [
     { value: "residential_roofing", label: "Residential Roofing" },
     { value: "commercial_roofing", label: "Commercial Roofing" },
@@ -83,10 +88,13 @@ const FirstPageForm = () => {
     { value: "solar", label: "Solar" },
     { value: "other", label: "Other" },
   ];
-  async function handleSubmit(e: React.ChangeEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setFirstPageForm((prev) => ({ ...prev, isFormFilled: true }));
-  }
+
+  useEffect(() => {
+    const savedData = loadFromLocalStorage(STORAGE_KEY);
+    if (savedData) {
+      setFirstPageForm({ ...savedData, isFormFilled: false });
+    }
+  }, []);
 
   return (
     <>
@@ -187,10 +195,12 @@ const FirstPageForm = () => {
               required
               value={firstPageForm.state}
               onChange={handleSelectChange}
-              options={statesData?.map((state:IState) => ({
-                value: state.id,
-                label: state.state_name,
-              }))}
+              options={statesData
+                ?.filter((state) => state.is_delivery_paused == false)
+                .map((state: IState) => ({
+                  value: state.state_id,
+                  label: state.state_name,
+                }))}
             />
 
             {/* Industry Select */}

@@ -78,7 +78,6 @@ const ProductSidebar = ({
   const [filteredAccessory, setFilteredAccessory] = useState<any>();
   const [showThankYouTab, setShowThankYouTab] = useState(false);
 
-
   useEffect(() => {
     if (!accessoryList || accessoryList.length === 0) return;
 
@@ -206,12 +205,11 @@ const ProductSidebar = ({
             </div>,
             document.body
           )}
-    
-        
+
         {showThankYouTab &&
           ReactDOM.createPortal(
             <div className="fixed top-0 z-30 inset-0 backdrop-blur-sm bg-black bg-opacity-10 flex items-center justify-center lg:p-4 p-8">
-             <ThankYouTab setShowThankYouTab={setShowThankYouTab} />
+              <ThankYouTab setShowThankYouTab={setShowThankYouTab} />
             </div>,
             document.body
           )}

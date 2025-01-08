@@ -19,22 +19,17 @@ import {
 import { CheckoutFormSchema } from "../../types/Validations";
 import SelectField from "../../../../components/utils/SelectFeild";
 import { SelectionsType } from "../ViewSingleProduct";
-import { apiClient, publicApiClient } from "../../../../utils/axios";
+import { publicApiClient } from "../../../../utils/axios";
+import { IState } from "../../../../contexts/ClientContext";
 
-
-// interface IAccessories extends IAccessory {
-//   qty:number;
-// }
 interface ICheckoutFormProps {
   setShowCheckOutForm: Dispatch<SetStateAction<boolean>>;
   productDetails: IProduct;
   setThankYouTab: Dispatch<SetStateAction<boolean>>;
-  selections:SelectionsType,
+  selections: SelectionsType;
   filteredAccessory: IAccessory[];
   financing: string;
 }
-
-
 
 const CheckoutForm = ({
   setShowCheckOutForm,
@@ -50,7 +45,11 @@ const CheckoutForm = ({
     saveToLocalStorage,
   } = useClientContext();
   const STORAGE_KEY = "checkoutData";
-  const [checkoutForm, setCheckoutForm] = useState<ICheckoutForm>(CheckoutFormDefaultValues);
+  const { shippingOptions, statesData } = useClientContext();
+  console.log(shippingOptions, selections);
+  const [checkoutForm, setCheckoutForm] = useState<ICheckoutForm>(
+    CheckoutFormDefaultValues
+  );
 
   const [validationErrors, setValidationErrors] = useState<
     { [key in keyof ICheckoutForm]?: string }
@@ -60,6 +59,9 @@ const CheckoutForm = ({
   const [isPaymentDetailsOpen, setIsPaymentDetailsOpen] = useState(true);
   const [isDeliveryAddressOpen, setIsDeliveryAddressOpen] = useState(true);
   const [isBillingInfoOpen, setIsBillingInfoOpen] = useState(true);
+  const selectedDelivery = shippingOptions.find(
+    (sh) => sh?.id == selections?.shippingOption
+  );
 
   const inputRef: React.RefObject<HTMLInputElement> = useRef(null);
 
@@ -146,17 +148,16 @@ const CheckoutForm = ({
     }));
   };
 
-  const handleSubmit = async(e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setCheckoutForm((prev: ICheckoutForm) => ({
       ...prev,
-      
-   zone_id:null,
-      delivery_cost:null
-      ,accessories:filteredAccessory
-    
+      shipping_method_used: selections.shippingOption == "pickup"?selections.shippingOption:"delivery",
+      zone_id: selectedDelivery?.zone_id,
+      delivery_cost:selections.shippingOption == "pickup"?"0":String(selectedDelivery?.price),
+      accessories: filteredAccessory,
     }));
-  console.log("Form data:", checkoutForm);
+    console.log("Form data:", checkoutForm);
     const validation = CheckoutFormSchema.safeParse(checkoutForm);
     console.log(validation);
     if (!validation.success) {
@@ -218,14 +219,11 @@ const CheckoutForm = ({
       return;
     }
 
-    // setShowCheckOutForm(false);
-    // setThankYouTab(true);
+    setShowCheckOutForm(false);
+    setThankYouTab(true);
     console.log("Form data:", checkoutForm);
-   const result=await publicApiClient.post("/webquote",{checkoutForm})
-   console.log(result.data)
-    
-    
-    
+    const result = await publicApiClient.post("/webquote", { checkoutForm });
+    console.log(result.data);
   };
 
   //  the first input on mount
@@ -249,13 +247,15 @@ const CheckoutForm = ({
       product_name: productDetails.name,
       product_price: Number(productDetails.price),
       product_qty: selections.baseUnitQty,
+      zone_id: selectedDelivery?.zone_id,
       product_total_cost: Number(productDetails.price) * selections.baseUnitQty,
-      shipping_method_used: selections.shippingOption || "pickup",
-      contact_industry: firstPageForm.industry as string ?? "" ,
+      shipping_method_used: selections.shippingOption == "pickup"?selections.shippingOption:"delivery",
+      contact_industry: (firstPageForm.industry as string) ?? "",
     }));
     const savedData = loadFromLocalStorage(STORAGE_KEY);
     if (savedData) {
-      setCheckoutForm({ ...savedData ,
+      setCheckoutForm({
+        ...savedData,
         // i_understand_deposit_is_non_refundable:false,payment_card_number:"",payment_cvc:"",payment_expiry:"",payment_name_on_card:"",
       });
     }
@@ -281,8 +281,6 @@ const CheckoutForm = ({
     checkoutForm.delivery_address_country,
     checkoutForm.billing_same_as_delivery,
   ]);
-
-  console.log(filteredAccessory);
 
   return (
     <form
@@ -316,6 +314,7 @@ const CheckoutForm = ({
               Build Summary
             </h2>
             <div className="flex flex-col lg:w-[60%] text-black lg:font-bold font-semibold text-sm lg:text-[17px] space-y-2">
+              {/* product info */}
               <div className="flex justify-between">
                 <p>Equiter {productDetails.name}</p>
                 <p>
@@ -325,6 +324,7 @@ const CheckoutForm = ({
                   </span>
                 </p>
               </div>
+              {/* accessories */}
               <div className="flex justify-between flex-col">
                 {filteredAccessory.map((acc) => {
                   return (
@@ -332,22 +332,18 @@ const CheckoutForm = ({
                       <p className="capitalize">{acc.name}</p>
                       <p>
                         ${Number(acc.price) * acc.qty}{" "}
-                        <span className="text-custom-med-gray">({acc.qty})</span>
+                        <span className="text-custom-med-gray">
+                          ({acc.qty})
+                        </span>
                       </p>
                     </div>
                   );
                 })}
               </div>
-
+              {/* delivery */}
               <div className="flex justify-between pr-5">
-                <p>
-                  {selections.shippingOption == "pickup"
-                    ? "Pickup"
-                    : `Delivery to the State of ${checkoutForm.delivery_address_state_id}`}
-                </p>
-                <p>
-                  {selections.shippingOption == "pickup" ? "$0" : `$${400}`}
-                </p>
+                <p>{selectedDelivery.name}</p>
+                <p>${selectedDelivery?.price}</p>
               </div>
             </div>
           </div>
@@ -550,16 +546,24 @@ const CheckoutForm = ({
                 label="State*"
                 id="delivery_address_state_id"
                 name="delivery_address_state_id"
-                labelClasses={"text-[12px] lg:text-[14px]  mb-2 !text-[#666666]"}
+                labelClasses={
+                  "text-[12px] lg:text-[14px]  mb-2 !text-[#666666]"
+                }
                 classes="mt-1 text-[#666666] text-xs font-noto-sans rounded-md block w-full  border border-inset border-custom-gray-200 outline-none px-3 h-8 lg:h-12 py-2 lg:py-3.5"
                 defaultValue="Select State*"
-                value={checkoutForm.delivery_address_state_id}
+                value={checkoutForm.delivery_address_state_id || ""}
                 onChange={handleChange}
-                options={[
-                  { value: "California", label: "California" },
-                  { value: "Texas", label: "Texas" },
-                  { value: "New York", label: "New York" },
-                ]}
+                // options={[
+                //   { value: "California", label: "California" },
+                //   { value: "Texas", label: "Texas" },
+                //   { value: "New York", label: "New York" },
+                // ]}
+                options={statesData
+                  ?.filter((state) => state.is_delivery_paused == false)
+                  .map((state: IState) => ({
+                    value: state.state_id,
+                    label: state.state_name,
+                  }))}
                 error={validationErrors.delivery_address_state_id}
               />
 
@@ -575,7 +579,9 @@ const CheckoutForm = ({
 
               <SelectField
                 label="Country*"
-                labelClasses={"text-[12px] lg:text-[14px]  mb-2 !text-[#666666]"}
+                labelClasses={
+                  "text-[12px] lg:text-[14px]  mb-2 !text-[#666666]"
+                }
                 classes="mt-1 text-[#666666] text-xs font-noto-sans rounded-md block w-full  border border-inset border-custom-gray-200 outline-none px-3 h-8 lg:h-12 py-2 lg:py-3.5"
                 defaultValue="Select Country"
                 id="delivery_address_country"
@@ -654,20 +660,27 @@ const CheckoutForm = ({
 
               <SelectField
                 label="State*"
-                
-        labelClasses={"text-[12px] lg:text-[14px]  mb-2 !text-[#666666]"}
+                labelClasses={
+                  "text-[12px] lg:text-[14px]  mb-2 !text-[#666666]"
+                }
                 classes="mt-1 text-[#666666] text-xs font-noto-sans rounded-md block w-full  border border-inset border-custom-gray-200 outline-none px-3 h-8 lg:h-12 py-2 lg:py-3.5"
                 defaultValue="Select State"
                 id="billing_address_state"
                 name="billing_address_state"
-                error={validationErrors.billing_address_state}
+                error={validationErrors.billing_address_state || ""}
                 value={checkoutForm.billing_address_state}
                 onChange={handleChange}
-                options={[
-                  { value: "California", label: "California" },
-                  { value: "Texas", label: "Texas" },
-                  { value: "New York", label: "New York" },
-                ]}
+                options={statesData
+                  ?.filter((state) => state.is_delivery_paused == false)
+                  .map((state: IState) => ({
+                    value: state.state_id,
+                    label: state.state_name,
+                  }))}
+                // options={[
+                //   { value: "California", label: "California" },
+                //   { value: "Texas", label: "Texas" },
+                //   { value: "New York", label: "New York" },
+                // ]}
               />
 
               <InputFieldCurved
@@ -681,7 +694,9 @@ const CheckoutForm = ({
                 onChange={handleChange}
               />
               <SelectField
-             labelClasses={"text-[12px] lg:text-[14px]  mb-2 !text-[#666666]"}
+                labelClasses={
+                  "text-[12px] lg:text-[14px]  mb-2 !text-[#666666]"
+                }
                 classes="mt-1 text-[#666666] text-xs font-noto-sans rounded-md block w-full  border border-inset border-custom-gray-200 outline-none px-3 h-8 lg:h-12 py-2 lg:py-3.5"
                 label="Country*"
                 defaultValue="Select Country"
@@ -768,7 +783,11 @@ const CheckoutForm = ({
           />
           I understand my deposit is non-refundable.
         </label>
-        {validationErrors.i_understand_deposit_is_non_refundable && <span className="text-red-500 h-6 text-[10px] font-bold">{validationErrors.i_understand_deposit_is_non_refundable}</span>}
+        {validationErrors.i_understand_deposit_is_non_refundable && (
+          <span className="text-red-500 h-6 text-[10px] font-bold">
+            {validationErrors.i_understand_deposit_is_non_refundable}
+          </span>
+        )}
       </div>
     </form>
   );

@@ -7,6 +7,7 @@ import axios, { AxiosError } from "axios";
 import { BackendUrl } from "../../utils/useEnv";
 import { isTokenExpired } from "../../utils/axios";
 import LoaderSpinner from "./LoaderSpinner";
+import { useClientContext } from "../../hooks/useClientContext";
 interface IExp {
   isExp: boolean;
 }
@@ -18,6 +19,10 @@ const Header = () => {
   const { token, logOut } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const {setStatesFn}=useClientContext()
+  useEffect(()=>{
+    setStatesFn()
+  },[])
 
  
 

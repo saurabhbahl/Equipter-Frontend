@@ -1,4 +1,4 @@
-import React, { createContext, useState } from "react";
+import React, { createContext, useEffect, useState } from "react";
 import {
   IAccessory,
   IFirstPageForm,
@@ -6,6 +6,20 @@ import {
   IProduct,
   CheckoutFormDefaultValues,
 } from "../pages/client/types/ClientSchemas";
+import { publicApiClient } from "../utils/axios";
+
+export interface IState {
+  id: string;
+  state_name: string;
+  is_delivery_paused: boolean;
+  shipping_rate: string;
+  zone_name: string;
+  state_id: string;
+  zone_id: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface GlobalLoadingState {
   products: boolean;
   accessories: boolean;
@@ -15,6 +29,8 @@ export interface ShippingOption {
   name: string;
   price: number;
   uuid?: string;
+  zone_name?: string;
+  zone_id?: string;
 }
 
 export interface IClientContext {
@@ -38,6 +54,10 @@ export interface IClientContext {
   setError: React.Dispatch<React.SetStateAction<{ [key: string]: string }>>;
   shippingOptions: ShippingOption[];
   setShippingOptions: React.Dispatch<React.SetStateAction<ShippingOption[]>>;
+  statesData: IState[];
+  setStatesFn: () => void;
+  selections: any;
+  setSelections: any;
 }
 
 export const ClientContext = createContext<IClientContext | null>(null);
@@ -49,10 +69,8 @@ export const ClientContextProvider = ({
 }) => {
   const [accessories, setAccessories] = useState<IAccessory[]>([]);
   const [products, setProducts] = useState<IProduct[]>([]);
-  const [shippingOptions, setShippingOptions] = useState<ShippingOption[]>([
-    { id: "pickup", name: "Pick-up", price: 0 },
-  ]);
-
+  const [shippingOptions, setShippingOptions] = useState<ShippingOption[]>([]);
+  const [statesData, setStatesData] = useState<IState[]>([]);
   const [loading, setLoading] = useState<GlobalLoadingState>({
     accessories: false,
     products: false,
@@ -75,6 +93,18 @@ export const ClientContextProvider = ({
   const [checkoutForm, setCheckoutForm] = useState<ICheckoutForm>(
     CheckoutFormDefaultValues
   );
+  const [selections, setSelections] = useState({
+    baseUnitQty: 1,
+    accessories: {},
+    shippingOption: "",
+  });
+
+  const filterState = (selectedId: string) => {
+    if (statesData.length > 0) {
+      const data = statesData.find((st) => st.state_id == selectedId);
+      return data;
+    }
+  };
 
   // Save data to localStorage
   const saveToLocalStorage = (
@@ -109,6 +139,19 @@ export const ClientContextProvider = ({
     }
     return null;
   };
+  async function setStatesFn() {
+    const res = await publicApiClient.get("/state/states");
+    setStatesData(res.data.data);
+  }
+  useEffect(() => {
+    if (statesData.length == 0) {
+      setStatesFn();
+    }
+    if (firstPageForm.state != "") {
+      const data = filterState(firstPageForm.state);
+      setSelections((prev: any) => ({ ...prev, selectedState: data }));
+    }
+  }, [firstPageForm.state]);
 
   return (
     <ClientContext.Provider
@@ -117,6 +160,9 @@ export const ClientContextProvider = ({
         checkoutForm,
         setCheckoutForm,
         shippingOptions,
+        setStatesFn,
+        selections,
+        setSelections,
         setShippingOptions,
         setProducts,
         loadFromLocalStorage,
@@ -124,6 +170,7 @@ export const ClientContextProvider = ({
         saveToLocalStorage,
         setFirstPageForm,
         accessories,
+        statesData,
         setAccessories,
         loading,
         setLoading,
