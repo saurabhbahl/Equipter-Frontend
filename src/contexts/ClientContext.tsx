@@ -32,7 +32,12 @@ export interface ShippingOption {
   zone_name?: string;
   zone_id?: string;
 }
-
+export interface ISidebarSteps {
+  cashStep: number;
+  financingStep: number;
+  showCheckOutForm: boolean;
+  showThankYouTab: boolean;
+}
 export interface IClientContext {
   accessories: IAccessory[];
   saveToLocalStorage: (
@@ -58,6 +63,15 @@ export interface IClientContext {
   setStatesFn: () => void;
   selections: any;
   setSelections: any;
+  activeTab: any;
+  setActiveTab: any;
+  totalPrices: any;
+  setTotalPrices: any;
+  handleAccessoryChange: (accId: string, isChecked: boolean) => any;
+  handleAccessoryQtyChange: (accId: string, qty: number) => any;
+  handleShippingChange: (optionId: any) => any;
+  sidebarSteps: any;
+  setSidebarSteps: any;
 }
 
 export const ClientContext = createContext<IClientContext | null>(null);
@@ -67,7 +81,14 @@ export const ClientContextProvider = ({
 }: {
   children: React.ReactNode;
 }) => {
+  const [activeTab, setActiveTab] = useState<string>("cash");
   const [accessories, setAccessories] = useState<IAccessory[]>([]);
+  const [sidebarSteps, setSidebarSteps] = useState<ISidebarSteps>({
+    cashStep: 1,
+    financingStep: 1,
+    showCheckOutForm: false,
+    showThankYouTab: false,
+  });
   const [products, setProducts] = useState<IProduct[]>([]);
   const [shippingOptions, setShippingOptions] = useState<ShippingOption[]>([]);
   const [statesData, setStatesData] = useState<IState[]>([]);
@@ -98,6 +119,11 @@ export const ClientContextProvider = ({
     accessories: {},
     shippingOption: "",
   });
+  const [totalPrices, setTotalPrices] = useState({
+    basePrice: 0,
+    addOns: 0,
+    netPrice: 0,
+  });
 
   const filterState = (selectedId: string) => {
     if (statesData.length > 0) {
@@ -106,37 +132,73 @@ export const ClientContextProvider = ({
     }
   };
 
+  const handleAccessoryChange = (accId: string, isChecked: boolean) => {
+    setSelections((prevState) => ({
+      ...prevState,
+      accessories: {
+        ...prevState.accessories,
+
+        [accId]: {
+          ...prevState.accessories[accId],
+          // qty:isChecked==false?1:...prevState.accessories.qty,
+          qty: isChecked ? prevState.accessories[accId]?.qty || 1 : 1,
+          selected: isChecked,
+        },
+      },
+    }));
+  };
+
+  const handleAccessoryQtyChange = (accId: string, qty: number) => {
+    setSelections((prevState) => ({
+      ...prevState,
+      accessories: {
+        ...prevState.accessories,
+        [accId]: {
+          ...prevState.accessories[accId],
+          qty: qty < 1 ? 1 : qty,
+        },
+      },
+    }));
+  };
+
+  const handleShippingChange = (optionId: any) => {
+    setSelections((prevState) => ({
+      ...prevState,
+      shippingOption: optionId,
+    }));
+  };
+
   // Save data to localStorage
   const saveToLocalStorage = (
     data: any,
     STORAGE_KEY: string,
     EXPIRATION_TIME: number
   ) => {
-    const now = new Date();
-    const payload = {
-      data,
-      createdAt: data.createdAt || now.toISOString(),
-      updatedAt: now.toISOString(),
-      expiresAt: new Date(now.getTime() + EXPIRATION_TIME).toISOString(),
-    };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+    // const now = new Date();
+    // const payload = {
+    //   data,
+    //   createdAt: data.createdAt || now.toISOString(),
+    //   updatedAt: now.toISOString(),
+    //   expiresAt: new Date(now.getTime() + EXPIRATION_TIME).toISOString(),
+    // };
+    // localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
   };
 
   // Load data from localStorage and check expiration
   const loadFromLocalStorage = (STORAGE_KEY: string) => {
-    const storedData = localStorage.getItem(STORAGE_KEY);
-    if (storedData) {
-      const parsedData = JSON.parse(storedData);
-      const now = new Date();
-      const expiresAt = new Date(parsedData.expiresAt);
+    // const storedData = localStorage.getItem(STORAGE_KEY);
+    // if (storedData) {
+    //   const parsedData = JSON.parse(storedData);
+    //   const now = new Date();
+    //   const expiresAt = new Date(parsedData.expiresAt);
 
-      if (now > expiresAt) {
-        // Data has expired, remove it
-        localStorage.removeItem(STORAGE_KEY);
-        return null;
-      }
-      return parsedData.data;
-    }
+    //   if (now > expiresAt) {
+    //     // Data has expired, remove it
+    //     localStorage.removeItem(STORAGE_KEY);
+    //     return null;
+    //   }
+    //   return parsedData.data;
+    // }
     return null;
   };
   async function setStatesFn() {
@@ -160,13 +222,22 @@ export const ClientContextProvider = ({
         checkoutForm,
         setCheckoutForm,
         shippingOptions,
+        activeTab,
+        setActiveTab,
         setStatesFn,
+        totalPrices,
+        setTotalPrices,
         selections,
         setSelections,
         setShippingOptions,
         setProducts,
         loadFromLocalStorage,
         firstPageForm,
+        handleAccessoryChange,
+        handleAccessoryQtyChange,
+        handleShippingChange,
+        sidebarSteps,
+        setSidebarSteps,
         saveToLocalStorage,
         setFirstPageForm,
         accessories,

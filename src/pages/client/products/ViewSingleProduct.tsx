@@ -37,10 +37,17 @@ const ViewSingleProduct = () => {
   const {
     firstPageForm,
     shippingOptions,
+    activeTab,
+    setActiveTab,
+    selections,setSelections,
+    totalPrices, setTotalPrices,
+    handleAccessoryChange,
+    handleAccessoryQtyChange,
+    handleShippingChange,
   } = useClientContext();
   const { productUrl } = useParams();
   const [error, setError] = useState(false);
-  const [activeTab, setActiveTab] = useState<string>("cash");
+
   const [modalAccessory, setModalAccessory] = useState<IAccessory | null>(null);
   const [showAccessories, setShowAccessories] = useState<boolean>(false);
   const [productDetails, setProductDetails] = useState<IProduct | null>(null);
@@ -48,17 +55,17 @@ const ViewSingleProduct = () => {
   const [slides, setSlides] = useState<string[]>([]);
   const [buildList, setBuildList] = useState<IBuildList[]>([]);
   const [accessoryList, setAccessoryList] = useState<IAccessory[]>([]);
-  const [selections, setSelections] = useState<SelectionsType>({
-    baseUnitQty: 1,
-    accessories: {},
-    shippingOption: "",
-  });
+  // const [selections, setSelections] = useState<SelectionsType>({
+  //   baseUnitQty: 1,
+  //   accessories: {},
+  //   shippingOption: "",
+  // });
 
-  const [totalPrices, setTotalPrices] = useState({
-    basePrice: 0,
-    addOns: 0,
-    netPrice: 0,
-  });
+  // const [totalPrices, setTotalPrices] = useState({
+  //   basePrice: 0,
+  //   addOns: 0,
+  //   netPrice: 0,
+  // });
 
   // Fetch product data
   const fetchData = async () => {
@@ -85,11 +92,11 @@ const ViewSingleProduct = () => {
       setAccessoryList(data.accessories || []);
 
       const initialAccessoriesState: { [key: string]: AccessorySelection } = {};
-      
+
       (data.accessories || []).forEach((acc: IAccessory) => {
         initialAccessoriesState[acc.id] = { selected: false, qty: 1 };
       });
-      console.log(shippingOptions)
+      console.log(shippingOptions);
       const shippingOptionState = firstPageForm.state;
       setSelections((prevState) => ({
         ...prevState,
@@ -160,47 +167,41 @@ const ViewSingleProduct = () => {
     [accessoryList]
   );
 
-  const handleAccessoryChange = (accId: string, isChecked: boolean) => {
-    setSelections((prevState) => ({
-      ...prevState,
-      accessories: {
-        ...prevState.accessories,
+  // const handleAccessoryChange = (accId: string, isChecked: boolean) => {
+  //   setSelections((prevState) => ({
+  //     ...prevState,
+  //     accessories: {
+  //       ...prevState.accessories,
 
-        [accId]: {
-          ...prevState.accessories[accId],
-          // qty:isChecked==false?1:...prevState.accessories.qty,
-          qty: isChecked ? prevState.accessories[accId]?.qty || 1 : 1,
-          selected: isChecked,
-        },
-      },
-    }));
-  };
+  //       [accId]: {
+  //         ...prevState.accessories[accId],
+  //         // qty:isChecked==false?1:...prevState.accessories.qty,
+  //         qty: isChecked ? prevState.accessories[accId]?.qty || 1 : 1,
+  //         selected: isChecked,
+  //       },
+  //     },
+  //   }));
+  // };
 
-  const handleAccessoryQtyChange = (accId: string, qty: number) => {
-    setSelections((prevState) => ({
-      ...prevState,
-      accessories: {
-        ...prevState.accessories,
-        [accId]: {
-          ...prevState.accessories[accId],
-          qty: qty < 1 ? 1 : qty,
-        },
-      },
-    }));
-  };
+  // const handleAccessoryQtyChange = (accId: string, qty: number) => {
+  //   setSelections((prevState) => ({
+  //     ...prevState,
+  //     accessories: {
+  //       ...prevState.accessories,
+  //       [accId]: {
+  //         ...prevState.accessories[accId],
+  //         qty: qty < 1 ? 1 : qty,
+  //       },
+  //     },
+  //   }));
+  // };
 
-  const handleShippingChange = (optionId: any) => {
-    // let option:string
-    // if(optionId.includes("pickup")){
-    //   option=optionId
-    // }else{
-    //   option="delivery"
-    // }
-    setSelections((prevState) => ({
-      ...prevState,
-      shippingOption: optionId,
-    }));
-  };
+  // const handleShippingChange = (optionId: any) => {
+  //   setSelections((prevState) => ({
+  //     ...prevState,
+  //     shippingOption: optionId,
+  //   }));
+  // };
 
   // Reorder accessories so that the clicked one is first
   const reorderedAccessories = useMemo(() => {
@@ -283,16 +284,15 @@ const ViewSingleProduct = () => {
               <ProductSidebar
                 setShowAccessory={setShowAccessories}
                 productDetails={productDetails}
-                activeTab={activeTab}
+            
                 handleTabClick={handleTabClick}
                 selections={selections}
                 setSelections={setSelections}
                 accessoryList={accessoryList}
-                handleAccessoryChange={handleAccessoryChange}
-                handleAccessoryQtyChange={handleAccessoryQtyChange}
+                // handleAccessoryChange={handleAccessoryChange}
+                // handleAccessoryQtyChange={handleAccessoryQtyChange}
+                // handleShippingChange={handleShippingChange}
                 shippingOptions={shippingOptions}
-                handleShippingChange={handleShippingChange}
-                totalPrices={totalPrices}
                 setModalAccessory={setModalAccessory}
               />
             )}

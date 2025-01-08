@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import CheckoutForm from "./CheckoutForm";
 import ReactDOM from "react-dom";
 import ThankYouTab from "./ThankYouTab";
+import { useClientContext } from "../../../../hooks/useClientContext";
 
 interface AccessorySelection {
   selected: boolean;
@@ -30,45 +31,28 @@ interface SelectionsType {
     [accId: string]: AccessorySelection;
   };
   shippingOption: string | null;
-}
-
-interface ShippingOption {
-  id: string;
-  name: string;
-  price: number;
 }
 
 interface IProductSidebarProps {
   setShowAccessory: (value: boolean) => void;
   productDetails: IProduct;
-  activeTab: string;
   handleTabClick: (tab: string) => void;
   selections: SelectionsType;
-  setSelections: React.Dispatch<React.SetStateAction<SelectionsType>>;
   accessoryList: IAccessory[];
-  handleAccessoryChange: (id: string, isChecked: boolean) => void;
-  handleAccessoryQtyChange: (id: string, qty: number) => void;
-  shippingOptions: ShippingOption[];
-  handleShippingChange: (optionId: string) => void;
-  totalPrices: { basePrice: number; addOns: number; netPrice: number };
   setModalAccessory: React.Dispatch<React.SetStateAction<IAccessory | null>>;
 }
 
 const ProductSidebar = ({
   setShowAccessory,
   productDetails,
-  activeTab,
   handleTabClick,
   selections,
-  setSelections,
+
   accessoryList,
-  handleAccessoryChange,
-  handleAccessoryQtyChange,
-  shippingOptions,
-  handleShippingChange,
-  totalPrices,
+
   setModalAccessory,
 }: IProductSidebarProps) => {
+  const { activeTab } = useClientContext();
   const productName = productDetails?.name || "Product";
   const productTitle = productDetails?.product_title || "";
   const tabs = ["cash", "financing"];
@@ -174,15 +158,8 @@ const ProductSidebar = ({
               productDetails={productDetails}
               showCheckOutForm={showCheckOutForm}
               setShowCheckOutForm={setShowCheckOutForm}
-              selections={selections}
-              setSelections={setSelections}
               accessoryList={accessoryList}
               cashTabStep={cashTabStep}
-              handleAccessoryChange={handleAccessoryChange}
-              handleAccessoryQtyChange={handleAccessoryQtyChange}
-              shippingOptions={shippingOptions}
-              handleShippingChange={handleShippingChange}
-              totalPrices={totalPrices}
               setModalAccessory={setModalAccessory}
               setShowAccessory={setShowAccessory}
             />

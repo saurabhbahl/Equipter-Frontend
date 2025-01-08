@@ -22,33 +22,29 @@ interface ICashTabProps {
   showCheckOutForm?: boolean;
   setShowCheckOutForm?: React.Dispatch<React.SetStateAction<boolean>>;
   cashTabStep: number;
-  selections: SelectionsType;
-  setSelections: React.Dispatch<React.SetStateAction<SelectionsType>>;
   accessoryList: IAccessory[];
-  handleAccessoryChange: (id: string, isChecked: boolean) => void;
-  handleAccessoryQtyChange: (id: string, qty: number) => void;
-  handleShippingChange: (optionId: string) => void;
-  totalPrices: { basePrice: number; addOns: number; netPrice: number };
   setModalAccessory: React.Dispatch<React.SetStateAction<IAccessory | null>>;
   setShowAccessory: (value: boolean) => void;
 }
 
 const CashTab = ({
   productDetails,
-  selections,
-  setSelections,
   cashTabStep,
   accessoryList,
-  handleAccessoryChange,
-  handleAccessoryQtyChange,
-  handleShippingChange,
-  totalPrices,
   setModalAccessory,
   setShowAccessory,
 }: ICashTabProps) => {
   const productName = productDetails.name;
 
-  const {shippingOptions}=useClientContext()
+  const {
+    shippingOptions,
+    totalPrices,
+    selections,
+    setSelections,
+    handleAccessoryChange,
+    handleAccessoryQtyChange,
+    handleShippingChange,
+  } = useClientContext();
 
   const CashTabStepOne = () => {
     return (
@@ -395,8 +391,6 @@ const CashTab = ({
             <span>${1500}</span>
           </div>
         </div>
-
-      
       </div>
     );
   };
