@@ -3,25 +3,10 @@ import { IAccessory, IProduct } from "../../types/ClientSchemas";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faInfo } from "@fortawesome/free-solid-svg-icons";
 import CustomSlider from "../../components/CustomSlider";
-import { useContext } from "react";
 import { useClientContext } from "../../../../hooks/useClientContext";
 
-interface AccessorySelection {
-  selected: boolean;
-  qty: number;
-}
-interface SelectionsType {
-  baseUnitQty: number;
-  accessories: {
-    [accId: string]: AccessorySelection;
-  };
-  shippingOption: string | null;
-}
 interface ICashTabProps {
   productDetails: IProduct;
-  showCheckOutForm?: boolean;
-  setShowCheckOutForm?: React.Dispatch<React.SetStateAction<boolean>>;
-  cashTabStep: number;
   accessoryList: IAccessory[];
   setModalAccessory: React.Dispatch<React.SetStateAction<IAccessory | null>>;
   setShowAccessory: (value: boolean) => void;
@@ -29,7 +14,6 @@ interface ICashTabProps {
 
 const CashTab = ({
   productDetails,
-  cashTabStep,
   accessoryList,
   setModalAccessory,
   setShowAccessory,
@@ -41,6 +25,7 @@ const CashTab = ({
     totalPrices,
     selections,
     setSelections,
+    sidebarSteps,
     handleAccessoryChange,
     handleAccessoryQtyChange,
     handleShippingChange,
@@ -72,7 +57,7 @@ const CashTab = ({
               Add Ons
             </p>
             <p className="text-custom-orange align-middle font-semibold text-md md:text-lg lg:text-xl xl:text-2xl">
-              ${totalPrices.addOns.toLocaleString()}{" "}
+              ${totalPrices?.addOns?.toLocaleString()}{" "}
             </p>
           </div>
           {/* = */}
@@ -388,17 +373,22 @@ const CashTab = ({
           </h3>
           <div className="flex justify-between items-center text-sm md:text-base font-semibold">
             <span>Non-Refundable Deposit</span>
-            <span>${1500}</span>
+            <span>
+              $
+              {Math.floor(
+                Number((Number(totalPrices.netPrice) * 0.20).toFixed(2))
+              )}
+            </span>
           </div>
         </div>
       </div>
     );
   };
 
-  if (cashTabStep == 1) {
+  if (sidebarSteps.cashStep == 1) {
     return <CashTabStepOne />;
   }
-  if (cashTabStep == 2) {
+  if (sidebarSteps.cashStep == 2) {
     return <CashTabStepTwo />;
   }
 };

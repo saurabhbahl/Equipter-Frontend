@@ -1,10 +1,4 @@
-import React, {
-  Dispatch,
-  SetStateAction,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import React, { useEffect, useRef, useState } from "react";
 import InputFieldCurved from "../../../../components/utils/InputFieldCurved";
 import GroupClose from "../../../utils/GroupClose";
 import GroupOpen from "../../../utils/GroupOpen";
@@ -18,52 +12,49 @@ import {
 } from "../../types/ClientSchemas";
 import { CheckoutFormSchema } from "../../types/Validations";
 import SelectField from "../../../../components/utils/SelectFeild";
-import { SelectionsType } from "../ViewSingleProduct";
+import { IState, ShippingOption } from "../../../../contexts/ClientContext";
 import { publicApiClient } from "../../../../utils/axios";
-import { IState } from "../../../../contexts/ClientContext";
 
 interface ICheckoutFormProps {
-  setShowCheckOutForm: Dispatch<SetStateAction<boolean>>;
   productDetails: IProduct;
-  setThankYouTab: Dispatch<SetStateAction<boolean>>;
-  selections: SelectionsType;
   filteredAccessory: IAccessory[];
-  financing: string;
 }
+const STORAGE_KEY = "checkoutData";
+const EXPIRATION_TIME = 15 * 24 * 60 * 60 * 1000;
 
 const CheckoutForm = ({
-  setShowCheckOutForm,
   productDetails,
-  setThankYouTab,
-  selections,
   filteredAccessory,
-  financing,
 }: ICheckoutFormProps) => {
   const {
+    shippingOptions,
+    statesData,
+    activeTab,
+    selections,
+    setTotalPrices,
     firstPageForm,
     loadFromLocalStorage,
     saveToLocalStorage,
+    filterState,
+    totalPrices,
+    setShippingOptions,
+    setSidebarSteps,
   } = useClientContext();
-  const STORAGE_KEY = "checkoutData";
-  const { shippingOptions, statesData } = useClientContext();
-  console.log(shippingOptions, selections);
+
   const [checkoutForm, setCheckoutForm] = useState<ICheckoutForm>(
     CheckoutFormDefaultValues
   );
-
   const [validationErrors, setValidationErrors] = useState<
     { [key in keyof ICheckoutForm]?: string }
   >({});
+  // states for different sections
   const [isBuildSummaryOpen, setIsBuildSummaryOpen] = useState(true);
   const [isContactInfoOpen, setIsContactInfoOpen] = useState(true);
   const [isPaymentDetailsOpen, setIsPaymentDetailsOpen] = useState(true);
   const [isDeliveryAddressOpen, setIsDeliveryAddressOpen] = useState(true);
   const [isBillingInfoOpen, setIsBillingInfoOpen] = useState(true);
-  const selectedDelivery = shippingOptions.find(
-    (sh) => sh?.id == selections?.shippingOption
-  );
-
   const inputRef: React.RefObject<HTMLInputElement> = useRef(null);
+  const [selectedDelivery, setSelectedDelivery] = useState<ShippingOption>();
 
   const getDigits = (input: string) => input.replace(/\D/g, "");
 
@@ -71,6 +62,7 @@ const CheckoutForm = ({
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value, type } = e.target;
+
     let newValue: string | boolean | number;
     let checked;
 
@@ -79,6 +71,24 @@ const CheckoutForm = ({
       newValue = checked;
     } else {
       newValue = value;
+    }
+
+    if (name === "delivery_address_state_id") {
+      const state = filterState(value);
+      const newShippingOption: ShippingOption[] = [
+        { id: "pickup", name: "Pick-up", price: 0 },
+        {
+          id: "delivery",
+          name: `Delivery to the State of ${state.state_name}`,
+          price: parseFloat(state.shipping_rate),
+          uuid: state.state_id,
+          zone_id: state.zone_id,
+          zone_name: state.zone_name,
+        },
+      ];
+      setShippingOptions([...newShippingOption]);
+
+      setCheckoutForm((prev) => ({ ...prev, zone_id: state.zone_id }));
     }
 
     // Handle card number formatting
@@ -105,7 +115,7 @@ const CheckoutForm = ({
       newValue = getDigits(value).slice(0, 4);
     }
 
-    // Handle Billing same as Delivery
+    // Handle Billing same as Delivery than copy data
     if (name === "billing_same_as_delivery") {
       if (checked) {
         // Remove any validation errors for billing address
@@ -121,11 +131,11 @@ const CheckoutForm = ({
         setCheckoutForm((prevForm) => ({
           ...prevForm,
           billing_same_as_delivery: true,
-          billing_address_street: prevForm.delivery_address_street,
-          billing_address_city: prevForm.delivery_address_city,
-          billing_address_state: prevForm.delivery_address_state_id,
-          billing_address_zip_code: prevForm.delivery_address_zip_code,
-          billing_address_country: prevForm.delivery_address_country,
+          billing_address_street: prevForm.delivery_address_street as string,
+          billing_address_city: prevForm.delivery_address_city as string,
+          billing_address_state: prevForm.delivery_address_state_id as string,
+          billing_address_zip_code: prevForm.delivery_address_zip_code as string,
+          billing_address_country: prevForm.delivery_address_country as string,
         }));
       } else {
         // If user unchecks, just set it to false (fields remain but are again independent)
@@ -141,25 +151,34 @@ const CheckoutForm = ({
       ...prevForm,
       [name]: newValue,
     }));
-    saveToLocalStorage(checkoutForm, STORAGE_KEY, 15 * 24 * 60 * 60 * 1000);
     setValidationErrors((prevErrors) => ({
       ...prevErrors,
       [name]: undefined,
     }));
+    saveToLocalStorage(checkoutForm, STORAGE_KEY, EXPIRATION_TIME);
   };
-
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+   
     e.preventDefault();
     setCheckoutForm((prev: ICheckoutForm) => ({
       ...prev,
-      shipping_method_used: selections.shippingOption == "pickup"?selections.shippingOption:"delivery",
+      shipping_method_used:
+        selections.shippingOption == "pickup"
+          ? selections.shippingOption
+          : "delivery",
       zone_id: selectedDelivery?.zone_id,
-      delivery_cost:selections.shippingOption == "pickup"?"0":String(selectedDelivery?.price),
+      delivery_cost:
+        selections.shippingOption == "pickup"
+          ? "0"
+          : String(selectedDelivery?.price),
       accessories: filteredAccessory,
+      non_refundable_deposit: Math.floor(
+        Number((Number(totalPrices.netPrice) * 0.2).toFixed(2))
+      ),
     }));
-    console.log("Form data:", checkoutForm);
+
     const validation = CheckoutFormSchema.safeParse(checkoutForm);
-    console.log(validation);
+
     if (!validation.success) {
       const newErrors: { [key in keyof ICheckoutForm]?: string } = {};
       validation.error.issues.forEach((issue) => {
@@ -219,13 +238,13 @@ const CheckoutForm = ({
       return;
     }
 
-    setShowCheckOutForm(false);
-    setThankYouTab(true);
-    console.log("Form data:", checkoutForm);
-    const result = await publicApiClient.post("/webquote", { checkoutForm });
-    console.log(result.data);
-  };
 
+    const result = await publicApiClient.post("/webquote", { checkoutForm });
+ 
+    if(result.data.success){
+      setSidebarSteps((prev)=>({...prev,showCheckOutForm:false,showThankYouTab:true}))
+    }
+  };
   //  the first input on mount
   useEffect(() => {
     if (inputRef.current !== null) {
@@ -242,35 +261,41 @@ const CheckoutForm = ({
       contact_email: firstPageForm.email,
       contact_job_title: firstPageForm.jobTitle,
       delivery_address_state_id: firstPageForm.state,
-      financing: financing,
+      financing: activeTab,
       product_id: productDetails.id,
       product_name: productDetails.name,
       product_price: Number(productDetails.price),
       product_qty: selections.baseUnitQty,
       zone_id: selectedDelivery?.zone_id,
       product_total_cost: Number(productDetails.price) * selections.baseUnitQty,
-      shipping_method_used: selections.shippingOption == "pickup"?selections.shippingOption:"delivery",
+      shipping_method_used:
+        selections.shippingOption == "pickup"
+          ? selections.shippingOption
+          : "delivery",
       contact_industry: (firstPageForm.industry as string) ?? "",
     }));
     const savedData = loadFromLocalStorage(STORAGE_KEY);
     if (savedData) {
       setCheckoutForm({
         ...savedData,
-        // i_understand_deposit_is_non_refundable:false,payment_card_number:"",payment_cvc:"",payment_expiry:"",payment_name_on_card:"",
+        i_understand_deposit_is_non_refundable: false,
+        payment_card_number: "",
+        payment_cvc: "",
+        payment_expiry: "",
+        payment_name_on_card: "",
       });
     }
-  }, [firstPageForm, financing]);
-
+  }, [firstPageForm, activeTab]);
   // Sync up billing if "billing_same_as_delivery" is true
   useEffect(() => {
     if (checkoutForm.billing_same_as_delivery) {
       setCheckoutForm((prevForm) => ({
         ...prevForm,
-        billing_address_street: prevForm.delivery_address_street,
-        billing_address_city: prevForm.delivery_address_city,
-        billing_address_state: prevForm.delivery_address_state_id,
-        billing_address_zip_code: prevForm.delivery_address_zip_code,
-        billing_address_country: prevForm.delivery_address_country,
+        billing_address_street: prevForm.delivery_address_street as string,
+        billing_address_city: prevForm.delivery_address_city as string,
+        billing_address_state: prevForm.delivery_address_state_id as string,
+        billing_address_zip_code: prevForm.delivery_address_zip_code as string,
+        billing_address_country: prevForm.delivery_address_country as string,
       }));
     }
   }, [
@@ -281,6 +306,45 @@ const CheckoutForm = ({
     checkoutForm.delivery_address_country,
     checkoutForm.billing_same_as_delivery,
   ]);
+  useEffect(() => {
+    const delivery = shippingOptions.find(
+      (sh) => sh?.id == selections?.shippingOption
+    );
+    setSelectedDelivery(delivery);
+  }, [checkoutForm.delivery_address_state_id]);
+
+  // Update total prices when selections change
+  useEffect(() => {
+    if (!productDetails?.price) return;
+
+    const basePrice = parseFloat(productDetails.price) * selections.baseUnitQty;
+
+    let shippingPrice = 0;
+    if (selections.shippingOption) {
+      const shippingOption = shippingOptions.find(
+        (option) => option.id === selections.shippingOption
+      );
+      if (shippingOption) {
+        shippingPrice = shippingOption.price;
+      }
+    }
+
+    const netPrice = basePrice + shippingPrice;
+
+    setTotalPrices({
+      basePrice,
+      netPrice,
+    });
+  }, [
+    selections,
+    productDetails?.price,
+    checkoutForm.delivery_address_state_id,
+  ]);
+
+  // useEffect(() => {
+  //   console.log("first")
+  //   setFirstPageForm((prev)=>({ ...prev, state:selections?.selectedState?.state_id }));
+  // }, [selections,shippingOptions,totalPrices])
 
   return (
     <form
@@ -291,7 +355,9 @@ const CheckoutForm = ({
       <button
         tabIndex={-1}
         className="absolute right-3 top-5 lg:right-6"
-        onClick={() => setShowCheckOutForm(false)}
+        onClick={() =>
+          setSidebarSteps((prev) => ({ ...prev, showCheckOutForm: false }))
+        }
       >
         <CloseBtn />
       </button>
@@ -316,16 +382,16 @@ const CheckoutForm = ({
             <div className="flex flex-col lg:w-[60%] text-black lg:font-bold font-semibold text-sm lg:text-[17px] space-y-2">
               {/* product info */}
               <div className="flex justify-between">
-                <p>Equiter {productDetails.name}</p>
+                <p>Equiter {productDetails?.name}</p>
                 <p>
-                  ${Number(productDetails.price) * selections.baseUnitQty}{" "}
+                  ${Number(productDetails?.price) * selections?.baseUnitQty}{" "}
                   <span className="text-custom-med-gray">
                     ({selections.baseUnitQty})
                   </span>
                 </p>
               </div>
               {/* accessories */}
-              <div className="flex justify-between flex-col">
+              <div className="flex gap-1 justify-between flex-col">
                 {filteredAccessory.map((acc) => {
                   return (
                     <div className="flex justify-between " key={acc.id}>
@@ -341,10 +407,15 @@ const CheckoutForm = ({
                 })}
               </div>
               {/* delivery */}
-              <div className="flex justify-between pr-5">
-                <p>{selectedDelivery.name}</p>
-                <p>${selectedDelivery?.price}</p>
-              </div>
+              {shippingOptions.map(
+                (option) =>
+                  selections.shippingOption === option.id && (
+                    <div key={option.id} className="flex  justify-between pr-5">
+                      <p>{option.name}</p>
+                      <span>${option.price}</span>
+                    </div>
+                  )
+              )}
             </div>
           </div>
         ) : (
@@ -506,7 +577,6 @@ const CheckoutForm = ({
         <button
           tabIndex={-1}
           onClick={(e) => {
-            console.log(e);
             e.currentTarget.blur();
             setIsDeliveryAddressOpen(!isDeliveryAddressOpen);
           }}
@@ -553,11 +623,6 @@ const CheckoutForm = ({
                 defaultValue="Select State*"
                 value={checkoutForm.delivery_address_state_id || ""}
                 onChange={handleChange}
-                // options={[
-                //   { value: "California", label: "California" },
-                //   { value: "Texas", label: "Texas" },
-                //   { value: "New York", label: "New York" },
-                // ]}
                 options={statesData
                   ?.filter((state) => state.is_delivery_paused == false)
                   .map((state: IState) => ({
@@ -676,11 +741,6 @@ const CheckoutForm = ({
                     value: state.state_id,
                     label: state.state_name,
                   }))}
-                // options={[
-                //   { value: "California", label: "California" },
-                //   { value: "Texas", label: "Texas" },
-                //   { value: "New York", label: "New York" },
-                // ]}
               />
 
               <InputFieldCurved
@@ -735,14 +795,20 @@ const CheckoutForm = ({
       <div className="pl-6 flex  flex-col mb-8 gap-2">
         <div className="font-roboto gap-3 lg:gap-8 flex flex-col lg:flex-row w-full justify-between items-center">
           <div className="w-[100%] lg:w-[60%]">
-            <p className="text-[#666666] font-semibold lg:font-bold lg:text-[17px]">
+            <p className="text-[#666666] font-semibold lg:font-bold lg:text-[15px]">
               Due Today
             </p>
             <div className="flex w-full justify-between items-center font-semibold lg:font-bold">
-              <p className="text-black  text-[16px]  2xl:text-[23px]">
+              <p className="text-black  text-[16px]  2xl:text-[20px]">
                 Non-Refundable Deposit
               </p>
-              <span className=" ">$1,500</span>
+
+              <span>
+                $
+                {Math.floor(
+                  Number((Number(totalPrices.netPrice) * 0.2).toFixed(2))
+                )}
+              </span>
             </div>
 
             <p className="text-custom-med-gray text-[12px] mt-1">

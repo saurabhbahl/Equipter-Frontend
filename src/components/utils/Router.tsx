@@ -82,8 +82,6 @@ export default function Router() {
   );
 }
 
-
-
 // import { Navigate, Route, Routes } from "react-router-dom";
 // import { Suspense, lazy } from "react";
 
@@ -98,7 +96,6 @@ export default function Router() {
 // import Products from "../../pages/client/products/Products";
 // import AllProducts from "../admincomponents/Products/AllProducts";
 // import ViewSingleProduct from "../../pages/client/products/ViewSingleProduct";
-
 
 // const LoginPage = lazy(() => import("../../pages/auth/LoginPage"));
 // const ForgetPassword = lazy(() => import("../../pages/auth/ForgetPassword"));

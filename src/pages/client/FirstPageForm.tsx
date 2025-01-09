@@ -16,6 +16,7 @@ const FirstPageForm = () => {
     setShippingOptions,
     loadFromLocalStorage,
     statesData,
+    setSelections,
   } = useClientContext();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -43,7 +44,7 @@ const FirstPageForm = () => {
         const newShippingOption: ShippingOption[] = [
           { id: "pickup", name: "Pick-up", price: 0 },
           {
-            id: selectedState.state_name,
+            id: "delivery",
             name: `Delivery to the State of ${selectedState.state_name}`,
             price: parseFloat(selectedState.shipping_rate),
             uuid: selectedState.state_id,
@@ -52,6 +53,7 @@ const FirstPageForm = () => {
           },
         ];
         setShippingOptions([...newShippingOption]);
+        setSelections((prev) => ({ ...prev, shippingOption: "delivery" }));
       }
     }
   }
@@ -88,7 +90,11 @@ const FirstPageForm = () => {
     { value: "solar", label: "Solar" },
     { value: "other", label: "Other" },
   ];
-
+  
+ 
+  
+  
+  
   useEffect(() => {
     const savedData = loadFromLocalStorage(STORAGE_KEY);
     if (savedData) {

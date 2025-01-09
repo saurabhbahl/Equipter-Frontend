@@ -8,8 +8,8 @@ export default function App() {
     <div className="max-w-[2500px] mx-auto ">
       <HelmetProvider>
         {/* <ErrorBoundary> */}
-        <Header />
-        <Router />
+          <Header />
+          <Router />
         {/* </ErrorBoundary> */}
       </HelmetProvider>
     </div>

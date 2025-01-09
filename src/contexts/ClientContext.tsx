@@ -20,6 +20,19 @@ export interface IState {
   updated_at: string;
 }
 
+interface AccessorySelection {
+  selected: boolean;
+  qty: number;
+}
+
+interface SelectionsType {
+  baseUnitQty: number;
+  accessories: {
+    [accId: string]: AccessorySelection;
+  };
+  shippingOption: string | null;
+  selectedState: IState | null;
+}
 export interface GlobalLoadingState {
   products: boolean;
   accessories: boolean;
@@ -37,6 +50,19 @@ export interface ISidebarSteps {
   financingStep: number;
   showCheckOutForm: boolean;
   showThankYouTab: boolean;
+}
+export interface IProductSelectionProps {
+  selectedAccessories: IAccessory[];
+  selectedDeliveryOption: "delivery" | "pickup";
+  productDetails: IProduct | null;
+  deliveryState: IState | null;
+  productBaseUnitPrice: number;
+  productBaseUnitQty: number;
+}
+export interface ITotalPrices{
+  basePrice: number,
+  addOns?: number,
+  netPrice: number,
 }
 export interface IClientContext {
   accessories: IAccessory[];
@@ -61,17 +87,22 @@ export interface IClientContext {
   setShippingOptions: React.Dispatch<React.SetStateAction<ShippingOption[]>>;
   statesData: IState[];
   setStatesFn: () => void;
-  selections: any;
-  setSelections: any;
-  activeTab: any;
-  setActiveTab: any;
-  totalPrices: any;
-  setTotalPrices: any;
-  handleAccessoryChange: (accId: string, isChecked: boolean) => any;
-  handleAccessoryQtyChange: (accId: string, qty: number) => any;
-  handleShippingChange: (optionId: any) => any;
-  sidebarSteps: any;
-  setSidebarSteps: any;
+  selections: SelectionsType;
+  setSelections: React.Dispatch<React.SetStateAction<SelectionsType>>;
+  activeTab: string;
+  setActiveTab: React.Dispatch<React.SetStateAction<string>>;
+  totalPrices: ITotalPrices;
+  setTotalPrices: React.Dispatch<React.SetStateAction<ITotalPrices>>;
+  filterState: (id: string) => any;
+  handleAccessoryChange: (accId: string, isChecked: boolean) => void;
+  handleAccessoryQtyChange: (accId: string, qty: number) => void;
+  handleShippingChange: (optionId: string) => void;
+  sidebarSteps: ISidebarSteps;
+  setSidebarSteps: React.Dispatch<React.SetStateAction<ISidebarSteps>>;
+  productSelection: IProductSelectionProps;
+  setProductSelections: React.Dispatch<
+    React.SetStateAction<IProductSelectionProps>
+  >;
 }
 
 export const ClientContext = createContext<IClientContext | null>(null);
@@ -114,15 +145,26 @@ export const ClientContextProvider = ({
   const [checkoutForm, setCheckoutForm] = useState<ICheckoutForm>(
     CheckoutFormDefaultValues
   );
-  const [selections, setSelections] = useState({
+  const [selections, setSelections] = useState<SelectionsType>({
     baseUnitQty: 1,
     accessories: {},
-    shippingOption: "",
+    shippingOption: "delivery",
+    selectedState: null,
   });
-  const [totalPrices, setTotalPrices] = useState({
+  const [totalPrices, setTotalPrices] = useState<ITotalPrices>({
     basePrice: 0,
     addOns: 0,
     netPrice: 0,
+  });
+  const [productSelection, setProductSelections] = useState<
+    IProductSelectionProps
+  >({
+    selectedAccessories: [],
+    selectedDeliveryOption: "pickup",
+    productDetails: null,
+    deliveryState: null,
+    productBaseUnitPrice: 0,
+    productBaseUnitQty: 1,
   });
 
   const filterState = (selectedId: string) => {
@@ -161,7 +203,7 @@ export const ClientContextProvider = ({
     }));
   };
 
-  const handleShippingChange = (optionId: any) => {
+  const handleShippingChange = (optionId: string) => {
     setSelections((prevState) => ({
       ...prevState,
       shippingOption: optionId,
@@ -174,37 +216,38 @@ export const ClientContextProvider = ({
     STORAGE_KEY: string,
     EXPIRATION_TIME: number
   ) => {
-    // const now = new Date();
-    // const payload = {
-    //   data,
-    //   createdAt: data.createdAt || now.toISOString(),
-    //   updatedAt: now.toISOString(),
-    //   expiresAt: new Date(now.getTime() + EXPIRATION_TIME).toISOString(),
-    // };
-    // localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+    const now = new Date();
+    const payload = {
+      data,
+      createdAt: data.createdAt || now.toISOString(),
+      updatedAt: now.toISOString(),
+      expiresAt: new Date(now.getTime() + EXPIRATION_TIME).toISOString(),
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
   };
 
   // Load data from localStorage and check expiration
   const loadFromLocalStorage = (STORAGE_KEY: string) => {
-    // const storedData = localStorage.getItem(STORAGE_KEY);
-    // if (storedData) {
-    //   const parsedData = JSON.parse(storedData);
-    //   const now = new Date();
-    //   const expiresAt = new Date(parsedData.expiresAt);
+    const storedData = localStorage.getItem(STORAGE_KEY);
+    if (storedData) {
+      const parsedData = JSON.parse(storedData);
+      const now = new Date();
+      const expiresAt = new Date(parsedData.expiresAt);
 
-    //   if (now > expiresAt) {
-    //     // Data has expired, remove it
-    //     localStorage.removeItem(STORAGE_KEY);
-    //     return null;
-    //   }
-    //   return parsedData.data;
-    // }
+      if (now > expiresAt) {
+        // Data has expired, remove it
+        localStorage.removeItem(STORAGE_KEY);
+        return null;
+      }
+      return parsedData.data;
+    }
     return null;
   };
   async function setStatesFn() {
     const res = await publicApiClient.get("/state/states");
     setStatesData(res.data.data);
   }
+
   useEffect(() => {
     if (statesData.length == 0) {
       setStatesFn();
@@ -220,9 +263,12 @@ export const ClientContextProvider = ({
       value={{
         products,
         checkoutForm,
+        filterState,
         setCheckoutForm,
         shippingOptions,
         activeTab,
+        productSelection,
+        setProductSelections,
         setActiveTab,
         setStatesFn,
         totalPrices,

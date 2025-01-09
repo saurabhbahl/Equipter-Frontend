@@ -7,37 +7,10 @@ import ReactDOM from "react-dom";
 import ThankYouTab from "./ThankYouTab";
 import { useClientContext } from "../../../../hooks/useClientContext";
 
-interface AccessorySelection {
-  selected: boolean;
-  qty: number;
-}
-
-interface SelectionsType {
-  baseUnitQty: number;
-  accessories: {
-    [accId: string]: AccessorySelection;
-  };
-  shippingOption: string | null;
-}
-
-interface AccessorySelection {
-  selected: boolean;
-  qty: number;
-}
-
-interface SelectionsType {
-  baseUnitQty: number;
-  accessories: {
-    [accId: string]: AccessorySelection;
-  };
-  shippingOption: string | null;
-}
-
 interface IProductSidebarProps {
   setShowAccessory: (value: boolean) => void;
   productDetails: IProduct;
   handleTabClick: (tab: string) => void;
-  selections: SelectionsType;
   accessoryList: IAccessory[];
   setModalAccessory: React.Dispatch<React.SetStateAction<IAccessory | null>>;
 }
@@ -46,35 +19,32 @@ const ProductSidebar = ({
   setShowAccessory,
   productDetails,
   handleTabClick,
-  selections,
-
   accessoryList,
-
   setModalAccessory,
 }: IProductSidebarProps) => {
-  const { activeTab } = useClientContext();
+  const {
+    activeTab,
+    sidebarSteps,
+    setSidebarSteps,
+    selections,
+  } = useClientContext();
+
   const productName = productDetails?.name || "Product";
   const productTitle = productDetails?.product_title || "";
   const tabs = ["cash", "financing"];
-  const [cashTabStep, setCashTabStep] = useState(1);
-  const [financingTabStep, setFinancingTabStep] = useState(1);
-  const [showCheckOutForm, setShowCheckOutForm] = useState(false);
-  const [filteredAccessory, setFilteredAccessory] = useState<any>();
-  const [showThankYouTab, setShowThankYouTab] = useState(false);
+  const [filteredAccessory, setFilteredAccessory] = useState<IAccessory[]>([]);
 
+  //  this is used to filter the accessories that is selected
   useEffect(() => {
     if (!accessoryList || accessoryList.length === 0) return;
-
     const selectedAccessories = accessoryList
-      .filter((accessory) => selections.accessories[accessory.id]?.selected)
+      .filter((accessory) => selections?.accessories[accessory.id]?.selected)
       .map((accessory) => ({
         ...accessory,
-        qty: selections.accessories[accessory.id]?.qty || 1,
+        qty: selections?.accessories[accessory.id]?.qty || 1,
       }));
 
     setFilteredAccessory(selectedAccessories);
-    console.log("Selected=>Acc", selectedAccessories);
-    console.log("Selections", selections);
   }, [selections, accessoryList]);
 
   const currentDate = new Date();
@@ -97,21 +67,24 @@ const ProductSidebar = ({
 
   return (
     <div className="w-full xl:w-[37%] md:p-3 my-3">
-      {(cashTabStep == 2 || financingTabStep == 2) && (
+      {(sidebarSteps.cashStep == 2 || sidebarSteps.financingStep == 2) && (
         <p
           className="text-custom-med-gray text-[15px] font-semibold cursor-pointer "
           onClick={() => {
-            if (cashTabStep === 3 || financingTabStep === 3) {
+            if (
+              sidebarSteps.cashStep == 3 ||
+              sidebarSteps.financingStep === 3
+            ) {
               if (activeTab === "cash") {
-                setCashTabStep(2);
+                setSidebarSteps((prev) => ({ ...prev, cashStep: 2 }));
               } else {
-                setFinancingTabStep(2);
+                setSidebarSteps((prev) => ({ ...prev, financingStep: 2 }));
               }
             } else {
               if (activeTab === "cash") {
-                setCashTabStep(1);
+                setSidebarSteps((prev) => ({ ...prev, cashStep: 1 }));
               } else {
-                setFinancingTabStep(1);
+                setSidebarSteps((prev) => ({ ...prev, financingStep: 1 }));
               }
             }
           }}
@@ -156,10 +129,7 @@ const ProductSidebar = ({
           {activeTab === "cash" ? (
             <CashTab
               productDetails={productDetails}
-              showCheckOutForm={showCheckOutForm}
-              setShowCheckOutForm={setShowCheckOutForm}
               accessoryList={accessoryList}
-              cashTabStep={cashTabStep}
               setModalAccessory={setModalAccessory}
               setShowAccessory={setShowAccessory}
             />
@@ -168,25 +138,21 @@ const ProductSidebar = ({
           )}
         </div>
         {/* checkout form */}
-        {showCheckOutForm &&
+        {sidebarSteps.showCheckOutForm &&
           ReactDOM.createPortal(
             <div className="fixed top-0 z-30 inset-0 backdrop-blur-sm bg-black bg-opacity-10 flex items-center justify-center lg:p-4 p-8">
               <CheckoutForm
-                setShowCheckOutForm={setShowCheckOutForm}
                 productDetails={productDetails}
                 filteredAccessory={filteredAccessory}
-                selections={selections}
-                financing={activeTab}
-                setThankYouTab={setShowThankYouTab}
               />
             </div>,
             document.body
           )}
 
-        {showThankYouTab &&
+        {sidebarSteps.showThankYouTab &&
           ReactDOM.createPortal(
             <div className="fixed top-0 z-30 inset-0 backdrop-blur-sm bg-black bg-opacity-10 flex items-center justify-center lg:p-4 p-8">
-              <ThankYouTab setShowThankYouTab={setShowThankYouTab} />
+              <ThankYouTab />
             </div>,
             document.body
           )}
@@ -207,22 +173,31 @@ const ProductSidebar = ({
             <button
               className="inline-block text-sm xl:text-md px-4 py-2 bg-custom-orange text-white lg:px-6 lg:py-3 hover:bg-black hover:bg-opacity-50 transition"
               onClick={() => {
-                if (cashTabStep === 2 || financingTabStep === 2) {
+                if (
+                  sidebarSteps.cashStep == 2 ||
+                  sidebarSteps.financingStep === 2
+                ) {
                   if (activeTab === "cash") {
-                    setShowCheckOutForm(true);
+                    setSidebarSteps((prev) => ({
+                      ...prev,
+                      showCheckOutForm: true,
+                    }));
                   } else {
-                    setShowCheckOutForm(true);
+                    setSidebarSteps((prev) => ({
+                      ...prev,
+                      showCheckOutForm: true,
+                    }));
                   }
                 } else {
                   if (activeTab === "cash") {
-                    setCashTabStep(2);
+                    setSidebarSteps((prev) => ({ ...prev, cashStep: 2 }));
                   } else {
-                    setFinancingTabStep(2);
+                    setSidebarSteps((prev) => ({ ...prev, financingStep: 2 }));
                   }
                 }
               }}
             >
-              {cashTabStep == 2 || financingTabStep == 2
+              {sidebarSteps.cashStep == 2 || sidebarSteps.financingStep === 2
                 ? "Confirm Deposit"
                 : "Continue"}
             </button>

@@ -4,35 +4,20 @@ import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import { IAccessory } from "../../types/ClientSchemas";
 import { truncateText } from "../../../../utils/helpers";
+import { useClientContext } from "../../../../hooks/useClientContext";
+import CloseBtn from "../../../utils/CloseBtn";
 
 interface IAccessorySliderProps {
   accessories: IAccessory[];
   onClose: () => void;
-  selections: any;
-  setSelections: React.Dispatch<React.SetStateAction<any>>;
-}
-interface AccessorySelection {
-  selected: boolean;
-  qty: number;
-}
-interface SelectionsType {
-  baseUnitQty: number;
-  accessories: {
-    [accId: string]: AccessorySelection;
-  };
-  shippingOption: string | null;
 }
 
-function AccessorySlider({
-  accessories,
-  onClose,
-  selections,
-  setSelections,
-}: IAccessorySliderProps) {
+
+function AccessorySlider({ accessories, onClose }: IAccessorySliderProps) {
   const [flash, setFlash] = useState(false);
-
+  const { selections, setSelections } = useClientContext();
   const handleAddAccessory = (currentAccessory: IAccessory) => {
-    setSelections((prev: SelectionsType) => {
+    setSelections((prev) => {
       const prevAccessory = prev.accessories[currentAccessory.id] || {
         selected: false,
         qty: 0,
@@ -103,7 +88,7 @@ function AccessorySlider({
         className="absolute z-50 top-4 right-4 sm:top-6 sm:right-6 text-lg text-black xl:text-5xl hover:text-gray-600 font-bold"
         aria-label="Close Slider"
       >
-        &times;
+        <CloseBtn />
       </button>
       <div className="w-full  font-work-sans ">
         <Slider {...settings}>
@@ -118,7 +103,7 @@ function AccessorySlider({
                 <div className="min-h-full">
                   <div className="flex flex-col md:flex-row h-full bg-white shadow-lg overflow-hidden ">
                     {/* Image Section */}
-                    <div className="w-full md:w-3/5 my-auto h-[250px] lg:h-[400px] flex items-center justify-center p-2">
+                    <div className="w-full md:w-3/5 my-auto min-h-[250px] lg:h-[400px] flex items-center justify-center p-2">
                       <img
                         src={featureImg[0]?.image_url}
                         alt="Product Image"

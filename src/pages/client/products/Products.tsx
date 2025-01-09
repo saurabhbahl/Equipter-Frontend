@@ -3,18 +3,21 @@ import SingleProductComponent from "../components/SingleProductComponent";
 import MetaComponent from "../../../utils/MetaComponent";
 import { useClientContext } from "../../../hooks/useClientContext";
 import LoaderSpinner from "../../../components/utils/LoaderSpinner";
-import {  publicApiClient } from "../../../utils/axios";
+import { publicApiClient } from "../../../utils/axios";
 import FirstPageForm from "../FirstPageForm";
 
-
 const Products = () => {
-  const { products, setProducts, loading, setLoading ,firstPageForm,shippingOptions,statesData,setShippingOptions} = useClientContext();
-  console.log(shippingOptions)
+  const {
+    products,
+    setProducts,
+    loading,
+    setLoading,
+    firstPageForm,
+  } = useClientContext();
 
   // Fetch Products Data
   const fetchData = async () => {
     try {
-      
       const data = await publicApiClient.get("/product");
       setProducts(data?.data.data || []);
       setLoading((prev) => ({ ...prev, products: false }));
@@ -30,34 +33,11 @@ const Products = () => {
       setLoading((prev) => ({ ...prev, products: true }));
       fetchData();
     }
-        // if (firstPageForm.state !== "") {
-        //   const selectedState = statesData.find(
-        //     (st) => st.state_id === firstPageForm.state
-        //   );
-        //   console.log(selectedState)
-    
-        //   if (selectedState) {
-        //     const newShippingOption: ShippingOption[] = [
-        //       // {
-        //       //   id: selectedState.id,
-        //       //   name: selectedState.zone_name,
-        //       //   price: parseFloat(selectedState.shipping_rate),
-        //       // },
-        //       { id: "pickup", name: "Pick-up", price: 0 },
-        //       { id: "pickup", name: "Pick-up", price: 0 },
-        //     ];
-    
-        //     console.log(newShippingOption);
-        //     setShippingOptions([...newShippingOption]);
-        //   }
-        // }
   }, []);
 
-
-  if(!firstPageForm.isFormFilled){
-    return <FirstPageForm/>
+  if (!firstPageForm.isFormFilled) {
+    return <FirstPageForm />;
   }
-
 
   if (loading.products) {
     return (

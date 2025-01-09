@@ -13,7 +13,6 @@ import AccessorySlider from "./components/AccessorySlider";
 import ProductSidebar from "./components/ProductSidebar";
 import FirstPageForm from "../FirstPageForm";
 import NotFound from "../../NotFound";
-import { ShippingOption } from "../../../contexts/ClientContext";
 
 interface IBuildList {
   title: string;
@@ -37,43 +36,36 @@ const ViewSingleProduct = () => {
   const {
     firstPageForm,
     shippingOptions,
-    activeTab,
     setActiveTab,
-    selections,setSelections,
-    totalPrices, setTotalPrices,
-    handleAccessoryChange,
-    handleAccessoryQtyChange,
-    handleShippingChange,
+    selections,
+    setSelections,
+    setTotalPrices,
+    setProductSelections,
   } = useClientContext();
   const { productUrl } = useParams();
   const [error, setError] = useState(false);
-
+  // this is used to show the first accessory
   const [modalAccessory, setModalAccessory] = useState<IAccessory | null>(null);
+  // state to toggle accessories
   const [showAccessories, setShowAccessories] = useState<boolean>(false);
+  // single product details
   const [productDetails, setProductDetails] = useState<IProduct | null>(null);
   const [loading, setLoading] = useState(true);
+  // images links stored here
   const [slides, setSlides] = useState<string[]>([]);
+  // to show the
   const [buildList, setBuildList] = useState<IBuildList[]>([]);
+  // to store all accessories
   const [accessoryList, setAccessoryList] = useState<IAccessory[]>([]);
-  // const [selections, setSelections] = useState<SelectionsType>({
-  //   baseUnitQty: 1,
-  //   accessories: {},
-  //   shippingOption: "",
-  // });
-
-  // const [totalPrices, setTotalPrices] = useState({
-  //   basePrice: 0,
-  //   addOns: 0,
-  //   netPrice: 0,
-  // });
 
   // Fetch product data
   const fetchData = async () => {
     try {
-      // get product data
+      // get products data with related accessories
       const resData = await publicApiClient.get(`/product/url/${productUrl}`);
       const data = resData.data.data;
       setProductDetails(data);
+      setProductSelections((prev) => ({ ...prev, productDetails: data }));
       setLoading(false);
       const heightFt = data.lift_height.split(".")[0];
       const heightInch = data.lift_height.split(".")[1];
@@ -96,15 +88,12 @@ const ViewSingleProduct = () => {
       (data.accessories || []).forEach((acc: IAccessory) => {
         initialAccessoriesState[acc.id] = { selected: false, qty: 1 };
       });
-      console.log(shippingOptions);
-      const shippingOptionState = firstPageForm.state;
+
+ 
       setSelections((prevState) => ({
         ...prevState,
         accessories: initialAccessoriesState,
-        shippingOption: shippingOptions[1]?.id,
-        // shippingOption: shippingOptionState
-        //   ? shippingOptions[1]?.id
-        //   : shippingOptions[0]?.id,
+        shippingOption: "delivery",
       }));
 
       // Set total prices based on base price
@@ -166,42 +155,6 @@ const ViewSingleProduct = () => {
     },
     [accessoryList]
   );
-
-  // const handleAccessoryChange = (accId: string, isChecked: boolean) => {
-  //   setSelections((prevState) => ({
-  //     ...prevState,
-  //     accessories: {
-  //       ...prevState.accessories,
-
-  //       [accId]: {
-  //         ...prevState.accessories[accId],
-  //         // qty:isChecked==false?1:...prevState.accessories.qty,
-  //         qty: isChecked ? prevState.accessories[accId]?.qty || 1 : 1,
-  //         selected: isChecked,
-  //       },
-  //     },
-  //   }));
-  // };
-
-  // const handleAccessoryQtyChange = (accId: string, qty: number) => {
-  //   setSelections((prevState) => ({
-  //     ...prevState,
-  //     accessories: {
-  //       ...prevState.accessories,
-  //       [accId]: {
-  //         ...prevState.accessories[accId],
-  //         qty: qty < 1 ? 1 : qty,
-  //       },
-  //     },
-  //   }));
-  // };
-
-  // const handleShippingChange = (optionId: any) => {
-  //   setSelections((prevState) => ({
-  //     ...prevState,
-  //     shippingOption: optionId,
-  //   }));
-  // };
 
   // Reorder accessories so that the clicked one is first
   const reorderedAccessories = useMemo(() => {
@@ -284,15 +237,9 @@ const ViewSingleProduct = () => {
               <ProductSidebar
                 setShowAccessory={setShowAccessories}
                 productDetails={productDetails}
-            
                 handleTabClick={handleTabClick}
-                selections={selections}
-                setSelections={setSelections}
                 accessoryList={accessoryList}
-                // handleAccessoryChange={handleAccessoryChange}
-                // handleAccessoryQtyChange={handleAccessoryQtyChange}
-                // handleShippingChange={handleShippingChange}
-                shippingOptions={shippingOptions}
+                // this is first accessory that selected to view
                 setModalAccessory={setModalAccessory}
               />
             )}
@@ -304,8 +251,6 @@ const ViewSingleProduct = () => {
           <AccessorySlider
             accessories={reorderedAccessories}
             onClose={() => setShowAccessories(false)}
-            selections={selections}
-            setSelections={setSelections}
           />,
           document.body
         )}

@@ -1,8 +1,10 @@
 import CloseBtn from "../../../utils/CloseBtn";
 import { FaFacebook, FaInstagram, FaLinkedin } from "react-icons/fa";
 import {FaXTwitter } from "react-icons/fa6";
+import { useClientContext } from "../../../../hooks/useClientContext";
 
-const ThankYouTab = ({setShowThankYouTab}:any) => {
+const ThankYouTab = () => {
+  const {setSidebarSteps}=useClientContext()
   return (
     <div className="relative font-roboto bg-white max-h-[90vh] overflow-y-auto scrollbar-custom max-w-lg xl:max-w-xl mx-auto mt-8 p-6  shadow-xl">
       {/* Close Button */}
@@ -10,8 +12,7 @@ const ThankYouTab = ({setShowThankYouTab}:any) => {
         type="button"
         className="absolute top-4 right-4 text-black hover:text-gray-700 focus:outline-none"
         aria-label="Close"
-        onClick={()=>setShowThankYouTab(false)}
-      >
+        onClick={()=>setSidebarSteps((prev)=>({...prev,showThankYouTab:false}))}>
         <CloseBtn/>
       </button>
 

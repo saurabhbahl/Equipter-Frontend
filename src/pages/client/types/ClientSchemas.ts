@@ -32,7 +32,7 @@ export interface IAccessory {
   updated_at: string;
   product_id: string;
   images: IAccessoryImage[];
-  qty:number;
+  qty: number;
 }
 
 export interface IProduct {
@@ -74,11 +74,11 @@ export interface ICheckoutForm {
   product_price: number;
   product_qty: number;
   shipping_method_used: string;
-  zone_id?: string|null;
+  zone_id?: string | null;
   contact_first_name: string;
   contact_last_name: string;
   contact_company_name: string;
-  contact_phone_number: number|string;
+  contact_phone_number: number | string;
   contact_email: string;
   contact_industry: string;
   contact_job_title: string;
@@ -92,34 +92,35 @@ export interface ICheckoutForm {
   billing_address_state: string;
   billing_address_zip_code: string;
   billing_address_country: string;
-  delivery_cost?: string|null;
+  delivery_cost?: string | null;
   delivery_address_street: string;
   delivery_address_city: string;
-  delivery_address_state_id: string|null;
+  delivery_address_state_id: string | null;
   delivery_address_zip_code: string;
   delivery_address_country: string;
   payment_type?: string;
   product_total_cost: number;
   non_refundable_deposit?: number;
   i_understand_deposit_is_non_refundable: boolean;
-  accessories?:IAccessory[];
+  accessories?: IAccessory[];
 }
 
-export const CheckoutFormDefaultValues:ICheckoutForm = {
+export const CheckoutFormDefaultValues: ICheckoutForm = {
   financing: "",
   product_id: "",
   product_name: "",
-  product_price: 0,accessories:[],
+  product_price: 0,
+  accessories: [],
   product_qty: 1,
   shipping_method_used: "",
   zone_id: null,
   contact_first_name: "",
   contact_last_name: "",
   contact_company_name: "",
-  payment_name_on_card: "66565",     
-  payment_card_number: "4569857456",      
-  payment_expiry: "1228",           
-  payment_cvc: "2564", 
+  payment_name_on_card: "",
+  payment_card_number: "",
+  payment_expiry: "",
+  payment_cvc: "",
   contact_phone_number: "",
   contact_email: "",
   contact_industry: "",
@@ -139,5 +140,5 @@ export const CheckoutFormDefaultValues:ICheckoutForm = {
   payment_type: "",
   product_total_cost: 0,
   non_refundable_deposit: 0,
-  i_understand_deposit_is_non_refundable: true,
+  i_understand_deposit_is_non_refundable: false,
 };
