@@ -60,6 +60,7 @@ interface SelectFieldProps {
   onChange?: (e: React.ChangeEvent<HTMLSelectElement>) => void;
   error?: string;
   labelClasses?:string;
+  disabled?:boolean
 }
 
 const SelectField: React.FC<SelectFieldProps> = ({
@@ -68,6 +69,7 @@ const SelectField: React.FC<SelectFieldProps> = ({
   labelClasses,
   name,
   classes,
+  disabled=false,
   defaultValue,
   required = false,
   options,
@@ -83,6 +85,7 @@ const SelectField: React.FC<SelectFieldProps> = ({
       <select
         id={id}
         name={name}
+        disabled={disabled}
         required={required}
         value={value}
         onChange={onChange}

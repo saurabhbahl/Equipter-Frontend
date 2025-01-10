@@ -1,16 +1,18 @@
 import { IProduct, IAccessory } from "../../types/ClientSchemas";
 import FinancingTab from "./FinancingTab";
 import CashTab from "./CashTab";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import CheckoutForm from "./CheckoutForm";
 import ReactDOM from "react-dom";
 import ThankYouTab from "./ThankYouTab";
 import { useClientContext } from "../../../../hooks/useClientContext";
+import ProductDetails from "./ProductDetails";
+import SendMailTab from "./SendMailTab";
 
 interface IProductSidebarProps {
   setShowAccessory: (value: boolean) => void;
   productDetails: IProduct;
-  handleTabClick: (tab: string) => void;
+  // handleTabClick: (tab: string) => void;
   accessoryList: IAccessory[];
   setModalAccessory: React.Dispatch<React.SetStateAction<IAccessory | null>>;
 }
@@ -18,7 +20,7 @@ interface IProductSidebarProps {
 const ProductSidebar = ({
   setShowAccessory,
   productDetails,
-  handleTabClick,
+  // handleTabClick,
   accessoryList,
   setModalAccessory,
 }: IProductSidebarProps) => {
@@ -26,13 +28,22 @@ const ProductSidebar = ({
     activeTab,
     sidebarSteps,
     setSidebarSteps,
+    setActiveTab,
     selections,
   } = useClientContext();
 
+  console.log(sidebarSteps);
   const productName = productDetails?.name || "Product";
   const productTitle = productDetails?.product_title || "";
   const tabs = ["cash", "financing"];
   const [filteredAccessory, setFilteredAccessory] = useState<IAccessory[]>([]);
+
+  const handleTabClick = useCallback(
+    (tab: string) => {
+      setSidebarSteps((prev) => ({ ...prev, cashStep: 1, financingStep: 1 }));
+      console.log(tab);
+      setActiveTab(tab);
+    },[accessoryList]);
 
   //  this is used to filter the accessories that is selected
   useEffect(() => {
@@ -47,20 +58,17 @@ const ProductSidebar = ({
     setFilteredAccessory(selectedAccessories);
   }, [selections, accessoryList]);
 
+  // dates
   const currentDate = new Date();
   // Next two months
   const twoMonthsFromNow = new Date(currentDate);
   twoMonthsFromNow.setMonth(currentDate.getMonth() + 2);
-  const twoMonths = twoMonthsFromNow.toLocaleString("default", {
-    month: "short",
-  });
+  const twoMonths = twoMonthsFromNow.toLocaleString("default", {month: "short",});
 
   // Next three months
   const threeMonthsFromNow = new Date(currentDate);
   threeMonthsFromNow.setMonth(currentDate.getMonth() + 3);
-  const threeMonths = threeMonthsFromNow.toLocaleString("default", {
-    month: "short",
-  });
+  const threeMonths = threeMonthsFromNow.toLocaleString("default", {month: "short",});
 
   const yearForTwoMonths = twoMonthsFromNow.getFullYear();
   const yearForThreeMonths = threeMonthsFromNow.getFullYear();
@@ -71,10 +79,7 @@ const ProductSidebar = ({
         <p
           className="text-custom-med-gray text-[15px] font-semibold cursor-pointer "
           onClick={() => {
-            if (
-              sidebarSteps.cashStep == 3 ||
-              sidebarSteps.financingStep === 3
-            ) {
+            if (sidebarSteps.cashStep == 3 ||sidebarSteps.financingStep === 3) {
               if (activeTab === "cash") {
                 setSidebarSteps((prev) => ({ ...prev, cashStep: 2 }));
               } else {
@@ -106,6 +111,7 @@ const ProductSidebar = ({
 
       {/* Tabs Section */}
       <div className="tabs-section font-roboto my-5">
+        {/* Mapping the tabs */}
         <ul className="flex gap-4 md:gap-12 border-b-4 border-orange-500">
           {tabs?.map((tab) => (
             <li
@@ -123,39 +129,18 @@ const ProductSidebar = ({
             </li>
           ))}
         </ul>
+        {/* Payment Plan */}
+        <div className="tabs-content pt-3 md:pt-8 transition-all duration-500 ease-in-out">
+          {activeTab === "cash" ? <CashTab /> : <FinancingTab />}
+        </div>
 
         {/* Tab Content Area */}
-        <div className="tabs-content pt-3 md:pt-8 transition-all duration-500 ease-in-out">
-          {activeTab === "cash" ? (
-            <CashTab
-              productDetails={productDetails}
-              accessoryList={accessoryList}
-              setModalAccessory={setModalAccessory}
-              setShowAccessory={setShowAccessory}
-            />
-          ) : (
-            <FinancingTab />
-          )}
-        </div>
-        {/* checkout form */}
-        {sidebarSteps.showCheckOutForm &&
-          ReactDOM.createPortal(
-            <div className="fixed top-0 z-30 inset-0 backdrop-blur-sm bg-black bg-opacity-10 flex items-center justify-center lg:p-4 p-8">
-              <CheckoutForm
-                productDetails={productDetails}
-                filteredAccessory={filteredAccessory}
-              />
-            </div>,
-            document.body
-          )}
-
-        {sidebarSteps.showThankYouTab &&
-          ReactDOM.createPortal(
-            <div className="fixed top-0 z-30 inset-0 backdrop-blur-sm bg-black bg-opacity-10 flex items-center justify-center lg:p-4 p-8">
-              <ThankYouTab />
-            </div>,
-            document.body
-          )}
+        <ProductDetails
+          productDetails={productDetails}
+          accessoryList={accessoryList}
+          setModalAccessory={setModalAccessory}
+          setShowAccessory={setShowAccessory}
+        />
         {/* Order Block */}
         <div className=" border-t font-roboto border-gray-400 pt-9 mt-7 max-w-7xl mx-auto  capitalize">
           <h2 className="text-lg lg:text-2xl font-semibold text-custom-black-200 text-center">
@@ -211,7 +196,34 @@ const ProductSidebar = ({
               717-661-3591
             </a>
           </p>
-        </div>
+        </div> 
+
+        {/* checkout form */}
+        {sidebarSteps.showCheckOutForm &&
+          ReactDOM.createPortal(
+            <div className="fixed top-0 z-30 inset-0 backdrop-blur-sm bg-black bg-opacity-10 flex items-center justify-center lg:p-4 p-8">
+              <CheckoutForm
+                productDetails={productDetails}
+                filteredAccessory={filteredAccessory}
+              />
+            </div>,
+            document.body
+          )}
+        {/* Thank you tab */}
+        {sidebarSteps.showThankYouTab &&
+          ReactDOM.createPortal(
+            <div className="fixed top-0 z-30 inset-0 backdrop-blur-sm bg-black bg-opacity-10 flex items-center justify-center lg:p-4 p-8">
+              <ThankYouTab />
+            </div>,
+            document.body
+          )}
+        {sidebarSteps.showThankYouTab &&
+          ReactDOM.createPortal(
+            <div className="fixed top-0 z-30 inset-0 backdrop-blur-sm bg-black bg-opacity-10 flex items-center justify-center lg:p-4 p-8">
+              <SendMailTab />
+            </div>,
+            document.body
+          )}
       </div>
     </div>
   );

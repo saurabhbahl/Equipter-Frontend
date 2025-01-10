@@ -102,6 +102,7 @@ interface InputFieldCurvedProps {
   ref?: React.Ref<HTMLInputElement>;
 }
 
+
 const InputFieldCurved = React.forwardRef<HTMLInputElement,InputFieldCurvedProps>(({label,type,id,name,maxlength,disabled = false,required = false,value,maxUnit,onChange,placeholder,checked,readonly = false,error,classes,},ref) => {
     return (
       <div className={`${label ? "mb-4" : ""}`}>
@@ -129,7 +130,7 @@ const InputFieldCurved = React.forwardRef<HTMLInputElement,InputFieldCurvedProps
             : { value: value || "" })}
           onChange={onChange}
           placeholder={placeholder}
-          className={`mt-1 text-[#666666] text-xs font-noto-sans rounded-md block w-full py-2.5 lg:py-3.5 border border-inset border-custom-gray-200 outline-none px-3 h-8 xl:h-12 ${
+          className={`mt-1 text-[#666666] text-xs font-noto-sans rounded-md block w-full py-2.5 lg:py-3.5 border border-inset border-custom-gray-200 outline-none px-3 h-8 lg:h-12 ${
             error ? "border-red-500" : "border-[#CCCCCC]"
           } ${classes}`}
         />

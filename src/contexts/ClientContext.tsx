@@ -61,7 +61,7 @@ export interface IProductSelectionProps {
 }
 export interface ITotalPrices{
   basePrice: number,
-  addOns?: number,
+  addOns: number,
   netPrice: number,
 }
 export interface IClientContext {

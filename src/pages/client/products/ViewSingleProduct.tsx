@@ -1,5 +1,5 @@
 import ReactDOM from "react-dom";
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import CustomSlider from "../components/CustomSlider";
 
 import { publicApiClient } from "../../../utils/axios";
@@ -89,7 +89,6 @@ const ViewSingleProduct = () => {
         initialAccessoriesState[acc.id] = { selected: false, qty: 1 };
       });
 
- 
       setSelections((prevState) => ({
         ...prevState,
         accessories: initialAccessoriesState,
@@ -149,13 +148,6 @@ const ViewSingleProduct = () => {
     });
   }, [selections, productDetails?.price, accessoryList]);
 
-  const handleTabClick = useCallback(
-    (tab: string) => {
-      setActiveTab(tab);
-    },
-    [accessoryList]
-  );
-
   // Reorder accessories so that the clicked one is first
   const reorderedAccessories = useMemo(() => {
     if (!modalAccessory || !productDetails?.accessories) return [];
@@ -196,7 +188,7 @@ const ViewSingleProduct = () => {
         {/* Main content */}
         <section className=" p-5">
           <div className=" mx-auto flex flex-col xl:flex-row gap-3">
-            {/* Left content */}
+            {/* Left content (Image Section)*/}
             <div className="w-full xl:w-[63%]">
               {/* Build + Buy heading */}
               <div className="main-heading relative -top-6 lg:block ">
@@ -237,7 +229,7 @@ const ViewSingleProduct = () => {
               <ProductSidebar
                 setShowAccessory={setShowAccessories}
                 productDetails={productDetails}
-                handleTabClick={handleTabClick}
+                // handleTabClick={handleTabClick}
                 accessoryList={accessoryList}
                 // this is first accessory that selected to view
                 setModalAccessory={setModalAccessory}
@@ -246,6 +238,7 @@ const ViewSingleProduct = () => {
           </div>
         </section>
       </div>
+      {/* slider */}
       {showAccessories &&
         ReactDOM.createPortal(
           <AccessorySlider

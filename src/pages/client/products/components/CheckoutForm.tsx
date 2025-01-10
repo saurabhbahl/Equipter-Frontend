@@ -19,8 +19,8 @@ interface ICheckoutFormProps {
   productDetails: IProduct;
   filteredAccessory: IAccessory[];
 }
-const STORAGE_KEY = "checkoutData";
-const EXPIRATION_TIME = 15 * 24 * 60 * 60 * 1000;
+// const STORAGE_KEY = "checkoutData";
+// const EXPIRATION_TIME = 15 * 24 * 60 * 60 * 1000;
 
 const CheckoutForm = ({
   productDetails,
@@ -33,20 +33,16 @@ const CheckoutForm = ({
     selections,
     setTotalPrices,
     firstPageForm,
-    loadFromLocalStorage,
     saveToLocalStorage,
     filterState,
     totalPrices,
     setShippingOptions,
     setSidebarSteps,
+    setFirstPageForm,
   } = useClientContext();
 
-  const [checkoutForm, setCheckoutForm] = useState<ICheckoutForm>(
-    CheckoutFormDefaultValues
-  );
-  const [validationErrors, setValidationErrors] = useState<
-    { [key in keyof ICheckoutForm]?: string }
-  >({});
+  const [checkoutForm, setCheckoutForm] = useState<ICheckoutForm>(CheckoutFormDefaultValues);
+  const [validationErrors, setValidationErrors] = useState<{ [key in keyof ICheckoutForm]?: string }>({});
   // states for different sections
   const [isBuildSummaryOpen, setIsBuildSummaryOpen] = useState(true);
   const [isContactInfoOpen, setIsContactInfoOpen] = useState(true);
@@ -89,6 +85,7 @@ const CheckoutForm = ({
       setShippingOptions([...newShippingOption]);
 
       setCheckoutForm((prev) => ({ ...prev, zone_id: state.zone_id }));
+
     }
 
     // Handle card number formatting
@@ -155,10 +152,9 @@ const CheckoutForm = ({
       ...prevErrors,
       [name]: undefined,
     }));
-    saveToLocalStorage(checkoutForm, STORAGE_KEY, EXPIRATION_TIME);
+    // saveToLocalStorage(checkoutForm, STORAGE_KEY, EXPIRATION_TIME);
   };
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-   
     e.preventDefault();
     setCheckoutForm((prev: ICheckoutForm) => ({
       ...prev,
@@ -176,6 +172,7 @@ const CheckoutForm = ({
         Number((Number(totalPrices.netPrice) * 0.2).toFixed(2))
       ),
     }));
+    console.log("Form", checkoutForm);
 
     const validation = CheckoutFormSchema.safeParse(checkoutForm);
 
@@ -238,11 +235,14 @@ const CheckoutForm = ({
       return;
     }
 
-
     const result = await publicApiClient.post("/webquote", { checkoutForm });
- 
-    if(result.data.success){
-      setSidebarSteps((prev)=>({...prev,showCheckOutForm:false,showThankYouTab:true}))
+
+    if (result.data.success) {
+      setSidebarSteps((prev) => ({
+        ...prev,
+        showCheckOutForm: false,
+        showThankYouTab: true,
+      }));
     }
   };
   //  the first input on mount
@@ -274,17 +274,6 @@ const CheckoutForm = ({
           : "delivery",
       contact_industry: (firstPageForm.industry as string) ?? "",
     }));
-    const savedData = loadFromLocalStorage(STORAGE_KEY);
-    if (savedData) {
-      setCheckoutForm({
-        ...savedData,
-        i_understand_deposit_is_non_refundable: false,
-        payment_card_number: "",
-        payment_cvc: "",
-        payment_expiry: "",
-        payment_name_on_card: "",
-      });
-    }
   }, [firstPageForm, activeTab]);
   // Sync up billing if "billing_same_as_delivery" is true
   useEffect(() => {
@@ -306,11 +295,18 @@ const CheckoutForm = ({
     checkoutForm.delivery_address_country,
     checkoutForm.billing_same_as_delivery,
   ]);
+
+  // updated states and delivery
   useEffect(() => {
     const delivery = shippingOptions.find(
       (sh) => sh?.id == selections?.shippingOption
     );
     setSelectedDelivery(delivery);
+    setFirstPageForm((prev) => ({
+      ...prev,
+      state: (delivery?.uuid as string) || "",
+    }));
+    saveToLocalStorage(firstPageForm, "firstPageForm", 7 * 24 * 60 * 60 * 1000);
   }, [checkoutForm.delivery_address_state_id]);
 
   // Update total prices when selections change
@@ -331,10 +327,7 @@ const CheckoutForm = ({
 
     const netPrice = basePrice + shippingPrice;
 
-    setTotalPrices({
-      basePrice,
-      netPrice,
-    });
+    setTotalPrices((prev) => ({ ...prev, basePrice, netPrice }));
   }, [
     selections,
     productDetails?.price,
@@ -349,7 +342,7 @@ const CheckoutForm = ({
   return (
     <form
       onSubmit={handleSubmit}
-      className="z-50 w-full md:max-w-[80%] xl:max-w-[60%] mx-auto p-4 p lg:p-8 lg:pl-5 bg-white overflow-y-auto    shadow-2xl relative scrollbar-custom pt-10  max-h-[90vh]   sm:max-h-[80vh]   md:max-h-[80%]     xl:max-h-[85vh] "
+      className="z-50 w-full md:max-w-[80%] xl:max-w-[60%] mx-auto p-4 p lg:p-8 lg:pl-5 bg-white overflow-y-auto    shadow-2xl relative scrollbar-custom pt-10  max-h-[90vh] pb-0   sm:max-h-[80vh]   md:max-h-[80%]     xl:max-h-[85vh] "
     >
       {/* close btn */}
       <button
@@ -364,9 +357,11 @@ const CheckoutForm = ({
       {/* Build Summary */}
       <div className="flex items-start mb-4 overflow-y-auto">
         <button
-          type="button"
           tabIndex={-1}
-          onClick={() => setIsBuildSummaryOpen(!isBuildSummaryOpen)}
+          onClick={(e) => {
+            e.preventDefault();
+            setIsBuildSummaryOpen(!isBuildSummaryOpen);
+          }}
           className={`${isBuildSummaryOpen ? "pt-0.5 pr-3" : "pr-3 pt-[3px]"}`}
           aria-expanded={isBuildSummaryOpen}
           aria-controls="buildSummaryContent"
@@ -430,7 +425,7 @@ const CheckoutForm = ({
         <button
           tabIndex={-1}
           onClick={(e) => {
-            e.currentTarget.blur();
+            e.preventDefault();
             setIsContactInfoOpen(!isContactInfoOpen);
           }}
           className={`${isContactInfoOpen ? "pt-0.5 pr-3" : "pr-3 pt-[3px]"}`}
@@ -505,7 +500,7 @@ const CheckoutForm = ({
         <button
           tabIndex={-1}
           onClick={(e) => {
-            e.currentTarget.blur();
+            e.preventDefault();
             setIsPaymentDetailsOpen(!isPaymentDetailsOpen);
           }}
           className={`${
@@ -577,7 +572,7 @@ const CheckoutForm = ({
         <button
           tabIndex={-1}
           onClick={(e) => {
-            e.currentTarget.blur();
+            e.preventDefault();
             setIsDeliveryAddressOpen(!isDeliveryAddressOpen);
           }}
           className={`${
@@ -670,7 +665,7 @@ const CheckoutForm = ({
         <button
           tabIndex={-1}
           onClick={(e) => {
-            e.currentTarget.blur();
+            e.preventDefault();
             setIsBillingInfoOpen(!isBillingInfoOpen);
           }}
           className={`${isBillingInfoOpen ? "pt-0.5 pr-3" : "pr-3 pt-[3px]"}`}
@@ -724,6 +719,7 @@ const CheckoutForm = ({
               />
 
               <SelectField
+                disabled={checkoutForm.billing_same_as_delivery}
                 label="State*"
                 labelClasses={
                   "text-[12px] lg:text-[14px]  mb-2 !text-[#666666]"
@@ -754,6 +750,7 @@ const CheckoutForm = ({
                 onChange={handleChange}
               />
               <SelectField
+                disabled={checkoutForm.billing_same_as_delivery}
                 labelClasses={
                   "text-[12px] lg:text-[14px]  mb-2 !text-[#666666]"
                 }
@@ -792,7 +789,8 @@ const CheckoutForm = ({
         )}
       </div>
       {/* submit btn */}
-      <div className="pl-6 flex  flex-col mb-8 gap-2">
+      <div className="pl-6 flex  flex-col mb-8 pb-0 sticky -bottom-8 z-50 bg-white gap-2">
+        <hr className="border-t   font-roboto border-gray-400 pt-9 mt-7 w-[100%]  mx-auto  capitalize" />
         <div className="font-roboto gap-3 lg:gap-8 flex flex-col lg:flex-row w-full justify-between items-center">
           <div className="w-[100%] lg:w-[60%]">
             <p className="text-[#666666] font-semibold lg:font-bold lg:text-[15px]">
