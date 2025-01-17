@@ -36,6 +36,11 @@ const Sidebar = () => {
       icon: faTools,
     },
     {
+      label: "WebQuotes",
+      route: "/admin/webquotes",
+      icon: faUsers,
+    },
+    {
       label: "Orders",
       route: "/admin/orders",
       icon: faShoppingCart,

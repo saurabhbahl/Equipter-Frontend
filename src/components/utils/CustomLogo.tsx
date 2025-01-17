@@ -64,7 +64,7 @@ const CustomLogo = ({ mainText = "equipter", numberText, classes }: ICustomLogoP
         {/* Number Text Section */}
         <div className="relative w-fit ml-auto flex -mt-2 justify-end">
           {/* Orange Background with Skew */}
-          <div className="absolute inset-0 bg-[#ec7a25] -skew-x-[40deg] ml-3 sm:ml-4 md:ml-3 -z-10 h-[80%] mt-[6px] w-[80%] sm:w-[75%] md:w-[90%]"></div>
+          <div className="absolute inset-0 bg-[#ec7a25] -skew-x-[40deg] ml-3 sm:ml-4 md:ml-3 -z-10 h-[80%]  -mt-[3.5px] w-[80%] sm:w-[75%] md:w-[90%]"></div>
           {/* Number Text */}
           <p className="text-xl  md:text-3xl font-extrabold text-black uppercase px-4 sm:px-5 md:px-6 mr-3 md:mr-1 lg:mr-0 pl-6 sm:pl-7 md:pl-8">
             {numberText}
