@@ -3,7 +3,7 @@ import TableRow from "../../Table/TableRow";
 import { faEdit, faTrashAlt } from "@fortawesome/free-solid-svg-icons";
 
 const StatesTableRow = ({ stateRow, no }: any) => {
-console.log(stateRow)
+
   const { state_name, state_id,  zone_name,  shipping_rate ,is_delivery_paused} = stateRow;
   const columns = [
     no,

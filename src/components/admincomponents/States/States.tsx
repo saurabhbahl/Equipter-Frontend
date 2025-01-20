@@ -17,7 +17,7 @@ const States = () => {
     { label: "States", link: "/states" },
   ];
   const [totalPages, setTotalPages] = useState(1);
-  const {   setError, loading, setLoading ,states,setStates} =   useAdminContext();
+  const {   setError, loading, setLoading ,states,setStates,zones,setZones} =   useAdminContext();
   const [searchParams] = useSearchParams();
 
   const page = Number(searchParams.get("page")) || 1;
@@ -37,6 +37,14 @@ const States = () => {
       const { totalPages = 1 } = response.data;
       setStates(data);
       setTotalPages(totalPages);
+      if(zones?.length==0){
+         const zoneRequrl = `/state/zones?page=${page}&limit=${99999}`;
+      const zoneResponse = await apiClient.get(zoneRequrl);
+      const { data:zoneData } = zoneResponse.data;
+      setZones(zoneData);
+      }
+     
+      
     } catch (error: any) {
       console.log(error);
       setError((prev) => ({

@@ -21,16 +21,15 @@ const Zones = () => {
 
   const page = Number(searchParams.get("page")) || 1;
   const limit = Number(searchParams.get("limit")) || 10;
-  const state_name = searchParams.get("state_name") || "";
-  const is_delivery_paused = searchParams.get("is_delivery_paused") || "";
-  const zone_name = searchParams.get("zone_name") || "";
+  const zone_name = searchParams.get("state_name") || "";
+  const shipping_rate = searchParams.get("shipping_rate") || "";
 
   const fetchZonesData = async () => {
     try {
       setLoading((prev) => ({ ...prev, zones: true }));
       setError((prev) => ({ ...prev, zones: "" }));
 
-      const url = `/state/states?page=${page}&limit=${limit}&state_name=${state_name}&is_delivery_paused=${is_delivery_paused}&zone_name=${zone_name}`;
+      const url = `/state/zones?page=${page}&limit=${limit}&zone_name=${zone_name}&shipping_rate=${shipping_rate}&zone_name=${zone_name}`;
       const response = await apiClient.get(url);
       const { data } = response.data;
       const { totalPages = 1 } = response.data;

@@ -2,11 +2,11 @@
 // import ReactDOM from "react-dom";
 
 // interface PortalProps {
-//   type: "error" | "info";
-//   message: string;
-//   children?: ReactNode;
+//   type?: "error" | "info";
+//   message?: string;
+//   children?: React.ReactNode;
 //   onClose: () => void;
-//   isOpen: boolean;
+//   isOpen?: boolean;
 // }
 
 // const Portal: React.FC<PortalProps> = ({
@@ -68,97 +68,14 @@
 //             </div>
 //           </div>
 //         )}
-//       </div>z
-//     </div>,
-//     document.body
-//   );
-// };
-
-// export default Portal;
-
-// import React, { useEffect, useState } from "react";
-// import ReactDOM from "react-dom";
-
-// interface PortalProps {
-//   type: "error" | "info";
-//   message: string;
-//   onClose: () => void;
-//   isOpen: boolean;
-//   autoCloseDuration?: number;
-// }
-
-// const Portal: React.FC<PortalProps> = ({
-//   type,
-//   message,
-//   onClose,
-//   isOpen,
-//   autoCloseDuration = 5000,
-// }) => {
-//   const [progress, setProgress] = useState(0);
-
-//   useEffect(() => {
-//     if (!isOpen) return;
-
-//     //  timer for auto-close and progress bar
-//     const startTime = Date.now();
-//     const interval = setInterval(() => {
-//       const elapsed = Date.now() - startTime;
-//       const newProgress = Math.min((elapsed / autoCloseDuration) * 100, 100);
-//       setProgress(newProgress);
-
-//       if (elapsed >= autoCloseDuration) {
-//         clearInterval(interval);
-//         onClose();
-//       }
-//     }, 80);
-
-//     return () => clearInterval(interval);
-//   }, [isOpen, autoCloseDuration, onClose]);
-
-//   useEffect(() => {
-//     const handleEscape = (event: KeyboardEvent) => {
-//       if (event.key === "Escape") {
-//         onClose();
-//       }
-//     };
-//     document.addEventListener("keydown", handleEscape);
-//     return () => document.removeEventListener("keydown", handleEscape);
-//   }, [onClose]);
-
-//   if (!isOpen) return null;
-
-//   const backgroundColor = type === "error" ? "bg-red-200" : "bg-blue-200";
-//   const textColor = type === "error" ? "text-red-600" : "text-blue-600";
-
-//   return ReactDOM.createPortal(
-//     <div className="fixed top-4 right-4 z-50">
-//       <div
-//         className={`relative p-4 rounded shadow-lg ${backgroundColor} max-w-sm`}
-//       >
-//         {/* Progress bar */}
-
-//         {/* Notification content */}
-//         <div className={`flex items-center justify-between ${textColor}`}>
-//           <p>{message}</p>
-//           <button
-//             onClick={onClose}
-//             aria-label="Close notification"
-//             className="ml-4 text-gray-600 bg-gray-100 rounded-full p-1 border border-gray-300 hover:bg-gray-200 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500"
-//           >
-//             &mdash;
-//           </button>
-//         </div>
 //       </div>
-//       <div
-//           style={{ width: `${progress}%` }}
-//           className={`h-1 rounded-md shadow-xl ${type === "error" ? "bg-red-500" : "bg-blue-500"} transition-all duration-50`}
-//         />
 //     </div>,
 //     document.body
 //   );
 // };
 
 // export default Portal;
+
 
 // import React, { useEffect, useState } from "react";
 // import ReactDOM from "react-dom";
