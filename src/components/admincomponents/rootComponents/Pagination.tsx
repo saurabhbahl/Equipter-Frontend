@@ -8,12 +8,12 @@ interface PaginationProps {
 }
 
 const Pagination: React.FC<PaginationProps> = ({
-  currentPage,
+  currentPage=1,
   totalPages,
   maxPageButtons = 7,
 }) => {
   const [searchParams, setSearchParams] = useSearchParams();
-
+console.log(currentPage,totalPages)
 
   if (totalPages <= 1) {
     return null;
@@ -48,11 +48,9 @@ const Pagination: React.FC<PaginationProps> = ({
           <button
             key={pageNumber}
             onClick={() => handlePageChange(Number(pageNumber))}
-            className={`px-3 text-xs py-1.5 rounded  bg-custom-orange/85 shadow-xl border-1 border-custom-orange bg-white text-custom-orange  ${
+            className={`px-3 text-xs py-1.5 rounded   shadow-xl border   text-custom-orange  ${
               pageNumber === currentPage
-                ? "  bg-custom-orange/100 text-white"
-                : " "
-            }`}
+                ? "bg-custom-orange/100 text-white":"bg-white"}`}
             aria-current={pageNumber === currentPage ? "page" : undefined}>
             {pageNumber}
           </button>

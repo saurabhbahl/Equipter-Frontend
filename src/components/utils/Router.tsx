@@ -13,6 +13,8 @@ import Products from "../../pages/client/products/Products";
 import AllProducts from "../admincomponents/Products/AllProducts";
 import ViewSingleProduct from "../../pages/client/products/ViewSingleProduct";
 import WebQuote from "../admincomponents/WebQuotes/WebQuote";
+import States from "../admincomponents/States/States";
+import Zones from "../admincomponents/Zones/Zones";
 const LoginPage = lazy(() => import("../../pages/auth/LoginPage"));
 const ForgetPassword = lazy(() => import("../../pages/auth/ForgetPassword"));
 const ResetPassword = lazy(() => import("../../pages/auth/ResetPassword"));
@@ -70,6 +72,14 @@ export default function Router() {
               <Route path="webquotes/new" element={<AddNewAccessory />} />
               <Route path="webquotes/view/:id" element={<ViewAccessory />} />
               <Route path="webquotes/edit/:id" element={<EditAccessory />} />
+              
+              
+              {/* zones */}
+              <Route path="zones" element={<Zones />} />
+              {/* states */}
+              <Route path="states" element={<States />} />
+              
+              
 
               <Route path="orders" element={<Orders />} />
             </Route>

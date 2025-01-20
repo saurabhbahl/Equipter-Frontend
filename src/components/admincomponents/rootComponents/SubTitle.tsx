@@ -6,7 +6,7 @@ import React from "react";
 
 interface Props {
   title: string;
-  buttonLink: string;
+  buttonLink?: string;
   buttonText?: string;
   loading?: boolean;
   reloadBtnFn?: () => void;
@@ -50,9 +50,9 @@ const SubTitle = ({
               />
             </button>
           )}
-          {buttonText && (
+          {(buttonText && buttonLink) && (
             <button
-              className="px-4 py-2.5 text-sm bg-custom-orange/85  hover:bg-custom-orange text-white rounded"
+              className="btn-yellow px-3 py-1 text-sm font-sans hover:scale-105 capitalize rounded"
               onClick={() => navigate(buttonLink)}>
               {buttonText}
             </button>

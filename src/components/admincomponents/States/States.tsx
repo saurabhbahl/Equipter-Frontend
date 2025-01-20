@@ -1,82 +1,78 @@
 import {  useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-
 import BreadCrump from "../rootComponents/BreadCrump";
 import SubTitle from "../rootComponents/SubTitle";
 import Pagination from "../rootComponents/Pagination";
 import MetaComponent from "../../../utils/MetaComponent";
 import { apiClient } from "../../../utils/axios";
 import { useAdminContext } from "../../../hooks/useAdminContext";
-
-import WebQuoteTable from "./WebQuoteTable";
-import { WebQuoteFilters } from "./WebQuoteFilters";
+import { StateFilters } from "./StatesFilters";
 import { PerPageSelector } from "../rootComponents/PerPageSelector";
+import StatesTable from "./StatesTable";
 
 
-const WebQuote = () => {
+const States = () => {
   const breadcrumbs = [
     { label: "Dashboard", link: "/" },
-    { label: "WebQuotes", link: "/webquotes" },
+    { label: "States", link: "/states" },
   ];
   const [totalPages, setTotalPages] = useState(1);
-  const {  setWebquotes, setError, loading, setLoading ,webquotes} =   useAdminContext();
+  const {   setError, loading, setLoading ,states,setStates} =   useAdminContext();
   const [searchParams] = useSearchParams();
 
   const page = Number(searchParams.get("page")) || 1;
   const limit = Number(searchParams.get("limit")) || 10;
-  const stage = searchParams.get("stage") || "";
-  const financing = searchParams.get("financing") || "";
-  const dateFilter = searchParams.get("dateFilter") || "";
-  const id = searchParams.get("id") || "";
+  const state_name = searchParams.get("state_name") || "";
+  const is_delivery_paused = searchParams.get("is_delivery_paused") || "";
+  const zone_name = searchParams.get("zone_name") || "";
 
-  const fetchWebQuoteData = async () => {
+  const fetchStatesData = async () => {
     try {
-      setLoading((prev) => ({ ...prev, webquotes: true }));
-      setError((prev) => ({ ...prev, webquotes: "" }));
+      setLoading((prev) => ({ ...prev, states: true }));
+      setError((prev) => ({ ...prev, states: "" }));
 
-      const url = `/webquote?page=${page}&limit=${limit}&stage=${stage}&financing=${financing}&dateFilter=${dateFilter}&id=${id}`;
+      const url = `/state/states?page=${page}&limit=${limit}&state_name=${state_name}&is_delivery_paused=${is_delivery_paused}&zone_name=${zone_name}`;
       const response = await apiClient.get(url);
       const { data } = response.data;
       const { totalPages = 1 } = response.data;
-      setWebquotes(data);
+      setStates(data);
       setTotalPages(totalPages);
     } catch (error: any) {
       console.log(error);
       setError((prev) => ({
         ...prev,
-        webquotes: error.message || "Unexpected error occurred",
+        states: error.message || "Unexpected error occurred",
       }));
     } finally {
-      setLoading((prev) => ({ ...prev, webquotes: false }));
+      setLoading((prev) => ({ ...prev, states: false }));
     }
   };
 
 
   useEffect(() => {
-    fetchWebQuoteData();
-  }, [searchParams,financing ]);
+    fetchStatesData();
+  }, [searchParams]);
 
   return (
     <>
-      <MetaComponent title="WebQuote" />
+      <MetaComponent title="States" />
       <div className="mx-auto font-sans bg-gray-200 h-full">
         <div className="flex justify-between bg-gradient-to-b p-5 border shadow from-gray-800 to-black/90">
-          <p className="text-white">WebQuote</p>
+          <p className="text-white">States</p>
           <BreadCrump breadcrumbs={breadcrumbs} />
         </div>
 
         {/* Main Content */}
         <div className="p-5">       
           <SubTitle
-            title="WebQuote"
-            reloadBtnFn={fetchWebQuoteData}
-            buttonLink="/admin/webquote/new"
-            loading={loading.webquotes}
-            subComp={<WebQuoteFilters />} />       
-          <WebQuoteTable />  
+            title="States"
+            reloadBtnFn={fetchStatesData}
+            loading={loading.states}
+            subComp={<StateFilters/>} />       
+          <StatesTable />  
           <div className="flex flex-col md:flex-row gap-5 justify-start items-center my-auto mt-4">
-            <Pagination key={"webquote"} currentPage={page} totalPages={totalPages} />
-            {webquotes.length > 1 &&  <PerPageSelector key={"webquotePerPageFilter"} currentLimit={limit} />}
+            <Pagination key={"states"} currentPage={page} totalPages={totalPages} />
+            {states.length > 0 &&  <PerPageSelector key={"statesperpage"} currentLimit={limit} />}
            </div>
         </div>
       </div>
@@ -84,5 +80,5 @@ const WebQuote = () => {
   );
 };
 
-export default WebQuote;
+export default States;
 

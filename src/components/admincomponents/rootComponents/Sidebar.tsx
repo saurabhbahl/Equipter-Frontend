@@ -9,6 +9,8 @@ import {
   faChevronLeft,
   faChevronRight,
   faUserShield,
+  faUniversalAccess,
+  faAreaChart,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useAdminContext } from "../../../hooks/useAdminContext";
@@ -41,6 +43,16 @@ const Sidebar = () => {
       icon: faUsers,
     },
     {
+      label: "States",
+      route: "/admin/states",
+      icon: faUniversalAccess,
+    },
+    {
+      label: "Zones",
+      route: "/admin/zones",
+      icon: faAreaChart,
+    },
+    {
       label: "Orders",
       route: "/admin/orders",
       icon: faShoppingCart,
@@ -49,11 +61,6 @@ const Sidebar = () => {
       label: "Customers",
       route: "/admin/customers",
       icon: faUsers,
-    },
-    {
-      label: "Logout",
-      route: "/logout",
-      icon: faSignOutAlt,
     },
   ];
   useEffect(() => {
