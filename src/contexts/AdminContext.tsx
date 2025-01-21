@@ -3,6 +3,10 @@ import {
   IAccessory,
   IProduct,
 } from "../components/admincomponents/Accessories/AccessoriesSchema";
+import { apiClient } from "../utils/axios";
+import { Zone } from "../components/admincomponents/Zones/ZoneSchemas";
+import { IWebQuote } from "../components/admincomponents/WebQuotes/WebQuoteSchema";
+import { IState } from "./ClientContext";
 
 export interface GlobalLoadingState {
   products: boolean;
@@ -14,15 +18,17 @@ export interface GlobalLoadingState {
 
 export interface IAdminContext {
   toggleSidebar: () => void;
+  fetchStates: () => void;
+  fetchZones: () => void;
   isSidebarCollapsed: boolean;
   accessories: IAccessory[];
   products: IProduct[];
-  webquotes: any;
-  setWebquotes: any;
-  states: any;
-  setStates: any;
-  zones: any;
-  setZones: any;
+  webquotes: IWebQuote[];
+  setWebquotes: React.Dispatch<React.SetStateAction<IWebQuote[]>>;
+  states: IState[];
+  setStates:  React.Dispatch<React.SetStateAction<IState[]>>;
+  zones: Zone[];
+  setZones: React.Dispatch<React.SetStateAction<Zone[]>>;
   setProducts: React.Dispatch<React.SetStateAction<IProduct[]>>;
   setAccessories: React.Dispatch<React.SetStateAction<IAccessory[]>>;
   loading: GlobalLoadingState;
@@ -40,9 +46,9 @@ export const AdminContextProvider = ({
 }) => {
   const [accessories, setAccessories] = useState<IAccessory[]>([]);
   const [products, setProducts] = useState<IProduct[]>([]);
-  const [webquotes, setWebquotes] = useState<any[]>([]);
-  const [states, setStates] = useState<any[]>([]);
-  const [zones, setZones] = useState<any[]>([]);
+  const [webquotes, setWebquotes] = useState<IWebQuote[]>([]);
+  const [states, setStates] = useState<IState[]>([]);
+  const [zones, setZones] = useState<Zone[]>([]);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [loading, setLoading] = useState<GlobalLoadingState>({
     accessories: false,
@@ -51,6 +57,46 @@ export const AdminContextProvider = ({
     states: false,
     zones: false,
   });
+  async function fetchStates() {
+    try {
+      setLoading((prev) => ({ ...prev, states: true }));
+      setError((prev) => ({ ...prev, states: "" }));
+  
+      const url = `/state/states?page=${1}&limit=${10}`;
+      const response = await apiClient.get(url);
+      const { data } = response.data;
+      setStates(data);
+    } catch (error: any) {
+      console.log(error);
+      setError((prev) => ({
+        ...prev,
+        states: error.message || "Unexpected error occurred",
+      }));
+    } finally {
+      setLoading((prev) => ({ ...prev, states: false }));
+    }
+  }
+  const fetchZones = async () => {
+    try {
+      setLoading((prev) => ({ ...prev, zones: true }));
+      setError((prev) => ({ ...prev, zones: "" }));
+
+      const url = `/state/zones?page=${1}&limit=${10}`;
+      const response = await apiClient.get(url);
+      const { data } = response.data;
+      setZones(data);
+    } catch (error: any) {
+      console.log(error);
+      setError((prev) => ({
+        ...prev,
+        zones: error.message || "Unexpected error occurred",
+      }));
+    } finally {
+      setLoading((prev) => ({ ...prev, zones: false }));
+    }
+  };
+
+  
   const [error, setError] = useState<{ [key: string]: string }>({
     accessories: "",
     products: "",
@@ -70,10 +116,12 @@ export const AdminContextProvider = ({
         products,
         setProducts,
         isSidebarCollapsed,
+        fetchZones,
         accessories,
         setAccessories,
         loading,
         states,
+        fetchStates,
         setStates,
         setLoading,
         error,

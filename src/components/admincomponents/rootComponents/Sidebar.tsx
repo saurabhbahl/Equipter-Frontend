@@ -4,13 +4,13 @@ import {
   faBoxOpen,
   faShoppingCart,
   faUsers,
-  faSignOutAlt,
   faTools,
   faChevronLeft,
   faChevronRight,
   faUserShield,
-  faUniversalAccess,
-  faAreaChart,
+  faFileInvoice,
+  faMapMarkedAlt,
+  faGlobeAmericas,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useAdminContext } from "../../../hooks/useAdminContext";
@@ -20,7 +20,6 @@ const Sidebar = () => {
   const { toggleSidebar, isSidebarCollapsed } = useAdminContext();
   const [showText, setShowText] = useState(!isSidebarCollapsed);
   const location = useLocation();
-
   const links = [
     {
       label: "Dashboard",
@@ -40,17 +39,17 @@ const Sidebar = () => {
     {
       label: "WebQuotes",
       route: "/admin/webquotes",
-      icon: faUsers,
+      icon: faFileInvoice, 
     },
     {
       label: "States",
       route: "/admin/states",
-      icon: faUniversalAccess,
+      icon: faMapMarkedAlt, 
     },
     {
       label: "Zones",
       route: "/admin/zones",
-      icon: faAreaChart,
+      icon: faGlobeAmericas, 
     },
     {
       label: "Orders",
@@ -62,7 +61,15 @@ const Sidebar = () => {
       route: "/admin/customers",
       icon: faUsers,
     },
+    // Optional: Add a Logout link if needed
+    // {
+    //   label: "Logout",
+    //   route: "/admin/logout",
+    //   icon: faSignOutAlt,
+    // },
   ];
+  
+  
   useEffect(() => {
     let timeoutId: NodeJS.Timeout;
     if (isSidebarCollapsed) {
@@ -82,7 +89,7 @@ const Sidebar = () => {
       {/* Toggle Button */}
       <div
         onClick={toggleSidebar}
-        className={`absolute z-50 top-2 right-[-12px] hidd ${
+        className={`absolute z-50 top-2 right-[-12px] ${
           isSidebarCollapsed ? "right-[-15px]" : ""
         }`}
       >

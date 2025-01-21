@@ -1,6 +1,5 @@
 import {  useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-
 import BreadCrump from "../rootComponents/BreadCrump";
 import SubTitle from "../rootComponents/SubTitle";
 import Pagination from "../rootComponents/Pagination";
@@ -19,7 +18,7 @@ const WebQuote = () => {
     { label: "WebQuotes", link: "/webquotes" },
   ];
   const [totalPages, setTotalPages] = useState(1);
-  const {  setWebquotes, setError, loading, setLoading ,webquotes} =   useAdminContext();
+  const { setWebquotes, setError, loading, setLoading ,webquotes} =   useAdminContext();
   const [searchParams] = useSearchParams();
 
   const page = Number(searchParams.get("page")) || 1;
@@ -76,7 +75,7 @@ const WebQuote = () => {
           <WebQuoteTable />  
           <div className="flex flex-col md:flex-row gap-5 justify-start items-center my-auto mt-4">
             <Pagination key={"webquote"} currentPage={page} totalPages={totalPages} />
-            {webquotes.length > 1 &&  <PerPageSelector key={"webquotePerPageFilter"} currentLimit={limit} />}
+            {webquotes.length > 0 &&  <PerPageSelector key={"webquotePerPageFilter"} currentLimit={limit} />}
            </div>
         </div>
       </div>

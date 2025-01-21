@@ -7,8 +7,8 @@ const WebQuoteTableRow = ({ webquote, no }: any) => {
   const columns = [
     no,
     ` ${id?.slice(0, 6)}`,
-    product_name,
-    product_price,
+    ` ${product_name?.slice(0, 10)}..`,
+    Math.ceil(product_price),
     ` ${zone_id?.slice(0, 13)}`,
     stage,
     shipping_method_used,

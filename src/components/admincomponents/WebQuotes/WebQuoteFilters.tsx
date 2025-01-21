@@ -32,7 +32,8 @@ export const WebQuoteFilters: React.FC = () => {
   const financingDropdownValues = [
     { label: "All", value: "" },
     { label: "Quote", value: "Quote" },
-    { label: "Order", value: "Order" },
+    { label: "Saved", value: "Saved" },
+    { label: "Ordered", value: "Ordered" },
   ];
   const durationDropdownValues = [
     { label: "All", value: "" },

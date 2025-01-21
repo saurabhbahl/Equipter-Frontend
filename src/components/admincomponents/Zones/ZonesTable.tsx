@@ -2,6 +2,7 @@ import { useAdminContext } from '../../../hooks/useAdminContext';
 import LoaderSpinner from '../../utils/LoaderSpinner';
 import TableHeading from '../../Table/TableHeading';
 import ZonesTableRow from './ZonesTableRow';
+import { Zone } from './ZoneSchemas';
 
 const ZonesTable = () => {
   const headers = [
@@ -32,7 +33,7 @@ const ZonesTable = () => {
           <table className="w-full text-sm !text-center text-gray-500 ">
             <TableHeading headers={headers} />
             <tbody className="bg-white">
-              {zones?.map((row: unknown, index: number) => (
+              {zones?.map((row: Zone, index: number) => (
                 <ZonesTableRow key={index} zoneRow={row} no={index + 1} />
               ))}
             </tbody>

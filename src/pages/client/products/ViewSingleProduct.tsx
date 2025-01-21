@@ -36,7 +36,6 @@ const ViewSingleProduct = () => {
   const {
     firstPageForm,
     shippingOptions,
-    setActiveTab,
     selections,
     setSelections,
     setTotalPrices,

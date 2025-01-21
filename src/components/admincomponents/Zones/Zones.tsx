@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import  { useEffect, useState } from 'react'
 import SubTitle from '../rootComponents/SubTitle';
 import { PerPageSelector } from '../rootComponents/PerPageSelector';
 import ZonesFilters from './ZonesFilters';
@@ -16,20 +16,18 @@ const Zones = () => {
     { label: "Zones", link: "/states" },
   ];
   const [totalPages, setTotalPages] = useState(1);
-  const {   setError, loading, setLoading ,zones,setZones} =   useAdminContext();
+  const { setError, loading, setLoading ,zones,setZones} =   useAdminContext();
   const [searchParams] = useSearchParams();
 
   const page = Number(searchParams.get("page")) || 1;
   const limit = Number(searchParams.get("limit")) || 10;
-  const zone_name = searchParams.get("state_name") || "";
-  const shipping_rate = searchParams.get("shipping_rate") || "";
+  const zone_name = searchParams.get("zone_name") || "";
 
   const fetchZonesData = async () => {
     try {
       setLoading((prev) => ({ ...prev, zones: true }));
       setError((prev) => ({ ...prev, zones: "" }));
-
-      const url = `/state/zones?page=${page}&limit=${limit}&zone_name=${zone_name}&shipping_rate=${shipping_rate}&zone_name=${zone_name}`;
+      const url = `/state/zones?page=${page}&limit=${limit}&zone_name=${zone_name}`;
       const response = await apiClient.get(url);
       const { data } = response.data;
       const { totalPages = 1 } = response.data;

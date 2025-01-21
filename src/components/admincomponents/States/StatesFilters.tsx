@@ -1,10 +1,41 @@
 import { faAdd, faRemove } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { ChangeEvent, useState } from "react";
+import { ChangeEvent, useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import ReactDOM from "react-dom";
 import AddAndEditState from "./AddAndEditState";
+import { apiClient } from "../../../utils/axios";
+import { Zone } from "../Zones/ZoneSchemas";
 export const StateFilters: React.FC = () => {
+  const [zones,setZones]=useState<Zone[]>([])
+  let zonesDropdownValues: { [key: string]: string }[] = []
+
+  const fetchZonesData = async () => {
+    try {
+      const url = `/state/zones?page=${1}&limit=${10}`;
+      const response = await apiClient.get(url);
+      const { data } = response.data;
+      setZones(data);  
+    } catch (error: any) {
+      console.log(error);     
+    } 
+  };
+  useEffect(()=>{
+    fetchZonesData()
+  },[])
+    
+  zonesDropdownValues = zones?.map((z) => {
+    return {
+      label: z?.zone_name as string,
+      value: z?.zone_name,
+    };
+  });
+  zonesDropdownValues?.unshift({
+    label: "All",
+    value: "",
+  });
+  
+  
   const [searchParams, setSearchParams] = useSearchParams();
   const [showPortal, setShowPortal] = useState(false);
   const is_delivery_paused = searchParams.get("is_delivery_paused") || "";
@@ -18,15 +49,13 @@ export const StateFilters: React.FC = () => {
     setSearchParams(params);
   };
 
-  const handleFilterChange = (
-    e: ChangeEvent<HTMLSelectElement | HTMLInputElement>
-  ) => {
+  const handleFilterChange = (e: ChangeEvent<HTMLSelectElement | HTMLInputElement>) => {
     const { name, value } = e.target;
     updateQueryParam(name, value);
   };
+
   const addNewState = () => {
-    console.log("call")
-    setShowPortal(true)
+    setShowPortal(true);
   };
 
   const handleClearFilters = () => {
@@ -39,20 +68,19 @@ export const StateFilters: React.FC = () => {
 
   const deliveryPausedDropDown = [
     { label: "All", value: "" },
-    { label: "True", value: "true" },
-    { label: "False", value: "false" },
-  ];
-  const zonesDropdownValues = [
-    { label: "All", value: "" },
-    { label: "Zone A", value: "zone a" },
-    { label: "Zone B", value: "zone b" },
+    { label: "Yes", value: "true" },
+    { label: "No", value: "false" },
   ];
 
   return (
     <div className=" flex text-sm gap-4 items-end justify-end self-end">
-      {showPortal && ReactDOM.createPortal(
-         <AddAndEditState key={"add"} onClose={()=>setShowPortal((prev)=>!prev)}/>
-         ,
+      {showPortal &&
+        ReactDOM.createPortal(
+          <AddAndEditState
+            status="Add"
+            key={"Add"}
+            onClose={() => setShowPortal((prev) => !prev)}
+          />,
           document.body
         )}
 
@@ -120,15 +148,13 @@ export const StateFilters: React.FC = () => {
       {/* Add State */}
       <button
         onClick={addNewState}
-        className="btn-yellow px-3 py-1 text-sm font-sans hover:scale-105 capitalize rounded"
-      >
+        className="btn-yellow px-3 py-1 text-sm font-sans hover:scale-105 capitalize rounded">
         <FontAwesomeIcon icon={faAdd} /> New State
       </button>
       {/* Clear Filters Button */}
       <button
         onClick={handleClearFilters}
-        className="btn-yellow px-3 py-1 text-sm font-sans hover:scale-105 capitalize rounded"
-      >
+        className="btn-yellow px-3 py-1 text-sm font-sans hover:scale-105 capitalize rounded" >
         <FontAwesomeIcon icon={faRemove} /> Clear Filters
       </button>
     </div>

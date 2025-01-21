@@ -10,7 +10,7 @@ const StatesTable = () => {
     "State Name",
     "Zone Name",
     "Shipping Rate",
-    "Is Delivery Paused",
+    "Delivery Paused",
     "Actions",
   ];
   const { states, error, loading } = useAdminContext();

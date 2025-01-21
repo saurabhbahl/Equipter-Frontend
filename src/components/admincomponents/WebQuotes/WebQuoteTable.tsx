@@ -10,8 +10,8 @@ const AccessoriesTable = () => {
     "ID",
     "Product",
     "Total Price",
-    "State",
     "Zone",
+    "State",
     "Shipping",
     "Financing",
     "Created At"
