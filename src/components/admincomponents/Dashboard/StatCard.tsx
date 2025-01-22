@@ -68,9 +68,7 @@ const StatCard = ({ title, value, icon, loading }: StatProps) => {
           {/* Value */}
           <p className="text-2xl font-extrabold text-[#1e293b] flex items-center">
             {suffix[0]}
-            {Number.isInteger(displayValue)
-              ? displayValue.toLocaleString()
-              : displayValue.toFixed(2)}
+            {Number.isInteger(displayValue) ? displayValue.toLocaleString()   : displayValue.toFixed(2) || 0}
             {suffix.slice(1)}
           </p>
 
