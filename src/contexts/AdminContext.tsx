@@ -7,6 +7,7 @@ import { apiClient } from "../utils/axios";
 import { Zone } from "../components/admincomponents/Zones/ZoneSchemas";
 import { IWebQuote } from "../components/admincomponents/WebQuotes/WebQuoteSchema";
 import { IState } from "./ClientContext";
+import { Iorder } from "../components/admincomponents/Orders/OrdersSchema";
 
 export interface GlobalLoadingState {
   products: boolean;
@@ -14,6 +15,7 @@ export interface GlobalLoadingState {
   webquotes: boolean;
   states: boolean;
   zones: boolean;
+  orders: boolean;
 }
 
 export interface IAdminContext {
@@ -23,6 +25,7 @@ export interface IAdminContext {
   isSidebarCollapsed: boolean;
   accessories: IAccessory[];
   products: IProduct[];
+  orders: Iorder[];
   webquotes: IWebQuote[];
   setWebquotes: React.Dispatch<React.SetStateAction<IWebQuote[]>>;
   states: IState[];
@@ -31,6 +34,7 @@ export interface IAdminContext {
   setZones: React.Dispatch<React.SetStateAction<Zone[]>>;
   setProducts: React.Dispatch<React.SetStateAction<IProduct[]>>;
   setAccessories: React.Dispatch<React.SetStateAction<IAccessory[]>>;
+  setOrders: React.Dispatch<React.SetStateAction<Iorder[]>>;
   loading: GlobalLoadingState;
   setLoading: React.Dispatch<React.SetStateAction<GlobalLoadingState>>;
   error: { [key: string]: string };
@@ -45,6 +49,7 @@ export const AdminContextProvider = ({
   children: React.ReactNode;
 }) => {
   const [accessories, setAccessories] = useState<IAccessory[]>([]);
+  const [orders, setOrders] = useState<Iorder[]>([]);
   const [products, setProducts] = useState<IProduct[]>([]);
   const [webquotes, setWebquotes] = useState<IWebQuote[]>([]);
   const [states, setStates] = useState<IState[]>([]);
@@ -53,6 +58,7 @@ export const AdminContextProvider = ({
   const [loading, setLoading] = useState<GlobalLoadingState>({
     accessories: false,
     products: false,
+    orders: false,
     webquotes: false,
     states: false,
     zones: false,
@@ -103,6 +109,7 @@ export const AdminContextProvider = ({
     webquotes: "",
     states: "",
     zones: "",
+    orders: "",
   });
 
   function toggleSidebar() {
@@ -119,6 +126,8 @@ export const AdminContextProvider = ({
         fetchZones,
         accessories,
         setAccessories,
+        orders,
+        setOrders,
         loading,
         states,
         fetchStates,
