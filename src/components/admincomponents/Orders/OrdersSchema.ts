@@ -1,5 +1,5 @@
 // order interface
-export interface Iorder {
+export interface IOrder {
   id: string;
   webquote_id: string;
   order_status: string;

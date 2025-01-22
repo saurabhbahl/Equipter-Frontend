@@ -3,7 +3,6 @@ import {
   faTachometerAlt,
   faBoxOpen,
   faShoppingCart,
-  faUsers,
   faTools,
   faChevronLeft,
   faChevronRight,
@@ -56,11 +55,11 @@ const Sidebar = () => {
       route: "/admin/orders",
       icon: faShoppingCart,
     },
-    {
-      label: "Customers",
-      route: "/admin/customers",
-      icon: faUsers,
-    },
+    // {
+    //   label: "Customers",
+    //   route: "/admin/customers",
+    //   icon: faUsers,
+    // },
     // Optional: Add a Logout link if needed
     // {
     //   label: "Logout",

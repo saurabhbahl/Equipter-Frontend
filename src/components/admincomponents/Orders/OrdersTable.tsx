@@ -1,11 +1,11 @@
 import LoaderSpinner from "../../utils/LoaderSpinner";
 import { useAdminContext } from "../../../hooks/useAdminContext";
 import TableHeading from "../../Table/TableHeading";
-import { Iorder } from "./OrdersSchema";
+import { IOrder } from "./OrdersSchema";
 import OrdersTableRow from "./OrdersTableRow";
 
 const OrdersTable = () => {
-  const headers = ["Sr.No.", "ID", "Webquote", "Order Status", "Estimated Completion Date", "Actual Completion Date", "Actions"];
+  const headers = ["Sr.No.", "ID", "Webquote", "Order Status", "Estimated Completion Date", "Actual Completion Date", ];
   const { orders, error, loading } = useAdminContext();
 
   if (loading.orders)
@@ -26,10 +26,10 @@ const OrdersTable = () => {
           <table className="w-full text-sm !text-center text-gray-500 ">
             <TableHeading headers={headers} />
             <tbody className="bg-white">
-              {orders?.map((order:Iorder, index:number) => (
+              {orders?.map((order:IOrder, index:number) => (
                 <OrdersTableRow
                   key={index}
-                  order={order as Iorder}
+                  order={order as IOrder}
                   no={index + 1}
                 />
               ))}

@@ -1,5 +1,4 @@
 import { useEffect } from "react";
-import SubTitle from "../rootComponents/SubTitle";
 import BreadCrump from "../rootComponents/BreadCrump";
 import { useAdminContext } from "../../../hooks/useAdminContext";
 import MetaComponent from "../../../utils/MetaComponent";
@@ -17,7 +16,6 @@ const Orders = () => {
     orders,
     setOrders,
     setError,
-    loading,
     setLoading,
   } = useAdminContext();
 

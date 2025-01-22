@@ -1,11 +1,12 @@
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faEdit, faEye } from "@fortawesome/free-solid-svg-icons";
+// import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+// import { faEdit, faEye } from "@fortawesome/free-solid-svg-icons";
 import TableRow from "../../Table/TableRow";
-import { Iorder } from "./OrdersSchema";
+import { IOrder } from "./OrdersSchema";
 import { useNavigate } from "react-router-dom";
+import { formatDate } from "../../../utils/helpers";
 
 interface OrdersTableRowProps{
-  order: Iorder,
+  order: IOrder,
   no: number,
 }
 
@@ -33,32 +34,30 @@ const OrdersTableRow = ({ order, no }: OrdersTableRowProps) => {
     order.id,
     <span onClick={() => navigate(`/products/${order.product.product_url}`)} className="cursor-pointer underline hover:text-blue-500">{order.product.name}</span>,
     <span
-      className={`px-3 py-1 text-sm font-semibold rounded-full ${getStatusStyle(
-        order.order_status
-      )}`}
+      className={`px-3 py-1 text-sm font-semibold rounded-full ${getStatusStyle(order.order_status)}`}
     >
       {order.order_status}
     </span>,
-    order.estimated_completion_date,
-    order.actual_completion_date
+    formatDate(order.estimated_completion_date),
+    formatDate(order.actual_completion_date)
   ];
 
-  const actions = [
-    {
-      icon: <FontAwesomeIcon icon={faEye} />,
-      title: "Order Details",
-      className: "hover:text-blue-500",
-      onClick: () => {},
-    },
-    {
-      icon: <FontAwesomeIcon icon={faEdit} />,
-      title: "Edit Order",
-      className: "hover:text-blue-500",
-      onClick: () => {},
-    },
-  ];
+  // const actions = [
+  //   {
+  //     icon: <FontAwesomeIcon icon={faEye} />,
+  //     title: "Order Details",
+  //     className: "hover:text-blue-500",
+  //     onClick: () => {},
+  //   },
+  //   {
+  //     icon: <FontAwesomeIcon icon={faEdit} />,
+  //     title: "Edit Order",
+  //     className: "hover:text-blue-500",
+  //     onClick: () => {},
+  //   },
+  // ];
 
-  return <TableRow columns={columns} actions={actions} />;
+  return <TableRow columns={columns}  />;
 };
 
 export default OrdersTableRow;

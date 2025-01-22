@@ -7,7 +7,7 @@ import { apiClient } from "../utils/axios";
 import { Zone } from "../components/admincomponents/Zones/ZoneSchemas";
 import { IWebQuote } from "../components/admincomponents/WebQuotes/WebQuoteSchema";
 import { IState } from "./ClientContext";
-import { Iorder } from "../components/admincomponents/Orders/OrdersSchema";
+import { IOrder } from "../components/admincomponents/Orders/OrdersSchema";
 
 export interface GlobalLoadingState {
   products: boolean;
@@ -25,7 +25,7 @@ export interface IAdminContext {
   isSidebarCollapsed: boolean;
   accessories: IAccessory[];
   products: IProduct[];
-  orders: Iorder[];
+  orders: IOrder[];
   webquotes: IWebQuote[];
   setWebquotes: React.Dispatch<React.SetStateAction<IWebQuote[]>>;
   states: IState[];
@@ -34,7 +34,7 @@ export interface IAdminContext {
   setZones: React.Dispatch<React.SetStateAction<Zone[]>>;
   setProducts: React.Dispatch<React.SetStateAction<IProduct[]>>;
   setAccessories: React.Dispatch<React.SetStateAction<IAccessory[]>>;
-  setOrders: React.Dispatch<React.SetStateAction<Iorder[]>>;
+  setOrders: React.Dispatch<React.SetStateAction<IOrder[]>>;
   loading: GlobalLoadingState;
   setLoading: React.Dispatch<React.SetStateAction<GlobalLoadingState>>;
   error: { [key: string]: string };
@@ -49,7 +49,7 @@ export const AdminContextProvider = ({
   children: React.ReactNode;
 }) => {
   const [accessories, setAccessories] = useState<IAccessory[]>([]);
-  const [orders, setOrders] = useState<Iorder[]>([]);
+  const [orders, setOrders] = useState<IOrder[]>([]);
   const [products, setProducts] = useState<IProduct[]>([]);
   const [webquotes, setWebquotes] = useState<IWebQuote[]>([]);
   const [states, setStates] = useState<IState[]>([]);
