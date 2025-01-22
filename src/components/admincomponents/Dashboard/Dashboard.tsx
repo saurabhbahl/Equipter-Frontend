@@ -1,7 +1,6 @@
 import ReactEChartsCore from "echarts-for-react/lib/core";
 import * as echarts from "echarts/core";
 import { BarChart, LineChart, PieChart, MapChart } from "echarts/charts";
-
 import usaJson from "./mapData.json";
 import {
   GridComponent,
@@ -12,10 +11,15 @@ import {
   DatasetComponent,
 } from "echarts/components";
 import { CanvasRenderer } from "echarts/renderers";
-import Topbar from "./Topbar";
+// import Topbar from "./Topbar";
 import Stats from "./Stats";
 import Map from "./Map";
 import { Helmet } from "react-helmet-async";
+import SubTitle from "../rootComponents/SubTitle";
+// import BreadCrump from "../rootComponents/BreadCrump";
+// import OrderFilters from "../Orders/OrderFilters";
+// import OrdersTable from "../Orders/OrdersTable";
+import DashboardFilters from "./DashboardFilters";
 
 echarts.use([
   TitleComponent,
@@ -197,13 +201,17 @@ const Dashboard = () => {
 
   return (
     <>
-    <Helmet>
-      <title>Dashboard</title>
-      <link rel="canonical" href={window.location.href} />
-    </Helmet>
-      <Topbar />
+      <Helmet>
+        <title>Dashboard | Equipter</title>
+        <link rel="canonical" href={window.location.href} />
+      </Helmet>
+      <div className="flex justify-between bg-gradient-to-b p-5 border shadow from-gray-800 to-black/90">
+        <p className="text-white">Dashboard</p>
+      </div>
       <div className="p-4 bg-gray-100 h-full flex flex-col gap-5">
+        <SubTitle title="Dashboard" subComp={<DashboardFilters />} />
         <Stats />
+
         {/* Charts Section */}
         <div className="flex w-full gap-6">
           {/* Sales & Revenue Line Chart */}

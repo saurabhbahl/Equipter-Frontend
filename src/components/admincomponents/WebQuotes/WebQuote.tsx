@@ -10,6 +10,7 @@ import { useAdminContext } from "../../../hooks/useAdminContext";
 import WebQuoteTable from "./WebQuoteTable";
 import { WebQuoteFilters } from "./WebQuoteFilters";
 import { PerPageSelector } from "../rootComponents/PerPageSelector";
+import { ErrorWithMessage } from "../../../types/componentsTypes";
 
 
 const WebQuote = () => {
@@ -39,11 +40,11 @@ const WebQuote = () => {
       const { totalPages = 1 } = response.data;
       setWebquotes(data);
       setTotalPages(totalPages);
-    } catch (error: any) {
+    } catch (error) {
       console.log(error);
       setError((prev) => ({
         ...prev,
-        webquotes: error.message || "Unexpected error occurred",
+        webquotes: (error as ErrorWithMessage).message || "Unexpected error occurred",
       }));
     } finally {
       setLoading((prev) => ({ ...prev, webquotes: false }));
@@ -52,7 +53,11 @@ const WebQuote = () => {
 
 
   useEffect(() => {
-    fetchWebQuoteData();
+    if(webquotes.length>0){
+      return
+    }else{
+      fetchWebQuoteData();      
+    }
   }, [searchParams,financing ]);
 
   return (

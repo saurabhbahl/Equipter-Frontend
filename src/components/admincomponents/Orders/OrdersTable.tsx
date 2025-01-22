@@ -5,7 +5,7 @@ import { IOrder } from "./OrdersSchema";
 import OrdersTableRow from "./OrdersTableRow";
 
 const OrdersTable = () => {
-  const headers = ["Sr.No.", "ID", "Webquote", "Order Status", "Estimated Completion Date", "Actual Completion Date", ];
+  const headers = ["Sr.No.", "ID", "Webquote", "Order Status","Order Date", "Estimated Completion Date", "Actual Completion Date", ];
   const { orders, error, loading } = useAdminContext();
 
   if (loading.orders)

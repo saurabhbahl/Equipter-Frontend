@@ -1,17 +1,26 @@
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { useEffect, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import LoaderSpinner from "../../utils/LoaderSpinner";
+
 interface StatProps {
   title: string;
   value: string | number;
   icon: IconProp;
+  loading: boolean;
 }
 
-const StatCard = ({ title, value, icon }: StatProps) => {
+const StatCard = ({ title, value, icon, loading }: StatProps) => {
   const [displayValue, setDisplayValue] = useState(0);
   const [suffix, setSuffix] = useState("");
 
   useEffect(() => {
+    // If it's loading, skip the counting animation for now.
+    if (loading) {
+      setDisplayValue(0);
+      return;
+    }
+
     const numericValue =
       typeof value === "string"
         ? parseFloat(value.replace(/[^0-9.-]+/g, ""))
@@ -42,7 +51,7 @@ const StatCard = ({ title, value, icon }: StatProps) => {
     return () => {
       setDisplayValue(numericValue);
     };
-  }, [value]);
+  }, [value, loading]);
 
   return (
     <div className="bg-white p-3 font-roboto shadow-md hover:shadow-xl text-center w-full cursor-pointer hover:scale-105 duration-200 ease-in-out flex flex-col items-center rounded border border-gray-200">
@@ -51,22 +60,28 @@ const StatCard = ({ title, value, icon }: StatProps) => {
         <FontAwesomeIcon icon={icon} />
       </div>
 
-      {/* Value */}
-      <p className="text-2xl font-extrabold text-[#1e293b] flex items-center">
-        {suffix[0]}
-        {Number.isInteger(displayValue)
-          ? displayValue.toLocaleString()
-          : displayValue.toFixed(2)}
-        {suffix.slice(1)}
-      </p>
+      {/* Content */}
+      {loading ? (
+        <LoaderSpinner />
+      ) : (
+        <>
+          {/* Value */}
+          <p className="text-2xl font-extrabold text-[#1e293b] flex items-center">
+            {suffix[0]}
+            {Number.isInteger(displayValue)
+              ? displayValue.toLocaleString()
+              : displayValue.toFixed(2)}
+            {suffix.slice(1)}
+          </p>
 
-      {/* Title */}
-      <p className="text-sm font-medium text-slate-600 uppercase tracking-wide mt-2">
-        {title}
-      </p>
+          
+        </>
+      )}{/* Title */}
+          <p className="text-sm font-medium text-slate-600 uppercase tracking-wide mt-2">
+            {title}
+          </p>
     </div>
   );
 };
 
 export default StatCard;
-
