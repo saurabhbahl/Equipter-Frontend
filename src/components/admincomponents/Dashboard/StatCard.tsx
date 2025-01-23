@@ -15,7 +15,7 @@ const StatCard = ({ title, value, icon, loading }: StatProps) => {
   const [suffix, setSuffix] = useState("");
 
   useEffect(() => {
-    // If it's loading, skip the counting animation for now.
+
     if (loading) {
       setDisplayValue(0);
       return;

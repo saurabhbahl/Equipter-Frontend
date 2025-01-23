@@ -94,11 +94,11 @@ const FirstPageForm = () => {
  
   
   
-  
   useEffect(() => {
     const savedData = loadFromLocalStorage(STORAGE_KEY);
+    const token=localStorage.getItem("token");
     if (savedData) {
-      setFirstPageForm({ ...savedData, isFormFilled: false });
+      setFirstPageForm({ ...savedData, isFormFilled: token!==null ? true :false });
     }
   }, []);
 

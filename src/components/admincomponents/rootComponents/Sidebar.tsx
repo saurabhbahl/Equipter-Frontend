@@ -55,17 +55,6 @@ const Sidebar = () => {
       route: "/admin/orders",
       icon: faShoppingCart,
     },
-    // {
-    //   label: "Customers",
-    //   route: "/admin/customers",
-    //   icon: faUsers,
-    // },
-    // Optional: Add a Logout link if needed
-    // {
-    //   label: "Logout",
-    //   route: "/admin/logout",
-    //   icon: faSignOutAlt,
-    // },
   ];
   
   
@@ -118,8 +107,8 @@ const Sidebar = () => {
       {/* Navigation Links */}
       <nav className="">
         {links.map((link, index) => {
-          const isActive = location.pathname.includes(link.route);
-          // const isActive = location.pathname === link.route;
+        
+          const isActive = link.route.includes(location.pathname);
           return (
             <Link
               title={link.label}

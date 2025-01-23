@@ -7,9 +7,7 @@ const DashboardFilters = () => {
 
   const updateQueryParam = (key: string, value: string) => {
     const params = Object.fromEntries(searchParams.entries());
-    params[key] = value;
-    params["page"] = "1";
- 
+    params[key] = value; 
     setSearchParams(params);
   };
 
@@ -20,9 +18,9 @@ const DashboardFilters = () => {
 
   const handleClearFilters = () => {
     const params = Object.fromEntries(searchParams.entries());
-    const filterKeys = ["order_status", "duration", "order_id"];
+    const filterKeys = [""];
     filterKeys.map((key) => delete params[key]);
-    params["page"] = "1";
+    params["duration"] = "";
     setSearchParams(params);
   };
 
@@ -36,9 +34,6 @@ const DashboardFilters = () => {
     { label: "Last Year", value: "365" },
   ];
 
-  useEffect(()=>{
-    updateQueryParam("duration","7")
-  },[])
   return (
     <div className=" flex text-sm gap-4 items-end justify-end self-end">
     
@@ -66,7 +61,7 @@ const DashboardFilters = () => {
         onClick={handleClearFilters}
         className="btn-yellow px-3 py-1 text-sm font-sans hover:scale-105 capitalize rounded"
       >
-        Clear
+        Reset
       </button>
     </div>
   );

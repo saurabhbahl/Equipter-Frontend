@@ -11,15 +11,17 @@ import {
   DatasetComponent,
 } from "echarts/components";
 import { CanvasRenderer } from "echarts/renderers";
-// import Topbar from "./Topbar";
 import Stats from "./Stats";
 import Map from "./Map";
 import { Helmet } from "react-helmet-async";
 import SubTitle from "../rootComponents/SubTitle";
-// import BreadCrump from "../rootComponents/BreadCrump";
-// import OrderFilters from "../Orders/OrderFilters";
-// import OrdersTable from "../Orders/OrdersTable";
 import DashboardFilters from "./DashboardFilters";
+import { apiClient } from "../../../utils/axios";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import { formatDate } from "../../../utils/helpers";
+import { IOrder } from "../Orders/OrdersSchema";
+import { IProduct } from "../Products/ProductSchema";
 
 echarts.use([
   TitleComponent,
@@ -34,84 +36,62 @@ echarts.use([
   LegendComponent,
   CanvasRenderer,
 ]);
-
 echarts.registerMap("USA", usaJson as any);
 
 const Dashboard = () => {
-  //  data for the charts
-  const salesData = [
-    { month: "Jan", sales: 4000, revenue: 2400 },
-    { month: "Feb", sales: 3000, revenue: 1398 },
-    { month: "Mar", sales: 2000, revenue: 9800 },
-    { month: "Apr", sales: 2780, revenue: 3908 },
-    { month: "May", sales: 1890, revenue: 4800 },
-    { month: "Jun", sales: 2390, revenue: 3800 },
-    { month: "Jul", sales: 3490, revenue: 4300 },
-  ];
+  const [ordersData, setOrdersData] = useState<IOrder[]>([]);
+  const [salesChartData, setSalesChartData] = useState<{ date: string; totalCost: number }[]>([]);
+  const [productsData, setProductsData] = useState<IProduct[]>([]);
+  const [orderStatusData, setOrderStatusData] = useState<{ name: string; value: number }[]>([]);
+  const [salesByProductOptions, setSalesByProductOptions] = useState({});
+  const [searchParams] = useSearchParams();
+  const duration = searchParams.get("duration");
+  const reload = searchParams.get("reload");
 
-  const productData = [
-    { name: "Product A", quantity: 4000 },
-    { name: "Product B", quantity: 3000 },
-    { name: "Product C", quantity: 2000 },
-    { name: "Product D", quantity: 2780 },
-  ];
+  // Fetchers
+  // 1. Fetch orders
+  const fetchOrdersData = async () => {
+    try {
+      const response = await apiClient.get(`/order/?limit=-1&duration=${duration}`);
+      const { data } = response.data;
+      setOrdersData(data);
+    } catch (error) {
+      console.log("fetchOrdersData error:", error);
+    }
+  };
+  // 2. Fetch Products
+  const fetchProductsData = async () => {
+    try {
+      const response = await apiClient.get("/product");
+      setProductsData(response.data.data || []);
+    } catch (error) {
+      console.log("fetchProductsData error:", error);
+    }
+  };
 
-  const customerData = [
-    { value: 300, name: "New" },
-    { value: 200, name: "Returning" },
-    { value: 100, name: "XYZ" },
-  ];
 
-  // Line Chart Options for Sales & Revenue
-  const salesRevenueOptions = {
-    title: { text: "Sales & Revenue" },
+  const dynamicSalesRevenueOptions = {
+    title: { text: "Sales (USD)" },
     tooltip: { trigger: "axis" },
-    legend: { data: ["Sales", "Revenue"] },
+    legend: { data: ["Sales"] },
     xAxis: {
       type: "category",
-      data: salesData.map((item) => item.month),
+      data: salesChartData.map((item) => item.date),
     },
     yAxis: { type: "value" },
     series: [
       {
         name: "Sales",
         type: "line",
-        data: salesData.map((item) => item.sales),
+        data: salesChartData.map((item) => item.totalCost),
         smooth: true,
         lineStyle: { color: "#5470C6" },
       },
-      {
-        name: "Revenue",
-        type: "line",
-        data: salesData.map((item) => item.revenue),
-        smooth: true,
-        lineStyle: { color: "#91CC75" },
-      },
     ],
   };
 
-  // Bar Chart for Product Quantities
-  const productOptions = {
-    title: { text: "Product Quantities" },
-    tooltip: { trigger: "axis" },
-    xAxis: {
-      type: "category",
-      data: productData.map((item) => item.name),
-    },
-    yAxis: { type: "value" },
-    series: [
-      {
-        name: "Quantity",
-        type: "bar",
-        data: productData.map((item) => item.quantity),
-        itemStyle: { color: "#3BA272" },
-      },
-    ],
-  };
-
-  // Pie Chart Options for Customer Segmentation
-  const customerOptions = {
-    title: { text: "Customer Segmentation" },
+  const OrdersStatusOptions = {
+    title: { text: "Orders by Status" },
     tooltip: { trigger: "item" },
     legend: {
       orient: "vertical",
@@ -119,10 +99,10 @@ const Dashboard = () => {
     },
     series: [
       {
-        name: "Customers",
+        name: "Orders",
         type: "pie",
         radius: "50%",
-        data: customerData,
+        data: orderStatusData,
         emphasis: {
           itemStyle: {
             shadowBlur: 10,
@@ -133,71 +113,121 @@ const Dashboard = () => {
       },
     ],
   };
+  
+  // Grouping data
+  // 1. Group orders by day (or week/month) to get totalCost
+  const groupOrdersByDay = (orders: IOrder[]) => {
+    const dailyMap: Record<string, number> = {};
+    orders.forEach((order) => {
+      const createdAt = formatDate(order.created_at);
+      const dayStr = createdAt.split(",")[0];
+      const price = parseFloat(order?.product?.product_price || "0");
+      const qty = parseFloat(order?.product?.product_qty || "0");
+      const orderTotal = price * qty;
+      dailyMap[dayStr] = (dailyMap[dayStr] || 0) + orderTotal;
+    });
 
-  const labelOption = {
-    show: true,
-    position: "insideTop",
-    distance: 10,
-    align: "left",
-    verticalAlign: "middle",
-    rotate: 45,
-    formatter: "{c}  {name|{a}}",
-    fontSize: 8,
-    rich: {
-      name: {},
-    },
+    const sortedDays = Object.keys(dailyMap).sort(
+      (a, b) => new Date(a).getTime() - new Date(b).getTime()
+    );
+    return sortedDays.map((day) => ({ date: day, totalCost: dailyMap[day] }));
   };
+  // 2. Grouping sales by product
+  function getSalesByProductByYear(orders: IOrder[]) {
+    const yearMap: Record<string, Record<string, number>> = {};
 
-  // Sales by Product Over Years Bar Chart
-  const salesByProductOptions = {
-    title: { text: "Sales by Product " },
-    tooltip: {
-      trigger: "axis",
-      axisPointer: { type: "shadow" },
-    },
-    legend: {
-      data: ["Product A", "Product B", "Product C", "Product D"],
-    },
-    xAxis: [
-      {
+    orders.forEach((order) => {
+      const orderYear = new Date(order.created_at).getFullYear().toString();
+      const prodId = order.product?.product_id;
+      // const price = parseFloat(order.product?.product_price || "0");
+      const qty = parseFloat(order.product?.product_qty || "0");
+      const total = qty;
+
+      if (!yearMap[orderYear]) {
+        yearMap[orderYear] = {};
+      }
+      if (!yearMap[orderYear][prodId]) {
+        yearMap[orderYear][prodId] = 0;
+      }
+      yearMap[orderYear][prodId] += total;
+    });
+
+    const years = Object.keys(yearMap).sort(
+      (a, b) => new Date(a).getTime() - new Date(b).getTime()
+    );
+
+    const allProdIds = productsData.map((p) => p.id);
+
+    return { yearMap, years, allProdIds };
+  }
+
+  // sales per product chart option once have orders & products
+  useEffect(() => {
+    if (!ordersData.length || !productsData.length) {
+      return;
+    }
+    const { yearMap, years, allProdIds } = getSalesByProductByYear(ordersData);
+    const seriesArray = allProdIds.map((prodId) => {
+      const foundProduct = productsData.find((p) => p.id === prodId);
+      const productName = foundProduct ? foundProduct.name : prodId;
+
+      // for each year,  total or 0
+      const yearlyTotals = years.map((y) => {
+        return yearMap[y]?.[prodId] || 0;
+      });
+
+      return {
+        name: productName,
+        type: "bar",
+        data: yearlyTotals,
+        emphasis: { focus: "series" },
+      };
+    });
+
+    setSalesByProductOptions({
+      title: { text: "Sales by Product (per Year)" },
+      tooltip: { trigger: "axis", axisPointer: { type: "shadow" } },
+      legend: { data: seriesArray.map((s) => s.name) },
+      xAxis: {
         type: "category",
+        data: years,
         axisTick: { show: false },
-        data: ["2018", "2019", "2020", "2021", "2022"],
       },
-    ],
-    yAxis: [{ type: "value" }],
-    series: [
-      {
-        name: "Product A",
-        type: "bar",
-        barGap: 0,
-        label: labelOption,
-        emphasis: { focus: "series" },
-        data: [500, 600, 750, 820, 900],
-      },
-      {
-        name: "Product B",
-        type: "bar",
-        label: labelOption,
-        emphasis: { focus: "series" },
-        data: [400, 420, 550, 610, 670],
-      },
-      {
-        name: "Product C",
-        type: "bar",
-        label: labelOption,
-        emphasis: { focus: "series" },
-        data: [300, 310, 430, 480, 530],
-      },
-      {
-        name: "Product D",
-        type: "bar",
-        label: labelOption,
-        emphasis: { focus: "series" },
-        data: [200, 210, 320, 350, 370],
-      },
-    ],
-  };
+      yAxis: { type: "value" },
+      series: seriesArray,
+    });
+  }, [ordersData, productsData]);
+
+  useEffect(() => {
+    if (!ordersData.length) {
+      setOrderStatusData([]);
+      return;
+    }
+    const statusCounts: Record<string, number> = {};
+    ordersData.forEach((order) => {
+      const status = order.order_status;
+      if (!statusCounts[status]) {
+        statusCounts[status] = 0;
+      }
+      statusCounts[status]++;
+    });
+
+    const chartData = Object.entries(statusCounts).map(([status, count]) => ({
+      name: status,
+      value: count,
+    }));
+    setOrderStatusData(chartData);
+  }, [ordersData]);
+
+  useEffect(() => {
+    fetchOrdersData();
+    fetchProductsData();
+  }, [duration,reload]);
+
+  useEffect(() => {
+    const result = groupOrdersByDay(ordersData);
+    setSalesChartData(result);
+  }, [ordersData]);
 
   return (
     <>
@@ -209,48 +239,40 @@ const Dashboard = () => {
         <p className="text-white">Dashboard</p>
       </div>
       <div className="p-4 bg-gray-100 h-full flex flex-col gap-5">
-        <SubTitle title="Dashboard" subComp={<DashboardFilters />} />
+        <SubTitle
+          title="Dashboard"
+          subComp={<DashboardFilters key={"dashfilters"} />}
+          // reloadBtnFn={() => console.log()}
+        />
         <Stats />
 
         {/* Charts Section */}
         <div className="flex w-full gap-6">
-          {/* Sales & Revenue Line Chart */}
-          <div className="bg-white p-6 w-[50%] shadow-lg">
+          {/* Sales Line Chart */}
+          <div className="bg-white p-6 w-[65%] shadow-lg">
             <ReactEChartsCore
               echarts={echarts}
-              option={salesRevenueOptions}
-              style={{ height: "300px", width: "100%" }}
+              option={dynamicSalesRevenueOptions}
+              style={{ height: "350px", width: "100%" }}
               notMerge={true}
               lazyUpdate={true}
             />
           </div>
-
-          {/* Product Quantities Bar Chart */}
-          <div className="bg-white p-6 w-[50%] shadow-lg">
+             {/* Orders Status Pie Chart */}
+             <div className="bg-white p-6 shadow-lg w-[35%]">
             <ReactEChartsCore
               echarts={echarts}
-              option={productOptions}
-              style={{ height: "300px", width: "100%" }}
+              option={OrdersStatusOptions}
+              style={{ height: "350px", width: "100%" }}
               notMerge={true}
               lazyUpdate={true}
             />
           </div>
         </div>
         <div className="flex w-full gap-6">
-          {/* Customer Segmentation Pie Chart */}
-          <div className="bg-white p-6 shadow-lg w-[35%]">
-            <ReactEChartsCore
-              echarts={echarts}
-              option={customerOptions}
-              style={{ height: "300px", width: "100%" }}
-              notMerge={true}
-              lazyUpdate={true}
-            />
-          </div>
-
           {/* USA Map Sorted */}
-          <div className="bg-white p-6 shadow-lg w-[65%]">
-            <Map />
+          <div className="bg-white p-6 shadow-lg w-[100%]">
+            <Map orders={ordersData} />
           </div>
         </div>
 
@@ -268,3 +290,4 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+
