@@ -62,23 +62,33 @@ const Dashboard = () => {
   // 2. Fetch Products
   const fetchProductsData = async () => {
     try {
-      const response = await apiClient.get("/product");
+      const response = await apiClient.get(`/product?limit=-1&duration=${duration}`);
       setProductsData(response.data.data || []);
     } catch (error) {
       console.log("fetchProductsData error:", error);
     }
   };
 
-
   const dynamicSalesRevenueOptions = {
     title: { text: "Sales (USD)" },
-    tooltip: { trigger: "axis" },
+    tooltip: {
+      trigger: "axis",
+      formatter: (params:any) => {
+        const data = params[0];
+        return `${data.axisValue}<br />Sales: $${data.data.toLocaleString()}`;
+      },
+    },
     legend: { data: ["Sales"] },
     xAxis: {
       type: "category",
       data: salesChartData.map((item) => item.date),
     },
-    yAxis: { type: "value" },
+    yAxis: {
+      type: "value",
+      axisLabel: {
+        formatter: '${value}', 
+      },
+    },
     series: [
       {
         name: "Sales",
@@ -89,7 +99,11 @@ const Dashboard = () => {
       },
     ],
   };
-
+  
+  
+  
+  
+  
   const OrdersStatusOptions = {
     title: { text: "Orders by Status" },
     tooltip: { trigger: "item" },
