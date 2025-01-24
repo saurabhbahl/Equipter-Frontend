@@ -13,10 +13,6 @@ const phoneNumberRegex = /^[+]?[(]?[0-9]{1,4}[)]?[-\s./0-9]*$/;
 // const cardNumberRegex = /^[0-9]{13,19}$/;
 
 
-
-
-
-
 // Zod schema for the Checkout Form
 export const CheckoutFormSchema = z.object({
   financing: z.string().min(1, { message: "Financing is required." }),
@@ -158,4 +154,12 @@ payment_expiry: z
   
   i_understand_deposit_is_non_refundable: z.boolean()
     .refine(val => val === true, { message: "You must understand that the deposit is non-refundable." }),
+});
+
+// webQuoteurl
+export const webQuoteSendmail = z.object({
+  email: z.string().min(1, { message: "email is required." }),
+  secondary_email: z.string().email().optional().nullable(),
+  webQuote_url: z.string().min(1, { message: "webQuoteurl is required." }),
+  product_name: z.string().min(1, { message: "product_name is required." }),
 });

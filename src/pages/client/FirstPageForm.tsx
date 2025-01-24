@@ -90,11 +90,7 @@ const FirstPageForm = () => {
     { value: "solar", label: "Solar" },
     { value: "other", label: "Other" },
   ];
-  
- 
-  
-  
-  
+
   useEffect(() => {
     const savedData = loadFromLocalStorage(STORAGE_KEY);
     if (savedData) {

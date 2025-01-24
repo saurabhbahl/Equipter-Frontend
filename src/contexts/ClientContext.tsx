@@ -50,6 +50,8 @@ export interface ISidebarSteps {
   financingStep: number;
   showCheckOutForm: boolean;
   showThankYouTab: boolean;
+  showSendEmailTab: boolean;
+  sendBuildForm: boolean;
 }
 export interface IProductSelectionProps {
   selectedAccessories: IAccessory[];
@@ -64,6 +66,7 @@ export interface ITotalPrices{
   addOns: number,
   netPrice: number,
 }
+
 export interface IClientContext {
   accessories: IAccessory[];
   saveToLocalStorage: (
@@ -103,6 +106,8 @@ export interface IClientContext {
   setProductSelections: React.Dispatch<
     React.SetStateAction<IProductSelectionProps>
   >;
+  webQuote: string,
+  setWebQuote: React.Dispatch<React.SetStateAction<string>>
 }
 
 export const ClientContext = createContext<IClientContext | null>(null);
@@ -119,6 +124,8 @@ export const ClientContextProvider = ({
     financingStep: 1,
     showCheckOutForm: false,
     showThankYouTab: false,
+    showSendEmailTab: false,
+    sendBuildForm: false,
   });
   const [products, setProducts] = useState<IProduct[]>([]);
   const [shippingOptions, setShippingOptions] = useState<ShippingOption[]>([]);
@@ -166,6 +173,7 @@ export const ClientContextProvider = ({
     productBaseUnitPrice: 0,
     productBaseUnitQty: 1,
   });
+  const [webQuote, setWebQuote] = useState<string>('');
 
   const filterState = (selectedId: string) => {
     if (statesData.length > 0) {
@@ -293,6 +301,8 @@ export const ClientContextProvider = ({
         setLoading,
         error,
         setError,
+        webQuote,
+        setWebQuote
       }}
     >
       {children}

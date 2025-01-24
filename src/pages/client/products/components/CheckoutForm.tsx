@@ -37,8 +37,10 @@ const CheckoutForm = ({
     filterState,
     totalPrices,
     setShippingOptions,
+    sidebarSteps,
     setSidebarSteps,
     setFirstPageForm,
+    setWebQuote
   } = useClientContext();
 
   const [checkoutForm, setCheckoutForm] = useState<ICheckoutForm>(CheckoutFormDefaultValues);
@@ -172,7 +174,6 @@ const CheckoutForm = ({
         Number((Number(totalPrices.netPrice) * 0.2).toFixed(2))
       ),
     }));
-    console.log("Form", checkoutForm);
 
     const validation = CheckoutFormSchema.safeParse(checkoutForm);
 
@@ -236,14 +237,34 @@ const CheckoutForm = ({
     }
 
     const result = await publicApiClient.post("/webquote", { checkoutForm });
-
     if (result.data.success) {
+      setFirstPageForm((prev) => {
+        return {
+          ...prev,
+          email: checkoutForm.contact_email
+        }
+      });
       setSidebarSteps((prev) => ({
         ...prev,
         showCheckOutForm: false,
-        showThankYouTab: true,
+        showThankYouTab: false,
       }));
+
+      setWebQuote(result.data.data.webQuote.id);
+      if(sidebarSteps.sendBuildForm){
+        setSidebarSteps((prev) => ({
+          ...prev,
+          showSendEmailTab: true,
+        }));
+      }
+      else{
+        setSidebarSteps((prev) => ({
+          ...prev,
+          showThankYouTab: true,
+        }));
+      }
     }
+
   };
   //  the first input on mount
   useEffect(() => {
@@ -274,7 +295,9 @@ const CheckoutForm = ({
           : "delivery",
       contact_industry: (firstPageForm.industry as string) ?? "",
     }));
+
   }, [firstPageForm, activeTab]);
+
   // Sync up billing if "billing_same_as_delivery" is true
   useEffect(() => {
     if (checkoutForm.billing_same_as_delivery) {
@@ -306,7 +329,6 @@ const CheckoutForm = ({
       ...prev,
       state: (delivery?.uuid as string) || "",
     }));
-    saveToLocalStorage(firstPageForm, "firstPageForm", 7 * 24 * 60 * 60 * 1000);
   }, [checkoutForm.delivery_address_state_id]);
 
   // Update total prices when selections change
@@ -338,6 +360,10 @@ const CheckoutForm = ({
   //   console.log("first")
   //   setFirstPageForm((prev)=>({ ...prev, state:selections?.selectedState?.state_id }));
   // }, [selections,shippingOptions,totalPrices])
+
+  useEffect(() => {
+    saveToLocalStorage(firstPageForm, "firstPageForm", 7 * 24 * 60 * 60 * 1000);
+  },[firstPageForm]);
 
   return (
     <form
