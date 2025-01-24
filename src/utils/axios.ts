@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { AxiosError, AxiosResponse } from "axios";
 import { BackendUrl } from "./useEnv";
 
 export const apiClient = axios.create({
@@ -9,9 +9,10 @@ interface isExp {
   isExp: boolean;
   permission: string;
 }
-export const isTokenExpired = (token: string | null = localStorage.getItem("token") || null) => {
-  if (!token)
-    return true
+export const isTokenExpired = (
+  token: string | null = localStorage.getItem("token") || null
+) => {
+  if (!token) return true;
   try {
     const payload = JSON.parse(atob(token.split(".")[1]));
     const isExpired = payload.exp < Date.now() / 1000;
@@ -31,10 +32,8 @@ export const isTokenExpired = (token: string | null = localStorage.getItem("toke
   }
 };
 
-
-
-
-apiClient.interceptors.request.use((config) => {
+apiClient.interceptors.request.use(
+  (config) => {
     const token: string | null = localStorage.getItem("token");
     const isExp = isTokenExpired(token);
     // console.log(config.url)
@@ -52,8 +51,26 @@ apiClient.interceptors.request.use((config) => {
   }
 );
 
+apiClient.interceptors.response.use(
+  (response: AxiosResponse) => {
+    return response;
+  },
+  (error: AxiosError) => {
+    if (error.response) {
+      const status = error.response.status;
+      if (!(status >= 200 && status < 300)) {
+        // Remove token and redirect to login
+        localStorage.removeItem("token");
+        window.location.replace("/login");
+      }
+    } else {
+      console.error("Network or server error:", error);
+    }
+    return Promise.reject(error);
+  }
+);
 
-export const publicApiClient=axios.create({
+export const publicApiClient = axios.create({
   baseURL: BackendUrl,
   timeout: 10000,
 });

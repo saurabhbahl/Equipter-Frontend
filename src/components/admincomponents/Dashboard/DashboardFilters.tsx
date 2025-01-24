@@ -1,4 +1,4 @@
-import  { ChangeEvent, useEffect } from 'react'
+import  { ChangeEvent } from 'react'
 import { useSearchParams } from 'react-router-dom';
 
 const DashboardFilters = () => {
@@ -7,9 +7,7 @@ const DashboardFilters = () => {
 
   const updateQueryParam = (key: string, value: string) => {
     const params = Object.fromEntries(searchParams.entries());
-    params[key] = value;
-    params["page"] = "1";
- 
+    params[key] = value; 
     setSearchParams(params);
   };
 
@@ -20,9 +18,8 @@ const DashboardFilters = () => {
 
   const handleClearFilters = () => {
     const params = Object.fromEntries(searchParams.entries());
-    const filterKeys = ["order_status", "duration", "order_id"];
+    const filterKeys = ["duration","page"];
     filterKeys.map((key) => delete params[key]);
-    params["page"] = "1";
     setSearchParams(params);
   };
 
@@ -36,13 +33,8 @@ const DashboardFilters = () => {
     { label: "Last Year", value: "365" },
   ];
 
-  useEffect(()=>{
-    updateQueryParam("duration","7")
-  },[])
   return (
     <div className=" flex text-sm gap-4 items-end justify-end self-end">
-    
-
       {/* Date Filter */}
       <div className="flex items-center gap-2">
         <label className="font-semibold" htmlFor="duration">
@@ -52,8 +44,8 @@ const DashboardFilters = () => {
           id="duration"
           className="border px-2 py-1 rounded outline-none border-none"
           name="duration"
-          value={duration}
-          defaultValue={1}
+          value={duration||""}
+ 
           onChange={handleFilterChange}>
           {durationDropdownValues.map((val,idx)=>(
             <option className="outline-none border-none" key={idx} value={val.value}>{val.label}</option>
@@ -64,9 +56,8 @@ const DashboardFilters = () => {
       {/* Clear Filters Button */}
       <button
         onClick={handleClearFilters}
-        className="btn-yellow px-3 py-1 text-sm font-sans hover:scale-105 capitalize rounded"
-      >
-        Clear
+        className="btn-yellow px-3 py-1 text-sm font-sans hover:scale-105 capitalize rounded"      >
+        Reset
       </button>
     </div>
   );

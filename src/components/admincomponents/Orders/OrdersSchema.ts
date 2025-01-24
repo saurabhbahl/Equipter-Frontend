@@ -9,9 +9,14 @@ export interface IOrder {
   updated_at: string;
   webquote: {
     product_name: string;
+    state_id: string;
   }
   product: {
+    product_id: string;
     name: string;
     product_url: string;
+    product_price: string;
+    product_qty: string;
+    product_total_cost: string;
   }
 }
