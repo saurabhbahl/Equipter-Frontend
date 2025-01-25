@@ -32,7 +32,6 @@ const ProductSidebar = ({
     selections,
   } = useClientContext();
 
-  console.log(sidebarSteps);
   const productName = productDetails?.name || "Product";
   const productTitle = productDetails?.product_title || "";
   const tabs = ["cash", "financing"];
@@ -72,6 +71,39 @@ const ProductSidebar = ({
 
   const yearForTwoMonths = twoMonthsFromNow.getFullYear();
   const yearForThreeMonths = threeMonthsFromNow.getFullYear();
+
+  const handleSendBuildButton = () => {
+    if (activeTab === "cash") {
+      setSidebarSteps((prev) => ({ ...prev, cashStep: 2, sendBuildForm: true }));
+    } else {
+      setSidebarSteps((prev) => ({ ...prev, financingStep: 2, sendBuildForm: true }));
+    }
+  }
+
+  const handleConfirmButton  = () => {
+    if (
+      sidebarSteps.cashStep == 2 ||
+      sidebarSteps.financingStep === 2
+    ) {
+      if (activeTab === "cash") {
+        setSidebarSteps((prev) => ({
+          ...prev,
+          showCheckOutForm: true,
+        }));
+      } else {
+        setSidebarSteps((prev) => ({
+          ...prev,
+          showCheckOutForm: true,
+        }));
+      }
+    } else {
+      if (activeTab === "cash") {
+        setSidebarSteps((prev) => ({ ...prev, cashStep: 2, sendBuildForm: false }));
+      } else {
+        setSidebarSteps((prev) => ({ ...prev, financingStep: 2, sendBuildForm: false }));
+      }
+    }
+  }
 
   return (
     <div className="w-full xl:w-[37%] md:p-3 my-3">
@@ -152,38 +184,17 @@ const ProductSidebar = ({
               : `Est. Delivery: ${twoMonths} ${yearForTwoMonths} – ${threeMonths} ${yearForThreeMonths}`}
           </h3>
           <div className="flex flex-col xs:flex-row items-center gap-6 mt-6 justify-center">
-            <button className="inline-block text-sm xl:text-md bg-custom-med-gray text-white px-4 py-2 lg:px-6 lg:py-3 hover:bg-custom-orange transition">
+          {sidebarSteps.cashStep == 1 && sidebarSteps.financingStep === 1 &&
+            <button className="inline-block text-sm xl:text-md bg-custom-med-gray text-white px-4 py-2 lg:px-6 lg:py-3 hover:bg-custom-orange transition" onClick={handleSendBuildButton}>
               Send Build
             </button>
+          }
             <button
               className="inline-block text-sm xl:text-md px-4 py-2 bg-custom-orange text-white lg:px-6 lg:py-3 hover:bg-black hover:bg-opacity-50 transition"
-              onClick={() => {
-                if (
-                  sidebarSteps.cashStep == 2 ||
-                  sidebarSteps.financingStep === 2
-                ) {
-                  if (activeTab === "cash") {
-                    setSidebarSteps((prev) => ({
-                      ...prev,
-                      showCheckOutForm: true,
-                    }));
-                  } else {
-                    setSidebarSteps((prev) => ({
-                      ...prev,
-                      showCheckOutForm: true,
-                    }));
-                  }
-                } else {
-                  if (activeTab === "cash") {
-                    setSidebarSteps((prev) => ({ ...prev, cashStep: 2 }));
-                  } else {
-                    setSidebarSteps((prev) => ({ ...prev, financingStep: 2 }));
-                  }
-                }
-              }}
+              onClick={handleConfirmButton}
             >
               {sidebarSteps.cashStep == 2 || sidebarSteps.financingStep === 2
-                ? "Confirm Deposit"
+                ? ( sidebarSteps.sendBuildForm ? "Confirm" :  "Confirm Deposit")
                 : "Continue"}
             </button>
           </div>
@@ -217,7 +228,7 @@ const ProductSidebar = ({
             </div>,
             document.body
           )}
-        {sidebarSteps.showThankYouTab &&
+        {sidebarSteps.showSendEmailTab &&
           ReactDOM.createPortal(
             <div className="fixed top-0 z-30 inset-0 backdrop-blur-sm bg-black bg-opacity-10 flex items-center justify-center lg:p-4 p-8">
               <SendMailTab />

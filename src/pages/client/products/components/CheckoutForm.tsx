@@ -37,12 +37,18 @@ const CheckoutForm = ({
     filterState,
     totalPrices,
     setShippingOptions,
+    sidebarSteps,
     setSidebarSteps,
     setFirstPageForm,
+    setWebQuoteId,
   } = useClientContext();
 
-  const [checkoutForm, setCheckoutForm] = useState<ICheckoutForm>(CheckoutFormDefaultValues);
-  const [validationErrors, setValidationErrors] = useState<{ [key in keyof ICheckoutForm]?: string }>({});
+  const [checkoutForm, setCheckoutForm] = useState<ICheckoutForm>(
+    CheckoutFormDefaultValues
+  );
+  const [validationErrors, setValidationErrors] = useState<{
+    [key in keyof ICheckoutForm]?: string;
+  }>({});
   // states for different sections
   const [isBuildSummaryOpen, setIsBuildSummaryOpen] = useState(true);
   const [isContactInfoOpen, setIsContactInfoOpen] = useState(true);
@@ -85,7 +91,6 @@ const CheckoutForm = ({
       setShippingOptions([...newShippingOption]);
 
       setCheckoutForm((prev) => ({ ...prev, zone_id: state.zone_id }));
-
     }
 
     // Handle card number formatting
@@ -131,7 +136,8 @@ const CheckoutForm = ({
           billing_address_street: prevForm.delivery_address_street as string,
           billing_address_city: prevForm.delivery_address_city as string,
           billing_address_state: prevForm.delivery_address_state_id as string,
-          billing_address_zip_code: prevForm.delivery_address_zip_code as string,
+          billing_address_zip_code:
+            prevForm.delivery_address_zip_code as string,
           billing_address_country: prevForm.delivery_address_country as string,
         }));
       } else {
@@ -155,6 +161,7 @@ const CheckoutForm = ({
     // saveToLocalStorage(checkoutForm, STORAGE_KEY, EXPIRATION_TIME);
   };
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    console.log(filteredAccessory);
     e.preventDefault();
     setCheckoutForm((prev: ICheckoutForm) => ({
       ...prev,
@@ -172,7 +179,6 @@ const CheckoutForm = ({
         Number((Number(totalPrices.netPrice) * 0.2).toFixed(2))
       ),
     }));
-    console.log("Form", checkoutForm);
 
     const validation = CheckoutFormSchema.safeParse(checkoutForm);
 
@@ -236,13 +242,47 @@ const CheckoutForm = ({
     }
 
     const result = await publicApiClient.post("/webquote", { checkoutForm });
-
     if (result.data.success) {
+      if (filteredAccessory.length > 0) {
+        const quoteAccessoiesData = filteredAccessory?.map((acc) => {
+          return {
+            webquote_id: result.data.data.webQuote.id,
+            accessory_id: acc.id,
+            quantity: acc.qty,
+            unit_price: acc.price,
+            accessory_name: acc.name,
+            total_price: Number(acc.qty) * Number(acc.price),
+          };
+        });
+         publicApiClient.post("/webquote/quote-accessory", {quoteAccessoiesData});
+      }
+
+      setFirstPageForm((prev) => {
+        return {
+          ...prev,
+          email: checkoutForm.contact_email,
+        };
+      });
       setSidebarSteps((prev) => ({
         ...prev,
         showCheckOutForm: false,
-        showThankYouTab: true,
+        showThankYouTab: false,
       }));
+
+      setWebQuoteId(result.data.data.webQuote.id);
+      if (sidebarSteps.sendBuildForm) {
+        setSidebarSteps((prev) => ({
+          ...prev,
+          showSendEmailTab: true,
+        }));
+      } else {
+        setSidebarSteps((prev) => ({
+          ...prev,
+          showThankYouTab: true,
+          cashStep:1,
+          financingStep:1,
+        }));
+      }
     }
   };
   //  the first input on mount
@@ -275,6 +315,7 @@ const CheckoutForm = ({
       contact_industry: (firstPageForm.industry as string) ?? "",
     }));
   }, [firstPageForm, activeTab]);
+
   // Sync up billing if "billing_same_as_delivery" is true
   useEffect(() => {
     if (checkoutForm.billing_same_as_delivery) {
@@ -306,7 +347,6 @@ const CheckoutForm = ({
       ...prev,
       state: (delivery?.uuid as string) || "",
     }));
-    saveToLocalStorage(firstPageForm, "firstPageForm", 7 * 24 * 60 * 60 * 1000);
   }, [checkoutForm.delivery_address_state_id]);
 
   // Update total prices when selections change
@@ -338,6 +378,10 @@ const CheckoutForm = ({
   //   console.log("first")
   //   setFirstPageForm((prev)=>({ ...prev, state:selections?.selectedState?.state_id }));
   // }, [selections,shippingOptions,totalPrices])
+
+  useEffect(() => {
+    saveToLocalStorage(firstPageForm, "firstPageForm", 7 * 24 * 60 * 60 * 1000);
+  }, [firstPageForm]);
 
   return (
     <form
