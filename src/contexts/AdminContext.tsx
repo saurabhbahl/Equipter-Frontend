@@ -5,7 +5,7 @@ import {
 } from "../components/admincomponents/Accessories/AccessoriesSchema";
 import { apiClient } from "../utils/axios";
 import { Zone } from "../components/admincomponents/Zones/ZoneSchemas";
-import { IWebQuote } from "../components/admincomponents/WebQuotes/WebQuoteSchema";
+import { IQuotes } from "../components/admincomponents/WebQuotes/WebQuoteSchema";
 import { IState } from "./ClientContext";
 import { IOrder } from "../components/admincomponents/Orders/OrdersSchema";
 
@@ -26,8 +26,8 @@ export interface IAdminContext {
   accessories: IAccessory[];
   products: IProduct[];
   orders: IOrder[];
-  webquotes: IWebQuote[];
-  setWebquotes: React.Dispatch<React.SetStateAction<IWebQuote[]>>;
+  webquotes: IQuotes[];
+  setWebquotes: React.Dispatch<React.SetStateAction<IQuotes[]>>;
   states: IState[];
   setStates:  React.Dispatch<React.SetStateAction<IState[]>>;
   zones: Zone[];
@@ -51,7 +51,7 @@ export const AdminContextProvider = ({
   const [accessories, setAccessories] = useState<IAccessory[]>([]);
   const [orders, setOrders] = useState<IOrder[]>([]);
   const [products, setProducts] = useState<IProduct[]>([]);
-  const [webquotes, setWebquotes] = useState<IWebQuote[]>([]);
+  const [webquotes, setWebquotes] = useState<IQuotes[]>([]);
   const [states, setStates] = useState<IState[]>([]);
   const [zones, setZones] = useState<Zone[]>([]);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);

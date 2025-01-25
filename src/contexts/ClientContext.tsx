@@ -106,8 +106,8 @@ export interface IClientContext {
   setProductSelections: React.Dispatch<
     React.SetStateAction<IProductSelectionProps>
   >;
-  webQuote: string,
-  setWebQuote: React.Dispatch<React.SetStateAction<string>>
+  webQuoteId: string,
+  setWebQuoteId: React.Dispatch<React.SetStateAction<string>>
 }
 
 export const ClientContext = createContext<IClientContext | null>(null);
@@ -173,7 +173,7 @@ export const ClientContextProvider = ({
     productBaseUnitPrice: 0,
     productBaseUnitQty: 1,
   });
-  const [webQuote, setWebQuote] = useState<string>('');
+  const [webQuoteId, setWebQuoteId] = useState<string>('');
 
   const filterState = (selectedId: string) => {
     if (statesData.length > 0) {
@@ -301,8 +301,8 @@ export const ClientContextProvider = ({
         setLoading,
         error,
         setError,
-        webQuote,
-        setWebQuote
+        webQuoteId,
+        setWebQuoteId
       }}
     >
       {children}

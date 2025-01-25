@@ -24,11 +24,11 @@ interface formValues{
 }
 
 const SendMailTab = () => {
-  const {firstPageForm, setSidebarSteps, webQuote, productSelection }= useClientContext();
+  const {firstPageForm, setSidebarSteps, webQuoteId, productSelection }= useClientContext();
   const [formValues, setFormValues] = useState<formValues>({
     email: firstPageForm.email ?? "",
     secondary_email: null,
-    webQuote_url: window.location.href.split('?')[0]+'?webQuote='+webQuote,
+    webQuote_url: window.location.href.split('?')[0]+'?webQuote='+webQuoteId,
     product_name: productSelection.productDetails?.name ?? ''
   });
 

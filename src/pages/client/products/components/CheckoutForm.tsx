@@ -40,11 +40,15 @@ const CheckoutForm = ({
     sidebarSteps,
     setSidebarSteps,
     setFirstPageForm,
-    setWebQuote
+    setWebQuoteId,
   } = useClientContext();
 
-  const [checkoutForm, setCheckoutForm] = useState<ICheckoutForm>(CheckoutFormDefaultValues);
-  const [validationErrors, setValidationErrors] = useState<{ [key in keyof ICheckoutForm]?: string }>({});
+  const [checkoutForm, setCheckoutForm] = useState<ICheckoutForm>(
+    CheckoutFormDefaultValues
+  );
+  const [validationErrors, setValidationErrors] = useState<{
+    [key in keyof ICheckoutForm]?: string;
+  }>({});
   // states for different sections
   const [isBuildSummaryOpen, setIsBuildSummaryOpen] = useState(true);
   const [isContactInfoOpen, setIsContactInfoOpen] = useState(true);
@@ -87,7 +91,6 @@ const CheckoutForm = ({
       setShippingOptions([...newShippingOption]);
 
       setCheckoutForm((prev) => ({ ...prev, zone_id: state.zone_id }));
-
     }
 
     // Handle card number formatting
@@ -133,7 +136,8 @@ const CheckoutForm = ({
           billing_address_street: prevForm.delivery_address_street as string,
           billing_address_city: prevForm.delivery_address_city as string,
           billing_address_state: prevForm.delivery_address_state_id as string,
-          billing_address_zip_code: prevForm.delivery_address_zip_code as string,
+          billing_address_zip_code:
+            prevForm.delivery_address_zip_code as string,
           billing_address_country: prevForm.delivery_address_country as string,
         }));
       } else {
@@ -157,6 +161,7 @@ const CheckoutForm = ({
     // saveToLocalStorage(checkoutForm, STORAGE_KEY, EXPIRATION_TIME);
   };
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    console.log(filteredAccessory);
     e.preventDefault();
     setCheckoutForm((prev: ICheckoutForm) => ({
       ...prev,
@@ -238,11 +243,25 @@ const CheckoutForm = ({
 
     const result = await publicApiClient.post("/webquote", { checkoutForm });
     if (result.data.success) {
+      if (filteredAccessory.length > 0) {
+        const quoteAccessoiesData = filteredAccessory?.map((acc) => {
+          return {
+            webquote_id: result.data.data.webQuote.id,
+            accessory_id: acc.id,
+            quantity: acc.qty,
+            unit_price: acc.price,
+            accessory_name: acc.name,
+            total_price: Number(acc.qty) * Number(acc.price),
+          };
+        });
+         publicApiClient.post("/webquote/quote-accessory", {quoteAccessoiesData});
+      }
+
       setFirstPageForm((prev) => {
         return {
           ...prev,
-          email: checkoutForm.contact_email
-        }
+          email: checkoutForm.contact_email,
+        };
       });
       setSidebarSteps((prev) => ({
         ...prev,
@@ -250,21 +269,21 @@ const CheckoutForm = ({
         showThankYouTab: false,
       }));
 
-      setWebQuote(result.data.data.webQuote.id);
-      if(sidebarSteps.sendBuildForm){
+      setWebQuoteId(result.data.data.webQuote.id);
+      if (sidebarSteps.sendBuildForm) {
         setSidebarSteps((prev) => ({
           ...prev,
           showSendEmailTab: true,
         }));
-      }
-      else{
+      } else {
         setSidebarSteps((prev) => ({
           ...prev,
           showThankYouTab: true,
+          cashStep:1,
+          financingStep:1,
         }));
       }
     }
-
   };
   //  the first input on mount
   useEffect(() => {
@@ -295,7 +314,6 @@ const CheckoutForm = ({
           : "delivery",
       contact_industry: (firstPageForm.industry as string) ?? "",
     }));
-
   }, [firstPageForm, activeTab]);
 
   // Sync up billing if "billing_same_as_delivery" is true
@@ -363,7 +381,7 @@ const CheckoutForm = ({
 
   useEffect(() => {
     saveToLocalStorage(firstPageForm, "firstPageForm", 7 * 24 * 60 * 60 * 1000);
-  },[firstPageForm]);
+  }, [firstPageForm]);
 
   return (
     <form

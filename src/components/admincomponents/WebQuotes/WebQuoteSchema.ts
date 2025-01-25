@@ -35,3 +35,19 @@ export interface IWebQuote {
   updated_at: string;
 }
 
+interface IQuoteAccessory {
+  id: string;
+  webquote_id: string;
+  accessory_id: string;
+  accessory_name: string;
+  quantity: string;
+  unit_price: string;
+  total_price: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface IQuotes{
+  quote_accessory:IQuoteAccessory,
+  web_quote:IWebQuote
+}

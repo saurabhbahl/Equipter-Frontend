@@ -233,7 +233,6 @@ const ViewSingleProduct = () => {
               <ProductSidebar
                 setShowAccessory={setShowAccessories}
                 productDetails={productDetails}
-                // handleTabClick={handleTabClick}
                 accessoryList={accessoryList}
                 // this is first accessory that selected to view
                 setModalAccessory={setModalAccessory}

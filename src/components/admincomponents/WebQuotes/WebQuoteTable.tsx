@@ -3,6 +3,7 @@ import { useAdminContext } from "../../../hooks/useAdminContext";
 import TableHeading from "../../Table/TableHeading";
 
 import WebQuoteTableRow from "./WebQuoteTableRow";
+import { IQuotes } from "./WebQuoteSchema";
 
 const AccessoriesTable = () => {
   const headers = [
@@ -36,8 +37,8 @@ const AccessoriesTable = () => {
           <table className="w-full text-sm !text-center text-gray-500 ">
             <TableHeading headers={headers} />
             <tbody className="bg-white">
-              {webquotes?.map((quote: unknown, index: number) => (
-                <WebQuoteTableRow key={index} webquote={quote} no={index + 1} />
+              {webquotes?.map((quote: IQuotes, index: number) => (
+                <WebQuoteTableRow key={index} webquote={quote.web_quote} no={index + 1} />
               ))}
             </tbody>
           </table>
