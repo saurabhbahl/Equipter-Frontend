@@ -35,7 +35,7 @@ export interface IWebQuote {
   updated_at: string;
 }
 
-interface IQuoteAccessory {
+export interface IQuoteAccessory {
   id: string;
   webquote_id: string;
   accessory_id: string;
