@@ -13,8 +13,6 @@ import AccessorySlider from "./components/AccessorySlider";
 import ProductSidebar from "./components/ProductSidebar";
 import FirstPageForm from "../FirstPageForm";
 import NotFound from "../../NotFound";
-import { useSearchParams } from "react-router-dom";
-import { IQuoteAccessory } from "../../../components/admincomponents/WebQuotes/WebQuoteSchema";
 
 interface IBuildList {
   title: string;
@@ -35,8 +33,6 @@ export interface SelectionsType {
 }
 
 const ViewSingleProduct = () => {
-  const [searchParams] = useSearchParams();
-  const webQuoteID = searchParams.get("webQuote");
 
   const {
     firstPageForm,
