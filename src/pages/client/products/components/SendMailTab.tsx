@@ -1,4 +1,4 @@
-import  { useState } from "react";
+import  { ChangeEvent, useState } from "react";
 import CloseBtn from "../../../utils/CloseBtn";
 import { FaFacebook, FaInstagram, FaLinkedin } from "react-icons/fa";
 import { FaXTwitter } from "react-icons/fa6";
@@ -37,7 +37,7 @@ const SendMailTab = () => {
   const [errors, setErrors] = useState<{ [key in keyof SendWebQuoteUrl]?: string }>();
   const [isContactInfoOpen, setIsContactInfoOpen] = useState(true);
 
-  const handleChange = (e:any) => {
+  const handleChange = (e:ChangeEvent<HTMLInputElement>) => {
     // Update state logic here
     const { name, value } = e.target;
     setErrors({...errors, [name]: ''});
