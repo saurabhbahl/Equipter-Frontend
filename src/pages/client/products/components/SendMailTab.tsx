@@ -8,6 +8,7 @@ import GroupOpen from "../../../utils/GroupOpen";
 import { useClientContext } from "../../../../hooks/useClientContext";
 import { publicApiClient } from "../../../../utils/axios";
 import { webQuoteSendmail } from "../../types/Validations";
+import Loader from "../../../../components/utils/Loader";
 
 
 interface SendWebQuoteUrl {
@@ -25,6 +26,7 @@ interface formValues{
 
 const SendMailTab = () => {
   const {firstPageForm, setSidebarSteps, webQuoteId, productSelection }= useClientContext();
+  const [loding,setLoading] = useState<boolean>(false);
   const [formValues, setFormValues] = useState<formValues>({
     email: firstPageForm.email ?? "",
     secondary_email: null,
@@ -33,7 +35,6 @@ const SendMailTab = () => {
   });
 
   const [errors, setErrors] = useState<{ [key in keyof SendWebQuoteUrl]?: string }>();
-  console.log(errors);
   const [isContactInfoOpen, setIsContactInfoOpen] = useState(true);
 
   const handleChange = (e:any) => {
@@ -49,6 +50,7 @@ const SendMailTab = () => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setLoading(true);
     const validation = webQuoteSendmail.safeParse(formValues);
 
     if (!validation.success) {
@@ -64,10 +66,12 @@ const SendMailTab = () => {
     if(result.data.success){
       handleCloseButton();
     }
+    setLoading(false);
   }
 
   return (
       <form onSubmit={handleSubmit} className="z-50 relative font-roboto bg-white max-h-[90vh] overflow-y-auto scrollbar-custom w-[100%] sm:w-[80%] md:w-[60%] px-6 py-8 md:px-8 xl:w-[35%] mx-auto   shadow-xl">
+        {loding && <Loader message={'Sending Building Configuration'}/>}
         {/* Close Button */}
         <button
           type="button"
