@@ -38,7 +38,7 @@ const AccessoriesTable = () => {
             <TableHeading headers={headers} />
             <tbody className="bg-white">
               {webquotes?.map((quote: IQuotes, index: number) => (
-                <WebQuoteTableRow key={index} webquote={quote.web_quote} no={index + 1} />
+                <WebQuoteTableRow key={index} webquote={quote} no={index + 1} />
               ))}
             </tbody>
           </table>

@@ -26,10 +26,10 @@ interface formValues{
 
 const SendMailTab = () => {
   const {firstPageForm, setSidebarSteps, webQuoteId, productSelection }= useClientContext();
-  const [loding,setLoading] = useState<boolean>(false);
+  const [loading,setLoading] = useState<boolean>(false);
   const [formValues, setFormValues] = useState<formValues>({
     email: firstPageForm.email ?? "",
-    secondary_email: null,
+    secondary_email: "",
     webQuote_url: window.location.href.split('?')[0]+'?webQuote='+webQuoteId,
     product_name: productSelection.productDetails?.name ?? ''
   });
@@ -50,8 +50,9 @@ const SendMailTab = () => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setLoading(true);
+ 
     const validation = webQuoteSendmail.safeParse(formValues);
+    console.log(validation)
 
     if (!validation.success) {
       const newErrors: { [key in keyof SendWebQuoteUrl]?: string } = {};
@@ -62,6 +63,7 @@ const SendMailTab = () => {
       setErrors(newErrors);
       return;
     }
+    setLoading(true);
     const result = await publicApiClient.post("/webquote/send-mail", formValues );
     if(result.data.success){
       handleCloseButton();
@@ -71,7 +73,7 @@ const SendMailTab = () => {
 
   return (
       <form onSubmit={handleSubmit} className="z-50 relative font-roboto bg-white max-h-[90vh] overflow-y-auto scrollbar-custom w-[100%] sm:w-[80%] md:w-[60%] px-6 py-8 md:px-8 xl:w-[35%] mx-auto   shadow-xl">
-        {loding && <Loader message={'Sending Building Configuration'}/>}
+        {loading && <Loader message={'Sending Building Configuration'}/>}
         {/* Close Button */}
         <button
           type="button"
@@ -105,7 +107,7 @@ const SendMailTab = () => {
               name="email"
               type="email"
               classes="lg:w-[75%]"
-              placeholder="Auto Populate"
+              placeholder="Enter Primary Email"
               value={formValues.email}
               onChange={handleChange}
               error={errors?.email ?? ''}

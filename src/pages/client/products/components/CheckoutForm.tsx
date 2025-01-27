@@ -346,7 +346,7 @@ const CheckoutForm = ({
       contact_phone_number: firstPageForm.phNo,
       contact_email: firstPageForm.email,
       contact_job_title: firstPageForm.jobTitle,
-      delivery_address_state_id: firstPageForm.state,
+      // delivery_address_state_id: firstPageForm.state,
       financing: activeTab,
       product_id: productDetails.id,
       product_name: productDetails.name,
@@ -597,7 +597,7 @@ const CheckoutForm = ({
           </div>
 
           {/* Payment Details */}
-          <div className="flex items-start mb-4">
+          <div className="flex items-start mb-4 hidden">
             <button
               tabIndex={-1}
               onClick={(e) => {
