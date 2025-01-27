@@ -6,5 +6,5 @@ export const awsBucketName: string = import.meta.env.VITE_AWS_BUCKET_NAME;
 export const awsDirName: string = import.meta.env.VITE_AWS_DIR_NAME;
 export const awsRegionName: string = import.meta.env.VITE_AWS_REGION;
 export const awsAccessKeyID: string = import.meta.env.VITE_AWS_ACCESS_KEY_ID;
-export const awsSecretAccessKey: string = import.meta.env
-  .VITE_AWS_SECRET_ACCESS_KEY;
+export const awsSecretAccessKey: string = import.meta.env.VITE_AWS_SECRET_ACCESS_KEY;
+export const stripePubKey: string = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;

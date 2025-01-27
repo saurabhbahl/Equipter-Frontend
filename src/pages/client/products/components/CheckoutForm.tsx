@@ -14,6 +14,7 @@ import { CheckoutFormSchema } from "../../types/Validations";
 import SelectField from "../../../../components/utils/SelectFeild";
 import { IState, ShippingOption } from "../../../../contexts/ClientContext";
 import { publicApiClient } from "../../../../utils/axios";
+import Loader from "../../../../components/utils/Loader";
 
 interface ICheckoutFormProps {
   productDetails: IProduct;
@@ -57,6 +58,8 @@ const CheckoutForm = ({
   const [isBillingInfoOpen, setIsBillingInfoOpen] = useState(true);
   const inputRef: React.RefObject<HTMLInputElement> = useRef(null);
   const [selectedDelivery, setSelectedDelivery] = useState<ShippingOption>();
+  const [loading, setLoading] = useState(false);
+  const [loaderMsg, setLoaderMsg] = useState("Redirecting to the Payment.....");
 
   const getDigits = (input: string) => input.replace(/\D/g, "");
 
@@ -175,7 +178,7 @@ const CheckoutForm = ({
           ? "0"
           : String(selectedDelivery?.price),
       accessories: filteredAccessory,
-      non_refundable_deposit: Math.floor(
+      non_refundable_deposit: Math.ceil(
         Number((Number(totalPrices.netPrice) * 0.2).toFixed(2))
       ),
     }));
@@ -240,7 +243,7 @@ const CheckoutForm = ({
       }
       return;
     }
-
+    setLoading(true);
     const result = await publicApiClient.post("/webquote", { checkoutForm });
     if (result.data.success) {
       if (filteredAccessory.length > 0) {
@@ -254,34 +257,77 @@ const CheckoutForm = ({
             total_price: Number(acc.qty) * Number(acc.price),
           };
         });
-         publicApiClient.post("/webquote/quote-accessory", {quoteAccessoiesData});
+        publicApiClient.post("/webquote/quote-accessory", {
+          quoteAccessoiesData,
+        });
       }
-
-      setFirstPageForm((prev) => {
-        return {
-          ...prev,
-          email: checkoutForm.contact_email,
-        };
-      });
-      setSidebarSteps((prev) => ({
-        ...prev,
-        showCheckOutForm: false,
-        showThankYouTab: false,
-      }));
-
-      setWebQuoteId(result.data.data.webQuote.id);
       if (sidebarSteps.sendBuildForm) {
+        setLoaderMsg("Saving Build....");
+        setFirstPageForm((prev) => {
+          return {
+            ...prev,
+            email: checkoutForm.contact_email,
+          };
+        });
+        setWebQuoteId(result.data.data.webQuote.id);
         setSidebarSteps((prev) => ({
           ...prev,
-          showSendEmailTab: true,
+          showCheckOutForm: false,
+          showThankYouTab: false,
         }));
+
+        if (sidebarSteps.sendBuildForm) {
+          setSidebarSteps((prev) => ({
+            ...prev,
+            showSendEmailTab: true,
+          }));
+        } else {
+          setSidebarSteps((prev) => ({
+            ...prev,
+            showThankYouTab: true,
+            cashStep: 1,
+            financingStep: 1,
+          }));
+          setLoading(false);
+        }
       } else {
-        setSidebarSteps((prev) => ({
-          ...prev,
-          showThankYouTab: true,
-          cashStep:1,
-          financingStep:1,
-        }));
+        setLoaderMsg("Redirecting to Payment....");
+        const currency = "usd";
+        const checkoutSessionResponse = await publicApiClient.post(
+          "/payment/create-checkout-session",
+          { webQuoteId: result.data.data.webQuote.id, currency }
+        );
+        if (checkoutSessionResponse.data.success) {
+          const { sessionUrl } = checkoutSessionResponse.data;
+          window.location.href = sessionUrl;
+
+          setFirstPageForm((prev) => {
+            return {
+              ...prev,
+              email: checkoutForm.contact_email,
+            };
+          });
+          setWebQuoteId(result.data.data.webQuote.id);
+
+          if (sidebarSteps.sendBuildForm) {
+            setSidebarSteps((prev) => ({
+              ...prev,
+              showSendEmailTab: true,
+            }));
+          } else {
+            setSidebarSteps((prev) => ({
+              ...prev,
+              // showThankYouTab: true,
+              // cashStep: 1,
+              // financingStep: 1,
+            }));
+          }
+        } else {
+          console.error(
+            "Failed to create checkout session:",
+            checkoutSessionResponse.data.message
+          );
+        }
       }
     }
   };
@@ -384,520 +430,539 @@ const CheckoutForm = ({
   }, [firstPageForm]);
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="z-50 w-full md:max-w-[80%] xl:max-w-[60%] mx-auto p-4 p lg:p-8 lg:pl-5 bg-white overflow-y-auto    shadow-2xl relative scrollbar-custom pt-10  max-h-[90vh] pb-0   sm:max-h-[80vh]   md:max-h-[80%]     xl:max-h-[85vh] "
-    >
-      {/* close btn */}
-      <button
-        tabIndex={-1}
-        className="absolute right-3 top-5 lg:right-6"
-        onClick={() =>
-          setSidebarSteps((prev) => ({ ...prev, showCheckOutForm: false }))
-        }
-      >
-        <CloseBtn />
-      </button>
-      {/* Build Summary */}
-      <div className="flex items-start mb-4 overflow-y-auto">
-        <button
-          tabIndex={-1}
-          onClick={(e) => {
-            e.preventDefault();
-            setIsBuildSummaryOpen(!isBuildSummaryOpen);
-          }}
-          className={`${isBuildSummaryOpen ? "pt-0.5 pr-3" : "pr-3 pt-[3px]"}`}
-          aria-expanded={isBuildSummaryOpen}
-          aria-controls="buildSummaryContent"
+    <>
+      {loading ? (
+        <Loader key={"CheckoutForm"} message={loaderMsg} />
+      ) : (
+        <form
+          onSubmit={handleSubmit}
+          className="z-50 w-full md:max-w-[80%] xl:max-w-[60%] mx-auto p-4 p lg:p-8 lg:pl-5 bg-white overflow-y-auto    shadow-2xl relative scrollbar-custom pt-10  max-h-[90vh] pb-0   sm:max-h-[80vh]   md:max-h-[80%]     xl:max-h-[85vh] "
         >
-          {isBuildSummaryOpen ? <GroupClose /> : <GroupOpen />}
-        </button>
+          {/* close btn */}
+          <button
+            tabIndex={-1}
+            className="absolute right-3 top-5 lg:right-6"
+            onClick={() =>
+              setSidebarSteps((prev) => ({ ...prev, showCheckOutForm: false }))
+            }
+          >
+            <CloseBtn />
+          </button>
+          {/* Build Summary */}
+          <div className="flex items-start mb-4 overflow-y-auto">
+            <button
+              tabIndex={-1}
+              onClick={(e) => {
+                e.preventDefault();
+                setIsBuildSummaryOpen(!isBuildSummaryOpen);
+              }}
+              className={`${
+                isBuildSummaryOpen ? "pt-0.5 pr-3" : "pr-3 pt-[3px]"
+              }`}
+              aria-expanded={isBuildSummaryOpen}
+              aria-controls="buildSummaryContent"
+            >
+              {isBuildSummaryOpen ? <GroupClose /> : <GroupOpen />}
+            </button>
 
-        {isBuildSummaryOpen ? (
-          <div className="flex-1" id="buildSummaryContent">
-            <h2 className="font-semibold text-md  lg:font-bold  lg:text-xl  mb-4 text-custom-black-200">
-              Build Summary
-            </h2>
-            <div className="flex flex-col lg:w-[60%] text-black lg:font-bold font-semibold text-sm lg:text-[17px] space-y-2">
-              {/* product info */}
-              <div className="flex justify-between">
-                <p>Equiter {productDetails?.name}</p>
-                <p>
-                  ${Number(productDetails?.price) * selections?.baseUnitQty}{" "}
-                  <span className="text-custom-med-gray">
-                    ({selections.baseUnitQty})
+            {isBuildSummaryOpen ? (
+              <div className="flex-1" id="buildSummaryContent">
+                <h2 className="font-semibold text-md  lg:font-bold  lg:text-xl  mb-4 text-custom-black-200">
+                  Build Summary
+                </h2>
+                <div className="flex flex-col lg:w-[60%] text-black lg:font-bold font-semibold text-sm lg:text-[17px] space-y-2">
+                  {/* product info */}
+                  <div className="flex justify-between">
+                    <p>Equiter {productDetails?.name}</p>
+                    <p>
+                      ${Number(productDetails?.price) * selections?.baseUnitQty}{" "}
+                      <span className="text-custom-med-gray">
+                        ({selections.baseUnitQty})
+                      </span>
+                    </p>
+                  </div>
+                  {/* accessories */}
+                  <div className="flex gap-1 justify-between flex-col">
+                    {filteredAccessory.map((acc) => {
+                      return (
+                        <div className="flex justify-between " key={acc.id}>
+                          <p className="capitalize">{acc.name}</p>
+                          <p>
+                            ${Number(acc.price) * acc.qty}{" "}
+                            <span className="text-custom-med-gray">
+                              ({acc.qty})
+                            </span>
+                          </p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {/* delivery */}
+                  {shippingOptions.map(
+                    (option) =>
+                      selections.shippingOption === option.id && (
+                        <div
+                          key={option.id}
+                          className="flex  justify-between pr-5"
+                        >
+                          <p>{option.name}</p>
+                          <span>${option.price}</span>
+                        </div>
+                      )
+                  )}
+                </div>
+              </div>
+            ) : (
+              <h2 className="flex-1 font-semibold text-md  lg:font-bold  lg:text-xl  mb-4 text-custom-black-200">
+                Build Summary
+              </h2>
+            )}
+          </div>
+
+          {/* Contact Info */}
+          <div className="flex items-start mb-4">
+            <button
+              tabIndex={-1}
+              onClick={(e) => {
+                e.preventDefault();
+                setIsContactInfoOpen(!isContactInfoOpen);
+              }}
+              className={`${
+                isContactInfoOpen ? "pt-0.5 pr-3" : "pr-3 pt-[3px]"
+              }`}
+              aria-expanded={isContactInfoOpen}
+              aria-controls="contactInfoContent"
+            >
+              {isContactInfoOpen ? <GroupClose /> : <GroupOpen />}
+            </button>
+            {isContactInfoOpen ? (
+              <div className="flex-1" id="contactInfoContent">
+                <h2 className="font-semibold text-md  lg:font-bold  lg:text-xl  mb-4 text-custom-black-200">
+                  Contact Info
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 md:gap-4">
+                  <InputFieldCurved
+                    label="First Name*"
+                    type="text"
+                    ref={inputRef}
+                    id="contact_first_name"
+                    error={validationErrors.contact_first_name}
+                    name="contact_first_name"
+                    value={checkoutForm.contact_first_name}
+                    onChange={handleChange}
+                  />
+                  <InputFieldCurved
+                    label="Last Name*"
+                    type="text"
+                    id="contact_last_name"
+                    name="contact_last_name"
+                    value={checkoutForm.contact_last_name}
+                    onChange={handleChange}
+                    error={validationErrors.contact_last_name}
+                  />
+                  <InputFieldCurved
+                    label="Company*"
+                    type="text"
+                    id="contact_company_name"
+                    name="contact_company_name"
+                    value={checkoutForm.contact_company_name}
+                    onChange={handleChange}
+                    error={validationErrors.contact_company_name}
+                  />
+                  <InputFieldCurved
+                    label="Phone Number*"
+                    type="text"
+                    id="contact_phone_number"
+                    name="contact_phone_number"
+                    value={checkoutForm.contact_phone_number as number}
+                    onChange={handleChange}
+                    error={validationErrors.contact_phone_number}
+                  />
+                  <InputFieldCurved
+                    label="Email*"
+                    type="email"
+                    id="contact_email"
+                    name="contact_email"
+                    value={checkoutForm.contact_email}
+                    onChange={handleChange}
+                    error={validationErrors.contact_email}
+                  />
+                </div>
+              </div>
+            ) : (
+              <h2 className="font-semibold text-md  lg:font-bold  lg:text-xl  mb-4 text-custom-black-200">
+                Contact Info
+              </h2>
+            )}
+          </div>
+
+          {/* Payment Details */}
+          <div className="flex items-start mb-4">
+            <button
+              tabIndex={-1}
+              onClick={(e) => {
+                e.preventDefault();
+                setIsPaymentDetailsOpen(!isPaymentDetailsOpen);
+              }}
+              className={`${
+                isPaymentDetailsOpen ? "pt-0.5 pr-3" : "pr-3 pt-[3px]"
+              }`}
+              aria-expanded={isPaymentDetailsOpen}
+              aria-controls="paymentDetailsContent"
+            >
+              {isPaymentDetailsOpen ? <GroupClose /> : <GroupOpen />}
+            </button>
+            {isPaymentDetailsOpen ? (
+              <div className="flex-1" id="paymentDetailsContent">
+                <h2 className="font-semibold text-md  lg:font-bold  lg:text-xl  mb-4 text-custom-black-200">
+                  Payment Details
+                </h2>
+                <div className="grid grid-cols-1 ">
+                  <InputFieldCurved
+                    label="Name on Card*"
+                    type="text"
+                    id="payment_name_on_card"
+                    name="payment_name_on_card"
+                    value={checkoutForm.payment_name_on_card}
+                    onChange={handleChange}
+                    error={validationErrors.payment_name_on_card}
+                  />
+                  <InputFieldCurved
+                    label="Card Number*"
+                    type="text"
+                    id="payment_card_number"
+                    name="payment_card_number"
+                    maxlength={19}
+                    error={validationErrors.payment_card_number}
+                    value={checkoutForm.payment_card_number}
+                    onChange={handleChange}
+                  />
+                  <div className="flex gap-3 grid-cols-2">
+                    <InputFieldCurved
+                      label="Expiration(MM/YY)*"
+                      type="text"
+                      id="payment_expiry"
+                      name="payment_expiry"
+                      maxlength={5}
+                      value={checkoutForm.payment_expiry}
+                      error={validationErrors.payment_expiry}
+                      onChange={handleChange}
+                    />
+                    <InputFieldCurved
+                      label="CVC*"
+                      type="number"
+                      id="payment_cvc"
+                      maxlength={4}
+                      name="payment_cvc"
+                      value={checkoutForm.payment_cvc}
+                      error={validationErrors.payment_cvc}
+                      onChange={handleChange}
+                    />
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <h2 className="font-semibold text-md  lg:font-bold  lg:text-xl  mb-4 text-custom-black-200">
+                Payment Details
+              </h2>
+            )}
+          </div>
+
+          {/* Delivery Address */}
+          <div className="flex items-start mb-4">
+            <button
+              tabIndex={-1}
+              onClick={(e) => {
+                e.preventDefault();
+                setIsDeliveryAddressOpen(!isDeliveryAddressOpen);
+              }}
+              className={`${
+                isDeliveryAddressOpen ? "pt-0.5 pr-3" : "pr-3 pt-[3px]"
+              }`}
+              aria-expanded={isDeliveryAddressOpen}
+              aria-controls="deliveryAddressContent"
+            >
+              {isDeliveryAddressOpen ? <GroupClose /> : <GroupOpen />}
+            </button>
+            {isDeliveryAddressOpen ? (
+              <div className="flex-1" id="deliveryAddressContent">
+                <h2 className="font-semibold text-md  lg:font-bold  lg:text-xl  mb-4 text-custom-black-200">
+                  Delivery Address
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 md:gap-4">
+                  <InputFieldCurved
+                    label="Address"
+                    type="text"
+                    id="delivery_address_street"
+                    name="delivery_address_street"
+                    value={checkoutForm.delivery_address_street}
+                    onChange={handleChange}
+                    error={validationErrors.delivery_address_street}
+                  />
+                  <InputFieldCurved
+                    label="City"
+                    type="text"
+                    id="delivery_address_city"
+                    name="delivery_address_city"
+                    value={checkoutForm.delivery_address_city}
+                    onChange={handleChange}
+                    error={validationErrors.delivery_address_city}
+                  />
+                  <SelectField
+                    label="State*"
+                    id="delivery_address_state_id"
+                    name="delivery_address_state_id"
+                    labelClasses={
+                      "text-[12px] lg:text-[14px]  mb-2 !text-[#666666]"
+                    }
+                    classes="mt-1 text-[#666666] text-xs font-noto-sans rounded-md block w-full  border border-inset border-custom-gray-200 outline-none px-3 h-8 lg:h-12 py-2 lg:py-3.5"
+                    defaultValue="Select State*"
+                    value={checkoutForm.delivery_address_state_id || ""}
+                    onChange={handleChange}
+                    options={statesData
+                      ?.filter((state) => state.is_delivery_paused == false)
+                      .map((state: IState) => ({
+                        value: state.state_id,
+                        label: state.state_name,
+                      }))}
+                    error={validationErrors.delivery_address_state_id}
+                  />
+
+                  <InputFieldCurved
+                    label="Zip Code"
+                    type="number"
+                    id="delivery_address_zip_code"
+                    name="delivery_address_zip_code"
+                    value={checkoutForm.delivery_address_zip_code}
+                    onChange={handleChange}
+                    error={validationErrors.delivery_address_zip_code}
+                  />
+
+                  <SelectField
+                    label="Country*"
+                    labelClasses={
+                      "text-[12px] lg:text-[14px]  mb-2 !text-[#666666]"
+                    }
+                    classes="mt-1 text-[#666666] text-xs font-noto-sans rounded-md block w-full  border border-inset border-custom-gray-200 outline-none px-3 h-8 lg:h-12 py-2 lg:py-3.5"
+                    defaultValue="Select Country"
+                    id="delivery_address_country"
+                    name="delivery_address_country"
+                    error={validationErrors.delivery_address_country}
+                    value={checkoutForm.delivery_address_country}
+                    onChange={handleChange}
+                    options={[
+                      { value: "United States", label: "United States" },
+                    ]}
+                  />
+                </div>
+              </div>
+            ) : (
+              <h2 className="font-semibold text-md  lg:font-bold  lg:text-xl  mb-4 text-custom-black-200">
+                Delivery Address
+              </h2>
+            )}
+          </div>
+
+          {/* Billing Information */}
+          <div className="flex items-start mb-4">
+            <button
+              tabIndex={-1}
+              onClick={(e) => {
+                e.preventDefault();
+                setIsBillingInfoOpen(!isBillingInfoOpen);
+              }}
+              className={`${
+                isBillingInfoOpen ? "pt-0.5 pr-3" : "pr-3 pt-[3px]"
+              }`}
+              aria-expanded={isBillingInfoOpen}
+              aria-controls="billingInfoContent"
+            >
+              {isBillingInfoOpen ? <GroupClose /> : <GroupOpen />}
+            </button>
+            {isBillingInfoOpen ? (
+              <div className="flex-1" id="billingInfoContent">
+                <div className="flex mb-4 md:flex-row flex-col">
+                  <h2 className="font-semibold text-md  lg:font-bold  lg:text-xl   text-custom-black-200">
+                    Billing Information
+                  </h2>
+                  <label
+                    htmlFor="billing_same_as_delivery"
+                    className=" text-xs lg:text-sm lg:!ml-8  text-[#666666] lg:flex items-end "
+                  >
+                    <input
+                      className="form-checkbox mr-3 pt-1 mt-0.5 "
+                      type="checkbox"
+                      id="billing_same_as_delivery"
+                      name="billing_same_as_delivery"
+                      checked={checkoutForm.billing_same_as_delivery}
+                      onChange={handleChange}
+                    />
+                    Billing address is same as delivery address
+                  </label>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 md:gap-4">
+                  <InputFieldCurved
+                    label="Address*"
+                    type="text"
+                    id="billing_address_street"
+                    name="billing_address_street"
+                    value={checkoutForm.billing_address_street}
+                    disabled={checkoutForm.billing_same_as_delivery}
+                    onChange={handleChange}
+                    error={validationErrors.billing_address_street}
+                  />
+                  <InputFieldCurved
+                    label="City*"
+                    type="text"
+                    id="billing_address_city"
+                    name="billing_address_city"
+                    disabled={checkoutForm.billing_same_as_delivery}
+                    value={checkoutForm.billing_address_city}
+                    error={validationErrors.billing_address_city}
+                    onChange={handleChange}
+                  />
+
+                  <SelectField
+                    disabled={checkoutForm.billing_same_as_delivery}
+                    label="State*"
+                    labelClasses={
+                      "text-[12px] lg:text-[14px]  mb-2 !text-[#666666]"
+                    }
+                    classes="mt-1 text-[#666666] text-xs font-noto-sans rounded-md block w-full  border border-inset border-custom-gray-200 outline-none px-3 h-8 lg:h-12 py-2 lg:py-3.5"
+                    defaultValue="Select State"
+                    id="billing_address_state"
+                    name="billing_address_state"
+                    error={validationErrors.billing_address_state || ""}
+                    value={checkoutForm.billing_address_state}
+                    onChange={handleChange}
+                    options={statesData
+                      ?.filter((state) => state.is_delivery_paused == false)
+                      .map((state: IState) => ({
+                        value: state.state_id,
+                        label: state.state_name,
+                      }))}
+                  />
+
+                  <InputFieldCurved
+                    label="Zip Code*"
+                    type="number"
+                    disabled={checkoutForm.billing_same_as_delivery}
+                    id="billing_address_zip_code"
+                    name="billing_address_zip_code"
+                    error={validationErrors.billing_address_zip_code}
+                    value={checkoutForm.billing_address_zip_code}
+                    onChange={handleChange}
+                  />
+                  <SelectField
+                    disabled={checkoutForm.billing_same_as_delivery}
+                    labelClasses={
+                      "text-[12px] lg:text-[14px]  mb-2 !text-[#666666]"
+                    }
+                    classes="mt-1 text-[#666666] text-xs font-noto-sans rounded-md block w-full  border border-inset border-custom-gray-200 outline-none px-3 h-8 lg:h-12 py-2 lg:py-3.5"
+                    label="Country*"
+                    defaultValue="Select Country"
+                    id="billing_address_country"
+                    name="billing_address_country"
+                    error={validationErrors.billing_address_country}
+                    value={checkoutForm.billing_address_country}
+                    onChange={handleChange}
+                    options={[
+                      { value: "United States", label: "United States" },
+                    ]}
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center mb-2">
+                <h2 className="font-semibold text-md  lg:font-bold  lg:text-xl  text-custom-black-200">
+                  Billing Information
+                </h2>
+                <label
+                  htmlFor="billing_same_as_delivery"
+                  className="text-xs lg:text-sm lg:!ml-8  text-[#666666] flex items-end "
+                >
+                  <input
+                    className="form-checkbox mr-3  "
+                    type="checkbox"
+                    id="billing_same_as_delivery"
+                    name="billing_same_as_delivery"
+                    checked={checkoutForm.billing_same_as_delivery}
+                    onChange={handleChange}
+                  />
+                  Billing address is same as delivery address
+                </label>
+              </div>
+            )}
+          </div>
+          {/* submit btn */}
+          <div className="pl-6 flex  flex-col mb-8 pb-0 sticky -bottom-8 z-50 bg-white gap-2">
+            <hr className="border-t   font-roboto border-gray-400 pt-9 mt-7 w-[100%]  mx-auto  capitalize" />
+            <div className="font-roboto gap-3 lg:gap-8 flex flex-col lg:flex-row w-full justify-between items-center">
+              <div className="w-[100%] lg:w-[60%]">
+                <p className="text-[#666666] font-semibold lg:font-bold lg:text-[15px]">
+                  Due Today
+                </p>
+                <div className="flex w-full justify-between items-center font-semibold lg:font-bold">
+                  <p className="text-black  text-[16px]  2xl:text-[20px]">
+                    Non-Refundable Deposit
+                  </p>
+
+                  <span>
+                    $
+                    {Math.ceil(
+                      Number((Number(totalPrices.netPrice) * 0.2).toFixed(2))
+                    )}
                   </span>
+                </div>
+
+                <p className="text-custom-med-gray text-[12px] mt-1">
+                  Once you confirm your build, your Equipter will be set for
+                  production and your deposit will be non-refundable. Pricing
+                  and options are subject to change until your Equiper is built.
                 </p>
               </div>
-              {/* accessories */}
-              <div className="flex gap-1 justify-between flex-col">
-                {filteredAccessory.map((acc) => {
-                  return (
-                    <div className="flex justify-between " key={acc.id}>
-                      <p className="capitalize">{acc.name}</p>
-                      <p>
-                        ${Number(acc.price) * acc.qty}{" "}
-                        <span className="text-custom-med-gray">
-                          ({acc.qty})
-                        </span>
-                      </p>
-                    </div>
-                  );
-                })}
-              </div>
-              {/* delivery */}
-              {shippingOptions.map(
-                (option) =>
-                  selections.shippingOption === option.id && (
-                    <div key={option.id} className="flex  justify-between pr-5">
-                      <p>{option.name}</p>
-                      <span>${option.price}</span>
-                    </div>
-                  )
-              )}
-            </div>
-          </div>
-        ) : (
-          <h2 className="flex-1 font-semibold text-md  lg:font-bold  lg:text-xl  mb-4 text-custom-black-200">
-            Build Summary
-          </h2>
-        )}
-      </div>
-
-      {/* Contact Info */}
-      <div className="flex items-start mb-4">
-        <button
-          tabIndex={-1}
-          onClick={(e) => {
-            e.preventDefault();
-            setIsContactInfoOpen(!isContactInfoOpen);
-          }}
-          className={`${isContactInfoOpen ? "pt-0.5 pr-3" : "pr-3 pt-[3px]"}`}
-          aria-expanded={isContactInfoOpen}
-          aria-controls="contactInfoContent"
-        >
-          {isContactInfoOpen ? <GroupClose /> : <GroupOpen />}
-        </button>
-        {isContactInfoOpen ? (
-          <div className="flex-1" id="contactInfoContent">
-            <h2 className="font-semibold text-md  lg:font-bold  lg:text-xl  mb-4 text-custom-black-200">
-              Contact Info
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 md:gap-4">
-              <InputFieldCurved
-                label="First Name*"
-                type="text"
-                ref={inputRef}
-                id="contact_first_name"
-                error={validationErrors.contact_first_name}
-                name="contact_first_name"
-                value={checkoutForm.contact_first_name}
-                onChange={handleChange}
-              />
-              <InputFieldCurved
-                label="Last Name*"
-                type="text"
-                id="contact_last_name"
-                name="contact_last_name"
-                value={checkoutForm.contact_last_name}
-                onChange={handleChange}
-                error={validationErrors.contact_last_name}
-              />
-              <InputFieldCurved
-                label="Company*"
-                type="text"
-                id="contact_company_name"
-                name="contact_company_name"
-                value={checkoutForm.contact_company_name}
-                onChange={handleChange}
-                error={validationErrors.contact_company_name}
-              />
-              <InputFieldCurved
-                label="Phone Number*"
-                type="text"
-                id="contact_phone_number"
-                name="contact_phone_number"
-                value={checkoutForm.contact_phone_number as number}
-                onChange={handleChange}
-                error={validationErrors.contact_phone_number}
-              />
-              <InputFieldCurved
-                label="Email*"
-                type="email"
-                id="contact_email"
-                name="contact_email"
-                value={checkoutForm.contact_email}
-                onChange={handleChange}
-                error={validationErrors.contact_email}
-              />
-            </div>
-          </div>
-        ) : (
-          <h2 className="font-semibold text-md  lg:font-bold  lg:text-xl  mb-4 text-custom-black-200">
-            Contact Info
-          </h2>
-        )}
-      </div>
-
-      {/* Payment Details */}
-      <div className="flex items-start mb-4">
-        <button
-          tabIndex={-1}
-          onClick={(e) => {
-            e.preventDefault();
-            setIsPaymentDetailsOpen(!isPaymentDetailsOpen);
-          }}
-          className={`${
-            isPaymentDetailsOpen ? "pt-0.5 pr-3" : "pr-3 pt-[3px]"
-          }`}
-          aria-expanded={isPaymentDetailsOpen}
-          aria-controls="paymentDetailsContent"
-        >
-          {isPaymentDetailsOpen ? <GroupClose /> : <GroupOpen />}
-        </button>
-        {isPaymentDetailsOpen ? (
-          <div className="flex-1" id="paymentDetailsContent">
-            <h2 className="font-semibold text-md  lg:font-bold  lg:text-xl  mb-4 text-custom-black-200">
-              Payment Details
-            </h2>
-            <div className="grid grid-cols-1 ">
-              <InputFieldCurved
-                label="Name on Card*"
-                type="text"
-                id="payment_name_on_card"
-                name="payment_name_on_card"
-                value={checkoutForm.payment_name_on_card}
-                onChange={handleChange}
-                error={validationErrors.payment_name_on_card}
-              />
-              <InputFieldCurved
-                label="Card Number*"
-                type="text"
-                id="payment_card_number"
-                name="payment_card_number"
-                maxlength={19}
-                error={validationErrors.payment_card_number}
-                value={checkoutForm.payment_card_number}
-                onChange={handleChange}
-              />
-              <div className="flex gap-3 grid-cols-2">
-                <InputFieldCurved
-                  label="Expiration(MM/YY)*"
-                  type="text"
-                  id="payment_expiry"
-                  name="payment_expiry"
-                  maxlength={5}
-                  value={checkoutForm.payment_expiry}
-                  error={validationErrors.payment_expiry}
-                  onChange={handleChange}
-                />
-                <InputFieldCurved
-                  label="CVC*"
-                  type="number"
-                  id="payment_cvc"
-                  maxlength={4}
-                  name="payment_cvc"
-                  value={checkoutForm.payment_cvc}
-                  error={validationErrors.payment_cvc}
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
-          </div>
-        ) : (
-          <h2 className="font-semibold text-md  lg:font-bold  lg:text-xl  mb-4 text-custom-black-200">
-            Payment Details
-          </h2>
-        )}
-      </div>
-
-      {/* Delivery Address */}
-      <div className="flex items-start mb-4">
-        <button
-          tabIndex={-1}
-          onClick={(e) => {
-            e.preventDefault();
-            setIsDeliveryAddressOpen(!isDeliveryAddressOpen);
-          }}
-          className={`${
-            isDeliveryAddressOpen ? "pt-0.5 pr-3" : "pr-3 pt-[3px]"
-          }`}
-          aria-expanded={isDeliveryAddressOpen}
-          aria-controls="deliveryAddressContent"
-        >
-          {isDeliveryAddressOpen ? <GroupClose /> : <GroupOpen />}
-        </button>
-        {isDeliveryAddressOpen ? (
-          <div className="flex-1" id="deliveryAddressContent">
-            <h2 className="font-semibold text-md  lg:font-bold  lg:text-xl  mb-4 text-custom-black-200">
-              Delivery Address
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 md:gap-4">
-              <InputFieldCurved
-                label="Address"
-                type="text"
-                id="delivery_address_street"
-                name="delivery_address_street"
-                value={checkoutForm.delivery_address_street}
-                onChange={handleChange}
-                error={validationErrors.delivery_address_street}
-              />
-              <InputFieldCurved
-                label="City"
-                type="text"
-                id="delivery_address_city"
-                name="delivery_address_city"
-                value={checkoutForm.delivery_address_city}
-                onChange={handleChange}
-                error={validationErrors.delivery_address_city}
-              />
-              <SelectField
-                label="State*"
-                id="delivery_address_state_id"
-                name="delivery_address_state_id"
-                labelClasses={
-                  "text-[12px] lg:text-[14px]  mb-2 !text-[#666666]"
-                }
-                classes="mt-1 text-[#666666] text-xs font-noto-sans rounded-md block w-full  border border-inset border-custom-gray-200 outline-none px-3 h-8 lg:h-12 py-2 lg:py-3.5"
-                defaultValue="Select State*"
-                value={checkoutForm.delivery_address_state_id || ""}
-                onChange={handleChange}
-                options={statesData
-                  ?.filter((state) => state.is_delivery_paused == false)
-                  .map((state: IState) => ({
-                    value: state.state_id,
-                    label: state.state_name,
-                  }))}
-                error={validationErrors.delivery_address_state_id}
-              />
-
-              <InputFieldCurved
-                label="Zip Code"
-                type="number"
-                id="delivery_address_zip_code"
-                name="delivery_address_zip_code"
-                value={checkoutForm.delivery_address_zip_code}
-                onChange={handleChange}
-                error={validationErrors.delivery_address_zip_code}
-              />
-
-              <SelectField
-                label="Country*"
-                labelClasses={
-                  "text-[12px] lg:text-[14px]  mb-2 !text-[#666666]"
-                }
-                classes="mt-1 text-[#666666] text-xs font-noto-sans rounded-md block w-full  border border-inset border-custom-gray-200 outline-none px-3 h-8 lg:h-12 py-2 lg:py-3.5"
-                defaultValue="Select Country"
-                id="delivery_address_country"
-                name="delivery_address_country"
-                error={validationErrors.delivery_address_country}
-                value={checkoutForm.delivery_address_country}
-                onChange={handleChange}
-                options={[{ value: "United States", label: "United States" }]}
-              />
-            </div>
-          </div>
-        ) : (
-          <h2 className="font-semibold text-md  lg:font-bold  lg:text-xl  mb-4 text-custom-black-200">
-            Delivery Address
-          </h2>
-        )}
-      </div>
-
-      {/* Billing Information */}
-      <div className="flex items-start mb-4">
-        <button
-          tabIndex={-1}
-          onClick={(e) => {
-            e.preventDefault();
-            setIsBillingInfoOpen(!isBillingInfoOpen);
-          }}
-          className={`${isBillingInfoOpen ? "pt-0.5 pr-3" : "pr-3 pt-[3px]"}`}
-          aria-expanded={isBillingInfoOpen}
-          aria-controls="billingInfoContent"
-        >
-          {isBillingInfoOpen ? <GroupClose /> : <GroupOpen />}
-        </button>
-        {isBillingInfoOpen ? (
-          <div className="flex-1" id="billingInfoContent">
-            <div className="flex mb-4 md:flex-row flex-col">
-              <h2 className="font-semibold text-md  lg:font-bold  lg:text-xl   text-custom-black-200">
-                Billing Information
-              </h2>
               <label
-                htmlFor="billing_same_as_delivery"
-                className=" text-xs lg:text-sm lg:!ml-8  text-[#666666] lg:flex items-end "
+                htmlFor="depositAgree"
+                className="text-sm text-[#666666] flex lg:hidden items-center font-noto-sans"
               >
                 <input
-                  className="form-checkbox mr-3 pt-1 mt-0.5 "
+                  className="form-checkbox mr-3"
                   type="checkbox"
-                  id="billing_same_as_delivery"
-                  name="billing_same_as_delivery"
-                  checked={checkoutForm.billing_same_as_delivery}
+                  id="i_understand_deposit_is_non_refundable"
+                  name="i_understand_deposit_is_non_refundable"
+                  checked={checkoutForm.i_understand_deposit_is_non_refundable}
                   onChange={handleChange}
                 />
-                Billing address is same as delivery address
+                I understand my deposit is non-refundable.
               </label>
+              <button className="btn-yellow w-full lg:w-[35%] h-fit capitalize">
+                Submit Deposit
+              </button>
             </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 md:gap-4">
-              <InputFieldCurved
-                label="Address*"
-                type="text"
-                id="billing_address_street"
-                name="billing_address_street"
-                value={checkoutForm.billing_address_street}
-                disabled={checkoutForm.billing_same_as_delivery}
-                onChange={handleChange}
-                error={validationErrors.billing_address_street}
-              />
-              <InputFieldCurved
-                label="City*"
-                type="text"
-                id="billing_address_city"
-                name="billing_address_city"
-                disabled={checkoutForm.billing_same_as_delivery}
-                value={checkoutForm.billing_address_city}
-                error={validationErrors.billing_address_city}
-                onChange={handleChange}
-              />
-
-              <SelectField
-                disabled={checkoutForm.billing_same_as_delivery}
-                label="State*"
-                labelClasses={
-                  "text-[12px] lg:text-[14px]  mb-2 !text-[#666666]"
-                }
-                classes="mt-1 text-[#666666] text-xs font-noto-sans rounded-md block w-full  border border-inset border-custom-gray-200 outline-none px-3 h-8 lg:h-12 py-2 lg:py-3.5"
-                defaultValue="Select State"
-                id="billing_address_state"
-                name="billing_address_state"
-                error={validationErrors.billing_address_state || ""}
-                value={checkoutForm.billing_address_state}
-                onChange={handleChange}
-                options={statesData
-                  ?.filter((state) => state.is_delivery_paused == false)
-                  .map((state: IState) => ({
-                    value: state.state_id,
-                    label: state.state_name,
-                  }))}
-              />
-
-              <InputFieldCurved
-                label="Zip Code*"
-                type="number"
-                disabled={checkoutForm.billing_same_as_delivery}
-                id="billing_address_zip_code"
-                name="billing_address_zip_code"
-                error={validationErrors.billing_address_zip_code}
-                value={checkoutForm.billing_address_zip_code}
-                onChange={handleChange}
-              />
-              <SelectField
-                disabled={checkoutForm.billing_same_as_delivery}
-                labelClasses={
-                  "text-[12px] lg:text-[14px]  mb-2 !text-[#666666]"
-                }
-                classes="mt-1 text-[#666666] text-xs font-noto-sans rounded-md block w-full  border border-inset border-custom-gray-200 outline-none px-3 h-8 lg:h-12 py-2 lg:py-3.5"
-                label="Country*"
-                defaultValue="Select Country"
-                id="billing_address_country"
-                name="billing_address_country"
-                error={validationErrors.billing_address_country}
-                value={checkoutForm.billing_address_country}
-                onChange={handleChange}
-                options={[{ value: "United States", label: "United States" }]}
-              />
-            </div>
-          </div>
-        ) : (
-          <div className="flex items-center mb-2">
-            <h2 className="font-semibold text-md  lg:font-bold  lg:text-xl  text-custom-black-200">
-              Billing Information
-            </h2>
             <label
-              htmlFor="billing_same_as_delivery"
-              className="text-xs lg:text-sm lg:!ml-8  text-[#666666] flex items-end "
+              htmlFor="depositAgree"
+              className="text-sm hidden  text-[#666666] lg:flex items-center font-noto-sans"
             >
               <input
-                className="form-checkbox mr-3  "
+                className="form-checkbox mr-3"
                 type="checkbox"
-                id="billing_same_as_delivery"
-                name="billing_same_as_delivery"
-                checked={checkoutForm.billing_same_as_delivery}
+                id="i_understand_deposit_is_non_refundable"
+                name="i_understand_deposit_is_non_refundable"
+                checked={checkoutForm.i_understand_deposit_is_non_refundable}
                 onChange={handleChange}
               />
-              Billing address is same as delivery address
+              I understand my deposit is non-refundable.
             </label>
-          </div>
-        )}
-      </div>
-      {/* submit btn */}
-      <div className="pl-6 flex  flex-col mb-8 pb-0 sticky -bottom-8 z-50 bg-white gap-2">
-        <hr className="border-t   font-roboto border-gray-400 pt-9 mt-7 w-[100%]  mx-auto  capitalize" />
-        <div className="font-roboto gap-3 lg:gap-8 flex flex-col lg:flex-row w-full justify-between items-center">
-          <div className="w-[100%] lg:w-[60%]">
-            <p className="text-[#666666] font-semibold lg:font-bold lg:text-[15px]">
-              Due Today
-            </p>
-            <div className="flex w-full justify-between items-center font-semibold lg:font-bold">
-              <p className="text-black  text-[16px]  2xl:text-[20px]">
-                Non-Refundable Deposit
-              </p>
-
-              <span>
-                $
-                {Math.floor(
-                  Number((Number(totalPrices.netPrice) * 0.2).toFixed(2))
-                )}
+            {validationErrors.i_understand_deposit_is_non_refundable && (
+              <span className="text-red-500 h-6 text-[10px] font-bold">
+                {validationErrors.i_understand_deposit_is_non_refundable}
               </span>
-            </div>
-
-            <p className="text-custom-med-gray text-[12px] mt-1">
-              Once you confirm your build, your Equipter will be set for
-              production and your deposit will be non-refundable. Pricing and
-              options are subject to change until your Equiper is built.
-            </p>
+            )}
           </div>
-          <label
-            htmlFor="depositAgree"
-            className="text-sm text-[#666666] flex lg:hidden items-center font-noto-sans"
-          >
-            <input
-              className="form-checkbox mr-3"
-              type="checkbox"
-              id="i_understand_deposit_is_non_refundable"
-              name="i_understand_deposit_is_non_refundable"
-              checked={checkoutForm.i_understand_deposit_is_non_refundable}
-              onChange={handleChange}
-            />
-            I understand my deposit is non-refundable.
-          </label>
-          <button className="btn-yellow w-full lg:w-[35%] h-fit capitalize">
-            Submit Deposit
-          </button>
-        </div>
-        <label
-          htmlFor="depositAgree"
-          className="text-sm hidden  text-[#666666] lg:flex items-center font-noto-sans"
-        >
-          <input
-            className="form-checkbox mr-3"
-            type="checkbox"
-            id="i_understand_deposit_is_non_refundable"
-            name="i_understand_deposit_is_non_refundable"
-            checked={checkoutForm.i_understand_deposit_is_non_refundable}
-            onChange={handleChange}
-          />
-          I understand my deposit is non-refundable.
-        </label>
-        {validationErrors.i_understand_deposit_is_non_refundable && (
-          <span className="text-red-500 h-6 text-[10px] font-bold">
-            {validationErrors.i_understand_deposit_is_non_refundable}
-          </span>
-        )}
-      </div>
-    </form>
+        </form>
+      )}
+    </>
   );
 };
 
