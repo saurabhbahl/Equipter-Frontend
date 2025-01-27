@@ -13,7 +13,6 @@ import AccessorySlider from "./components/AccessorySlider";
 import ProductSidebar from "./components/ProductSidebar";
 import FirstPageForm from "../FirstPageForm";
 import NotFound from "../../NotFound";
-import { useSearchParams } from 'react-router-dom';
 
 interface IBuildList {
   title: string;
@@ -34,15 +33,14 @@ export interface SelectionsType {
 }
 
 const ViewSingleProduct = () => {
-  const [searchParams] = useSearchParams();
-  console.log(searchParams.get('webQuote'));
+
   const {
     firstPageForm,
     shippingOptions,
     selections,
     setSelections,
     setTotalPrices,
-    setProductSelections,
+    setProductSelections
   } = useClientContext();
   const { productUrl } = useParams();
   const [error, setError] = useState(false);
@@ -66,7 +64,6 @@ const ViewSingleProduct = () => {
       // get products data with related accessories
       const resData = await publicApiClient.get(`/product/url/${productUrl}`);
       const data = resData.data.data;
-      console.log('data',data);
       setProductDetails(data);
       setProductSelections((prev) => ({ ...prev, productDetails: data }));
       setLoading(false);
@@ -94,8 +91,8 @@ const ViewSingleProduct = () => {
 
       setSelections((prevState) => ({
         ...prevState,
-        accessories: initialAccessoriesState,
-        shippingOption: "delivery",
+        // accessories: initialAccessoriesState,
+        shippingOption: "pickup",
       }));
 
       // Set total prices based on base price

@@ -20,12 +20,12 @@ export interface IState {
   updated_at: string;
 }
 
-interface AccessorySelection {
+export interface AccessorySelection {
   selected: boolean;
   qty: number;
 }
 
-interface SelectionsType {
+export interface SelectionsType {
   baseUnitQty: number;
   accessories: {
     [accId: string]: AccessorySelection;
