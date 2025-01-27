@@ -33,13 +33,14 @@ export interface SelectionsType {
 }
 
 const ViewSingleProduct = () => {
+
   const {
     firstPageForm,
     shippingOptions,
     selections,
     setSelections,
     setTotalPrices,
-    setProductSelections,
+    setProductSelections
   } = useClientContext();
   const { productUrl } = useParams();
   const [error, setError] = useState(false);
@@ -90,8 +91,8 @@ const ViewSingleProduct = () => {
 
       setSelections((prevState) => ({
         ...prevState,
-        accessories: initialAccessoriesState,
-        shippingOption: "delivery",
+        // accessories: initialAccessoriesState,
+        shippingOption: "pickup",
       }));
 
       // Set total prices based on base price
@@ -164,6 +165,7 @@ const ViewSingleProduct = () => {
   if (error) {
     return <NotFound />;
   }
+
   if (!firstPageForm.isFormFilled) {
     return <FirstPageForm />;
   }
@@ -228,7 +230,6 @@ const ViewSingleProduct = () => {
               <ProductSidebar
                 setShowAccessory={setShowAccessories}
                 productDetails={productDetails}
-                // handleTabClick={handleTabClick}
                 accessoryList={accessoryList}
                 // this is first accessory that selected to view
                 setModalAccessory={setModalAccessory}

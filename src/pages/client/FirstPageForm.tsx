@@ -1,14 +1,20 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import InputField from "../../components/utils/InputFeild";
 import SelectField from "../../components/utils/SelectFeild";
 import { useClientContext } from "../../hooks/useClientContext";
-import { IState, ShippingOption } from "../../contexts/ClientContext";
+import { AccessorySelection, IState, ShippingOption } from "../../contexts/ClientContext";
+import { useSearchParams } from "react-router-dom";
+import { publicApiClient } from "../../utils/axios";
+import { IQuoteAccessory } from "../../components/admincomponents/WebQuotes/WebQuoteSchema";
 
 const STORAGE_KEY = "firstPageForm";
 
 const EXPIRATION_TIME = 7 * 24 * 60 * 60 * 1000;
 
 const FirstPageForm = () => {
+  const [searchParams] = useSearchParams();
+  const webQuoteID = searchParams.get("webQuote");
+  const [shippingMethod, setShippingMethod] = useState<string>('delivery');
   const {
     firstPageForm,
     setFirstPageForm,
@@ -53,7 +59,7 @@ const FirstPageForm = () => {
           },
         ];
         setShippingOptions([...newShippingOption]);
-        setSelections((prev) => ({ ...prev, shippingOption: "delivery" }));
+        setSelections((prev) => ({ ...prev, shippingOption: shippingMethod }));
       }
     }
   }
@@ -101,6 +107,68 @@ const FirstPageForm = () => {
       setFirstPageForm({ ...savedData, isFormFilled: token!==null ? true :false });
     }
   }, []);
+
+  useEffect(() => {
+    if (webQuoteID) {
+      const fetchWebQuote = async () => {
+        try {
+          // get products data with related accessories
+          const resData = await publicApiClient.get(`/webquote/${webQuoteID}`);
+          const data = resData.data.data[0];
+          const quoteAccessory = data.quote_accessory;
+
+          // Ensure accessory_id is present and loop through all items
+          if (quoteAccessory && quoteAccessory.length > 0) {
+            // Loop through all accessories in quoteAccessory array
+            const updatedAccessories = quoteAccessory.reduce((acc: Record<string, AccessorySelection>, item: IQuoteAccessory) => {
+              if (item.accessory_id) {
+                acc[item.accessory_id] = {
+                  selected: true, // Dynamically set based on your logic
+                  qty: Number(item.quantity), // Dynamically set qty or default value
+                };
+              } else {
+                console.error("Accessory ID not found for item:", item);
+              }
+              return acc;
+            }, {});
+
+            // Update selections with the new accessories
+            setSelections((prevSelections) => ({
+              ...prevSelections,
+              accessories: {
+                ...prevSelections.accessories,
+                ...updatedAccessories,
+              },
+            }));
+          } else {
+            console.error(
+              "No valid accessories found in quoteAccessory:",
+              quoteAccessory
+            );
+          }
+
+          setSelections((prevState) => ({
+            ...prevState,
+            baseUnitQty: data.product_qty,
+            shippingOption: data.shipping_method_used
+          }));
+          setShippingMethod(data.shipping_method_used);
+
+        } catch (error) {
+          console.error(`error: ${error}`);
+        }
+      };
+
+      fetchWebQuote();
+    }
+    else{
+      
+      setSelections((prevState) => ({
+        ...prevState,
+        shippingOption: "delivery"
+      }));
+    }
+  },[webQuoteID]);
 
   return (
     <>

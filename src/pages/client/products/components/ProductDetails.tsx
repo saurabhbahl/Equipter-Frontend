@@ -19,7 +19,6 @@ const ProductDetails = ({
   setShowAccessory,
 }: IProductDetailsProps) => {
   const productName = productDetails.name;
-
   const {
     shippingOptions,
     totalPrices,

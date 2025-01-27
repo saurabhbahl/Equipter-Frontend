@@ -53,11 +53,11 @@ const WebQuote = () => {
 
 
   useEffect(() => {
-    if(webquotes.length>0){
-      return
-    }else{
+    // if(webquotes.length>0){
+    //   return
+    // }else{
       fetchWebQuoteData();      
-    }
+    // }
   }, [searchParams,financing ]);
 
   return (
