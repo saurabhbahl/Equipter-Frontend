@@ -911,7 +911,7 @@ const CheckoutForm = ({
                   <span>
                     $
                     {Math.ceil(
-                      Number((Number(totalPrices.netPrice) * 0.2).toFixed(2))
+                      Number((Number(1500)).toFixed(2))
                     )}
                   </span>
                 </div>

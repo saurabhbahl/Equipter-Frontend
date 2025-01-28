@@ -15,6 +15,9 @@ import ViewSingleProduct from "../../pages/client/products/ViewSingleProduct";
 import WebQuote from "../admincomponents/WebQuotes/WebQuote";
 import States from "../admincomponents/States/States";
 import Zones from "../admincomponents/Zones/Zones";
+import { SuccessPage } from "../../pages/client/SuccessPage";
+import { CancelPage } from "../../pages/client/CancelPage";
+
 const LoginPage = lazy(() => import("../../pages/auth/LoginPage"));
 const ForgetPassword = lazy(() => import("../../pages/auth/ForgetPassword"));
 const ResetPassword = lazy(() => import("../../pages/auth/ResetPassword"));
@@ -40,6 +43,8 @@ export default function Router() {
           <Route path="/" element={<Products />} />
           <Route path="/products" element={<Navigate to="/" replace />} />
           <Route path="/products/:productUrl" element={<ViewSingleProduct />} />
+          <Route path="/success" element={<SuccessPage />} />
+          <Route path="/cancel" element={<CancelPage />} />
           <Route element={<PublicRoute />}>
             <Route path="/login" element={<LoginPage />} />
             <Route path="/forget-password" element={<ForgetPassword />} />

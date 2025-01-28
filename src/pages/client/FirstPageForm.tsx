@@ -114,6 +114,7 @@ const FirstPageForm = () => {
         try {
           // get products data with related accessories
           const resData = await publicApiClient.get(`/webquote/${webQuoteID}`);
+          console.log(resData)
           const data = resData.data.data[0];
           const quoteAccessory = data.quote_accessory;
 

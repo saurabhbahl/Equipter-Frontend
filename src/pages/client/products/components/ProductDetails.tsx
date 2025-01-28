@@ -310,10 +310,16 @@ const ProductDetails = ({
           </h3>
           <div className="flex justify-between items-center text-sm md:text-base font-semibold">
             <span>Non-Refundable Deposit</span>
-            <span>
+            <span className="hidden">
               $
               {Math.floor(
                 Number((Number(totalPrices.netPrice) * 0.2).toFixed(2))
+              )}
+            </span>
+            <span>
+              $
+              {Math.floor(
+                Number((Number(1500)).toFixed(2))
               )}
             </span>
           </div>

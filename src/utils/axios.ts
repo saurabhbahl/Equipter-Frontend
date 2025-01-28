@@ -5,7 +5,7 @@ export const apiClient = axios.create({
   baseURL: BackendUrl,
   timeout: 10000,
 });
-interface isExp {
+export interface isExp {
   isExp: boolean;
   permission: string;
 }
@@ -16,9 +16,9 @@ export const isTokenExpired = (
   try {
     const payload = JSON.parse(atob(token.split(".")[1]));
     const isExpired = payload.exp < Date.now() / 1000;
-    // console.log("Decoded token payload: ", payload);
-    // console.log("Expiration check: ",isExpired);
-    // console.log("time", payload.exp - Date.now() / 1000);
+    console.log("Decoded token payload: ", payload);
+    console.log("Expiration check: ",isExpired);
+    console.log("time", payload.exp - Date.now() / 1000);
     return {
       isExp: isExpired,
       permission: payload.role as string,
