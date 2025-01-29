@@ -6,6 +6,7 @@ import { AccessorySelection, IState, ShippingOption } from "../../contexts/Clien
 import { useSearchParams } from "react-router-dom";
 import { publicApiClient } from "../../utils/axios";
 import { IQuoteAccessory } from "../../components/admincomponents/WebQuotes/WebQuoteSchema";
+import axios from "axios";
 
 const STORAGE_KEY = "firstPageForm";
 
@@ -101,6 +102,7 @@ const FirstPageForm = () => {
   
   
   useEffect(() => {
+    axios.get("https://api.ipify.org?format=json").then((res)=>console.log(res.data)).catch((err)=>console.log(err))
     const savedData = loadFromLocalStorage(STORAGE_KEY);
     const token=localStorage.getItem("token");
     if (savedData) {
