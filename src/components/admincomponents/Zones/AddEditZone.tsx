@@ -82,6 +82,7 @@ const AddAndEditZone: React.FC<AddAndEditZoneProps> = ({
     setLoading(true);
     setError(null);
     try {
+
       if (isEditMode && zone_id) {
         const updateRes = await apiClient.put(`/state/zones/${zone_id}`, formData);
         if (updateRes.status === 200) {

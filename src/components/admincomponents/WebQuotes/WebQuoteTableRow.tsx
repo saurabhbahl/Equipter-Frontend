@@ -1,16 +1,21 @@
+import { Link } from "react-router-dom";
 import { formatDate } from "../../../utils/helpers";
 import TableRow from "../../Table/TableRow";
 
-const WebQuoteTableRow = ({ webquote, no }: any) => {
+interface WebQuoteTableRowProps {
+  webquote: any;
+  no: number;
+}
 
-  const { product_name, id, created_at, zone_id, stage, financing ,shipping_method_used,product_price} = webquote;
+const WebQuoteTableRow = ({ webquote, no }: WebQuoteTableRowProps) => {
+  const { product_name, id, created_at,  stage, financing ,shipping_method_used,product_price,product_url,zone_name} = webquote;
   const columns = [
     no,
     ` ${id?.slice(0, 6)}`,
-    ` ${product_name?.slice(0, 10)}..`,
-    Math.ceil(product_price),
-    ` ${zone_id?.slice(0, 13)}`,
-    stage,
+    <Link to={`/products/${product_url}?webQuote=${id}`} className="cursor-pointer underline hover:text-blue-500">{product_name}</Link>,
+    Math.ceil(Number(product_price)),
+    ` ${zone_name||"--"}`,
+    stage||"--",
     shipping_method_used,
     financing,
     formatDate(created_at),

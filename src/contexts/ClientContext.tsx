@@ -252,7 +252,7 @@ export const ClientContextProvider = ({
     return null;
   };
   async function setStatesFn() {
-    const res = await publicApiClient.get("/state/states");
+    const res = await publicApiClient.get("/state/states/?limit=-1");
     setStatesData(res.data.data);
   }
 

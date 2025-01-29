@@ -72,7 +72,7 @@ const ProductDetails = ({
 
         {/* Accessories Section */}
         {accessoryList.length > 0 && (
-          <div className="my-3 font-roboto overflow-y-scroll max-h-[260px] scrollbar-hide">
+          <div className="my-3 font-roboto overflow-y-scroll max-h-[260px scrollbar-hide">
             <h3 className="font-semibold mb-3 text-lg md:text-xl text-center">
               Add-On Accessories
             </h3>

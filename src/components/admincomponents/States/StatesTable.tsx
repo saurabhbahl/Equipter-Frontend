@@ -2,6 +2,7 @@ import LoaderSpinner from "../../utils/LoaderSpinner";
 import { useAdminContext } from "../../../hooks/useAdminContext";
 import TableHeading from "../../Table/TableHeading";
 import StatesTableRow from "./StatesTableRow";
+import { IState } from "../../../contexts/ClientContext";
 
 const StatesTable = () => {
   const headers = [
@@ -33,7 +34,7 @@ const StatesTable = () => {
           <table className="w-full text-sm !text-center text-gray-500 ">
             <TableHeading headers={headers} />
             <tbody className="bg-white">
-              {states?.map((row: unknown, index: number) => (
+              {states?.map((row: IState, index: number) => (
                 <StatesTableRow key={index} stateRow={row} no={index + 1} />
               ))}
             </tbody>

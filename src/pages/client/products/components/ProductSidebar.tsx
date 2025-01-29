@@ -106,7 +106,7 @@ const ProductSidebar = ({
   }
 
   return (
-    <div className="w-full xl:w-[37%] md:p-3 my-3">
+    <div className="w-full xl:w-[37%] md:p-3 my-3 max-h-[85vh] overflow-y-scroll scrollbar-hide">
       {(sidebarSteps.cashStep == 2 || sidebarSteps.financingStep == 2) && (
         <p
           className="text-custom-med-gray text-[15px] font-semibold cursor-pointer "
@@ -174,16 +174,16 @@ const ProductSidebar = ({
           setShowAccessory={setShowAccessory}
         />
         {/* Order Block */}
-        <div className=" border-t font-roboto border-gray-400 pt-9 mt-7 max-w-7xl mx-auto  capitalize">
-          <h2 className="text-lg lg:text-2xl font-semibold text-custom-black-200 text-center">
+        <div className=" border-t font-roboto border-gray-400 pt-5 mt-5 max-w-7xl mx-auto  capitalize">
+          <h2 className="text-lg lg:text-xl font-semibold text-custom-black-200 text-center">
             Order Your Equipter {productName}
           </h2>
-          <h3 className="font-semibold text-base md:text-lg text-custom-med-gray text-center mt-2">
+          <h3 className="font-semibold text-base md:text-md text-custom-med-gray text-center mt-2">
             {yearForTwoMonths === yearForThreeMonths
               ? `Est. Delivery:  ${threeMonths} ${yearForTwoMonths}`
               : `Est. Delivery: ${twoMonths} ${yearForTwoMonths} – ${threeMonths} ${yearForThreeMonths}`}
           </h3>
-          <div className="flex flex-col xs:flex-row items-center gap-6 mt-6 justify-center">
+          <div className="flex flex-col xs:flex-row items-center gap-6 mt-4 justify-center">
           {sidebarSteps.cashStep == 1 && sidebarSteps.financingStep === 1 &&
             <button className="inline-block text-sm xl:text-md bg-custom-med-gray text-white px-4 py-2 lg:px-6 lg:py-3 hover:bg-custom-orange transition" onClick={handleSendBuildButton}>
               Send Build
@@ -198,7 +198,7 @@ const ProductSidebar = ({
                 : "Continue"}
             </button>
           </div>
-          <p className="text-center text-custom-med-gray-200 text-sm mt-7">
+          <p className="text-center text-custom-med-gray-200 text-sm mt-5">
             To talk to a rep call:{" "}
             <a
               href="tel:717-661-3591"

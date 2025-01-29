@@ -29,6 +29,7 @@ export interface IWebQuote {
   delivery_address_country?: string;
   payment_type?: string;
   product_total_cost?: string;
+  product_url?: string;
   non_refundable_deposit?: string;
   i_understand_deposit_is_non_refundable?: boolean;
   created_at: string;

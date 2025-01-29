@@ -32,14 +32,14 @@ const OrdersTableRow = ({ order, no }: OrdersTableRowProps) => {
   const columns = [
     no,
     ` ${order.id?.slice(0, 6)}`,
-    <span onClick={() => navigate(`/products/${order.product.product_url}`)} className="cursor-pointer underline hover:text-blue-500">{order.product.name}</span>,
+    <span onClick={() => navigate(`/products/${order.product.product_url}?webQuote=${order.webquote_id}`)} className="cursor-pointer underline hover:text-blue-500">{order.product.name}</span>,
     <span
       className={`px-3 py-1 text-sm font-semibold rounded-full ${getStatusStyle(order.order_status)}`}>
-      {order.order_status}
+      {order.order_status||"--"} 
     </span>,
       formatDate(order.created_at),
     formatDate(order.estimated_completion_date),
-    formatDate(order.actual_completion_date),
+    `${order?.actual_completion_date?formatDate(order.actual_completion_date):"--"}`,
     
   ];
 

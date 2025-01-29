@@ -30,6 +30,7 @@ const Map = ({ orders }: IMapProps) => {
 
   // 1)  map from state_id -> state_name
   const stateIdToName: Record<string, string> = {};
+ 
   states.forEach((st) => {
     stateIdToName[st.state_id] = st.state_name;
   });
@@ -53,6 +54,7 @@ const Map = ({ orders }: IMapProps) => {
     name,
     value,
   }));
+  
 
   //  max for visualMap
   const maxOrderCount = mapData.length ? Math.max(...mapData.map((d) => d.value)) : 0;

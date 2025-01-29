@@ -185,12 +185,12 @@ const ViewSingleProduct = () => {
         title={productDetails?.meta_title as string}
         description={productDetails?.description as string}
       />
-      <div className="products-component md:px-20 xl:w-[90%]  px-3 max-w-[2500px] mx-auto">
+      <div className="products-component md:px-20 xl:w-[90%]  px-3 max-w-[2500px] mx-auto ">
         {/* Main content */}
-        <section className=" p-5">
+        <section className=" p-5 ">
           <div className=" mx-auto flex flex-col xl:flex-row gap-3">
             {/* Left content (Image Section)*/}
-            <div className="w-full xl:w-[63%]">
+            <div className="w-full  xl:w-[63%]">
               {/* Build + Buy heading */}
               <div className="main-heading relative -top-6 lg:block ">
                 <h1 className="uppercase text-sm lg:text-[10px] font-roboto text-gray-700">
@@ -212,9 +212,9 @@ const ViewSingleProduct = () => {
               </div>
 
               {/* Build lists content */}
-              <div className="grid grid-cols-4 xl:mt-12 mt-8 text-left w-full">
+              <div className="grid grid-cols-4 xl:mt-1.5 mt-8 text-left w-full">
                 {buildList.map((item, index) => (
-                  <div key={index} className="w-full my-2 lg:m-0">
+                  <div key={index} className="w-full my-1 lg:m-0">
                     <h4 className="font-roboto text-[10px] lg:text-lg">
                       {item.title}
                     </h4>

@@ -1,18 +1,17 @@
 import LoaderSpinner from "../../utils/LoaderSpinner";
 import { useAdminContext } from "../../../hooks/useAdminContext";
 import TableHeading from "../../Table/TableHeading";
-
 import WebQuoteTableRow from "./WebQuoteTableRow";
 import { IQuotes } from "./WebQuoteSchema";
 
-const AccessoriesTable = () => {
+const WebQuoteTable = () => {
   const headers = [
     "Sr.No.",
     "ID",
     "Product",
     "Total Price",
     "Zone",
-    "State",
+    "Stage",
     "Shipping",
     "Financing",
     "Created At"
@@ -29,7 +28,6 @@ const AccessoriesTable = () => {
   if (error?.webquotes) {
     return <p className="text-red-600 text-center">{error.webquotes}</p>;
   }
-  console.log(webquotes);
   return (
     <>
       {webquotes &&  webquotes?.length > 0 ? (
@@ -52,4 +50,4 @@ const AccessoriesTable = () => {
   );
 };
 
-export default AccessoriesTable;
+export default WebQuoteTable;

@@ -7,7 +7,6 @@ import { apiClient } from "../../../utils/axios";
 import { useNotification } from "../../../contexts/NotificationContext";
 import { Zone } from "../Zones/ZoneSchemas";
 
-
 interface AddAndEditStateProps {
   status?: "Edit" | "Add";
   onClose: () => void;
@@ -52,7 +51,6 @@ const AddAndEditState: React.FC<AddAndEditStateProps> = ({
       value: z?.id as string,
     };
   });
-
 
   const [formData, setFormData] = useState<StateFormData>({
     zone_id: "",
@@ -113,6 +111,7 @@ const AddAndEditState: React.FC<AddAndEditStateProps> = ({
     setError(null);
     try {
       if (isEditMode && state_id) {
+     
         const updateRes = await apiClient.put(
           `/state/states/${state_id}`,
           formData
@@ -129,7 +128,6 @@ const AddAndEditState: React.FC<AddAndEditStateProps> = ({
           if (zoneStateRes.status === 200) {
             onClose();
             fetchStates();
-            addNotification("success", "State Created Successfully!");
           } else {
             setError("Failed to associate state with zone.");
           }
@@ -213,7 +211,7 @@ const AddAndEditState: React.FC<AddAndEditStateProps> = ({
             {/* Zone ID */}
             <div className="flex flex-col">
               <SelectField
-                value={formData.zone_id}
+                value={formData.zone_id||""}
                 options={zonesDropdownValues || []}
                 id="zone_id"
                 label="Select Zone"
