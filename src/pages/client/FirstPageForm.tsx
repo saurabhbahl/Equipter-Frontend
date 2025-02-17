@@ -2,11 +2,16 @@ import { useEffect, useState } from "react";
 import InputField from "../../components/utils/InputFeild";
 import SelectField from "../../components/utils/SelectFeild";
 import { useClientContext } from "../../hooks/useClientContext";
-import { AccessorySelection, IState, ShippingOption } from "../../contexts/ClientContext";
+import {
+  AccessorySelection,
+  IState,
+  ShippingOption,
+} from "../../contexts/ClientContext";
 import { useSearchParams } from "react-router-dom";
 import { publicApiClient } from "../../utils/axios";
 import { IQuoteAccessory } from "../../components/admincomponents/WebQuotes/WebQuoteSchema";
 import axios from "axios";
+import { BackendUrl } from "../../utils/useEnv";
 
 const STORAGE_KEY = "firstPageForm";
 
@@ -15,7 +20,7 @@ const EXPIRATION_TIME = 7 * 24 * 60 * 60 * 1000;
 const FirstPageForm = () => {
   const [searchParams] = useSearchParams();
   const webQuoteID = searchParams.get("webQuote");
-  const [shippingMethod, setShippingMethod] = useState<string>('delivery');
+  const [shippingMethod, setShippingMethod] = useState<string>("delivery");
   const {
     firstPageForm,
     setFirstPageForm,
@@ -37,16 +42,25 @@ const FirstPageForm = () => {
     setFirstPageForm(updatedForm);
     saveToLocalStorage(updatedForm, STORAGE_KEY, EXPIRATION_TIME);
   };
+  const saveLead = async () => {   
+      const selectedState = statesData.find(
+        (st) => st.state_id === firstPageForm.state
+      );
+      await axios.post(`${BackendUrl}/webquote/soft-lead`, {
+        ...firstPageForm,
+        state: selectedState?.state_name,
+      });    
+  };
 
   async function handleSubmit(e: React.ChangeEvent<HTMLFormElement>) {
     e.preventDefault();
     setFirstPageForm((prev) => ({ ...prev, isFormFilled: true }));
 
     if (firstPageForm.state !== "") {
+      await saveLead();
       const selectedState = statesData.find(
         (st) => st.state_id === firstPageForm.state
       );
-
       if (selectedState) {
         const newShippingOption: ShippingOption[] = [
           { id: "pickup", name: "Pick-up", price: 0 },
@@ -97,16 +111,19 @@ const FirstPageForm = () => {
     { value: "solar", label: "Solar" },
     { value: "other", label: "Other" },
   ];
-  
- 
-  
-  
+
   useEffect(() => {
-    axios.get("https://api.ipify.org?format=json").then((res)=>console.log(res.data)).catch((err)=>console.log(err))
+    axios
+      .get("https://api.ipify.org?format=json")
+      .then((res) => console.log(res.data))
+      .catch((err) => console.log(err));
     const savedData = loadFromLocalStorage(STORAGE_KEY);
-    const token=localStorage.getItem("token");
+    const token = localStorage.getItem("token");
     if (savedData) {
-      setFirstPageForm({ ...savedData, isFormFilled: token!==null ? true :false });
+      setFirstPageForm({
+        ...savedData,
+        isFormFilled: token !== null ? true : false,
+      });
     }
   }, []);
 
@@ -116,24 +133,30 @@ const FirstPageForm = () => {
         try {
           // get products data with related accessories
           const resData = await publicApiClient.get(`/webquote/${webQuoteID}`);
-          console.log(resData)
+          console.log(resData);
           const data = resData.data.data[0];
           const quoteAccessory = data.quote_accessory;
 
           // Ensure accessory_id is present and loop through all items
           if (quoteAccessory && quoteAccessory.length > 0) {
             // Loop through all accessories in quoteAccessory array
-            const updatedAccessories = quoteAccessory.reduce((acc: Record<string, AccessorySelection>, item: IQuoteAccessory) => {
-              if (item.accessory_id) {
-                acc[item.accessory_id] = {
-                  selected: true, // Dynamically set based on your logic
-                  qty: Number(item.quantity), // Dynamically set qty or default value
-                };
-              } else {
-                console.error("Accessory ID not found for item:", item);
-              }
-              return acc;
-            }, {});
+            const updatedAccessories = quoteAccessory.reduce(
+              (
+                acc: Record<string, AccessorySelection>,
+                item: IQuoteAccessory
+              ) => {
+                if (item.accessory_id) {
+                  acc[item.accessory_id] = {
+                    selected: true, // Dynamically set based on your logic
+                    qty: Number(item.quantity), // Dynamically set qty or default value
+                  };
+                } else {
+                  console.error("Accessory ID not found for item:", item);
+                }
+                return acc;
+              },
+              {}
+            );
 
             // Update selections with the new accessories
             setSelections((prevSelections) => ({
@@ -153,25 +176,22 @@ const FirstPageForm = () => {
           setSelections((prevState) => ({
             ...prevState,
             baseUnitQty: data.product_qty,
-            shippingOption: data.shipping_method_used
+            shippingOption: data.shipping_method_used,
           }));
           setShippingMethod(data.shipping_method_used);
-
         } catch (error) {
           console.error(`error: ${error}`);
         }
       };
 
       fetchWebQuote();
-    }
-    else{
-      
+    } else {
       setSelections((prevState) => ({
         ...prevState,
-        shippingOption: "delivery"
+        shippingOption: "delivery",
       }));
     }
-  },[webQuoteID]);
+  }, [webQuoteID]);
 
   return (
     <>
