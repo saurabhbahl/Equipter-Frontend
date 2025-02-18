@@ -279,7 +279,6 @@ const AddNewAccessory = () => {
       const response = await apiClient.get(`/accessory/slug`, {
         params: { slug },
       });
-      console.log(response);
       const isUnique = response.data.isUnique;
       if (!isUnique) {
         setErrors((prevErrors) => ({

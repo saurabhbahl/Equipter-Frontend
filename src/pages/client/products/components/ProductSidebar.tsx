@@ -40,7 +40,6 @@ const ProductSidebar = ({
   const handleTabClick = useCallback(
     (tab: string) => {
       setSidebarSteps((prev) => ({ ...prev, cashStep: 1, financingStep: 1 }));
-      console.log(tab);
       setActiveTab(tab);
     },[accessoryList]);
 

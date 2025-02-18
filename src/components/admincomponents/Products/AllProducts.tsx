@@ -28,7 +28,6 @@ const AllProducts = () => {
       setError((prev) => ({ ...prev, products: "" }));
       // const data = await ProductsService.fetchProductsWithImages();
       const data=await apiClient.get("/product")
-      console.log(data);
       setProducts(data?.data?.data);
     } catch (error) {
       console.log(error);

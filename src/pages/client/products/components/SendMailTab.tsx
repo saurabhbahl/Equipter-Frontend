@@ -52,7 +52,6 @@ const SendMailTab = () => {
     e.preventDefault();
  
     const validation = webQuoteSendmail.safeParse(formValues);
-    console.log(validation)
 
     if (!validation.success) {
       const newErrors: { [key in keyof SendWebQuoteUrl]?: string } = {};

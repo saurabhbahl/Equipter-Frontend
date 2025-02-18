@@ -384,7 +384,7 @@ const EditAccessory = () => {
     const totalImages =
       images.length +
       existingImages.filter((img) => !img.markedForDeletion).length;
-    console.log("Total", totalImages);
+
     if (totalImages === 0) {
       setImageUploadError(true);
       addNotification("error", "At least one accessory image is required.");

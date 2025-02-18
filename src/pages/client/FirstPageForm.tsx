@@ -113,10 +113,6 @@ const FirstPageForm = () => {
   ];
 
   useEffect(() => {
-    axios
-      .get("https://api.ipify.org?format=json")
-      .then((res) => console.log(res.data))
-      .catch((err) => console.log(err));
     const savedData = loadFromLocalStorage(STORAGE_KEY);
     const token = localStorage.getItem("token");
     if (savedData) {
@@ -133,7 +129,6 @@ const FirstPageForm = () => {
         try {
           // get products data with related accessories
           const resData = await publicApiClient.get(`/webquote/${webQuoteID}`);
-          console.log(resData);
           const data = resData.data.data[0];
           const quoteAccessory = data.quote_accessory;
 

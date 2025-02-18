@@ -4,7 +4,6 @@ import { ThreeDots } from "react-loader-spinner";
 const Loader = ({ message }: { message?: string }) => {
   const [displayMessage, setDisplayMessage] = useState(message);
   const [fadeClass, setFadeClass] = useState("opacity-100");
-  console.log(message);
   useEffect(() => {
     if (message) {
       setFadeClass("opacity-0");

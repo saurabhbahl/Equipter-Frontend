@@ -13,7 +13,6 @@ const Pagination: React.FC<PaginationProps> = ({
   maxPageButtons = 7,
 }) => {
   const [searchParams, setSearchParams] = useSearchParams();
-console.log(currentPage,totalPages)
 
   if (totalPages <= 1) {
     return null;
